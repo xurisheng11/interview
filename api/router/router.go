@@ -80,6 +80,17 @@ func Setup() *gin.Engine {
 		// 公司面试情报
 		protected.GET("/company/intel", handler.GetCompanyIntel)
 		protected.GET("/company/question-answer", handler.GetCompanyQuestionAnswer)
+
+		// 管理后台
+		admin := protected.Group("/admin")
+		admin.Use(middleware.AdminRequired())
+		{
+			admin.GET("/users", handler.AdminListUsers)
+			admin.GET("/users/:id", handler.AdminGetUser)
+			admin.PUT("/users/:id/password", handler.AdminResetPassword)
+			admin.PUT("/users/:id/role", handler.AdminSetRole)
+			admin.DELETE("/users/:id", handler.AdminDeleteUser)
+		}
 	}
 	api.GET("/reports/share/:token", handler.GetSharedReport)
 

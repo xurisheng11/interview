@@ -19,6 +19,10 @@ const ArticleDetail = () => import('@/views/community/Article.vue')
 const ProfileIndex = () => import('@/views/profile/Index.vue')
 const CompanyIntel = () => import('@/views/company/Intel.vue')
 
+// 管理后台
+const AdminLogin = () => import('@/views/admin/Login.vue')
+const AdminDashboard = () => import('@/views/admin/Dashboard.vue')
+
 const routes = [
   {
     path: '/login',
@@ -91,6 +95,19 @@ const routes = [
     component: CompanyIntel,
     meta: { requiresAuth: true, title: '公司面试知识库' }
   },
+  // 管理后台路由（独立，不受主应用 Navbar 影响）
+  {
+    path: '/admin/login',
+    name: 'AdminLogin',
+    component: AdminLogin,
+    meta: { requiresAuth: false, isAdmin: true, title: '管理员登录' }
+  },
+  {
+    path: '/admin/dashboard',
+    name: 'AdminDashboard',
+    component: AdminDashboard,
+    meta: { requiresAdminAuth: true, isAdmin: true, title: '后台管理' }
+  },
   // 404 兜底
   {
     path: '*',
@@ -107,15 +124,37 @@ const router = new VueRouter({
 // 路由守卫
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')
+  const adminToken = localStorage.getItem('admin_token')
+  const adminUser = JSON.parse(localStorage.getItem('admin_user') || 'null')
+
+  // 管理后台路由守卫
+  if (to.meta.requiresAdminAuth) {
+    if (!adminToken || !adminUser || adminUser.role !== 'admin') {
+      next({ path: '/admin/login' })
+      return
+    }
+    if (to.meta && to.meta.title) {
+      document.title = `${to.meta.title} - MockInterview`
+    }
+    next()
+    return
+  }
+
+  // 管理后台登录页：已登录则直接跳仪表盘
+  if (to.path === '/admin/login' && adminToken && adminUser && adminUser.role === 'admin') {
+    next({ path: '/admin/dashboard', replace: true })
+    return
+  }
+
+  // 普通路由守卫
   if (to.meta.requiresAuth && !token) {
-    // 未登录，跳转登录页并记录目标路径
     next({ path: '/login', query: { redirect: to.fullPath } })
   } else if (to.path === '/login' && token) {
-    // 已登录访问登录页，跳到仪表盘（用 replace 避免 redirect 错误）
     next({ path: '/dashboard', replace: true })
   } else {
     next()
   }
+
   // 设置页面标题
   if (to.meta && to.meta.title) {
     document.title = `${to.meta.title} - MockInterview`

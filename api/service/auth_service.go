@@ -103,6 +103,10 @@ func Register(req *RegisterReq) (*AuthResult, error) {
 	if err := repository.SaveAccountIndex(req.Username, user.UserID); err != nil {
 		return nil, err
 	}
+	// 加入全局用户列表（按注册时间排序）
+	if err := repository.AddUserToList(user.UserID, float64(user.CreatedAt.Unix())); err != nil {
+		return nil, err
+	}
 
 	// 生成 JWT
 	token, err := jwt.GenerateToken(user.UserID, user.Role)
@@ -128,6 +132,11 @@ func Login(req *LoginReq) (*AuthResult, error) {
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
 		return nil, ErrWrongPassword
 	}
+	// 保存最后登录时间
+	loginTime := time.Now().Format(time.RFC3339)
+	_ = repository.SaveLastLogin(user.UserID, loginTime)
+	user.LastLoginAt = loginTime
+
 	token, err := jwt.GenerateToken(user.UserID, user.Role)
 	if err != nil {
 		return nil, err

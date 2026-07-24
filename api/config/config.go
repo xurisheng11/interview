@@ -21,6 +21,8 @@ type Config struct {
 	DeepSeekBaseURL        string
 	AIDailyLimit           int
 	InterviewQuestionCount int
+	AdminUsername          string
+	AdminPassword          string
 }
 
 var Cfg *Config
@@ -48,6 +50,8 @@ func Init() {
 		DeepSeekBaseURL:        getEnv("DEEPSEEK_BASE_URL", "https://api.deepseek.com"),
 		AIDailyLimit:           aiDailyLimit,
 		InterviewQuestionCount: questionCount,
+		AdminUsername:          getEnv("ADMIN_USERNAME", "admin"),
+		AdminPassword:          getEnv("ADMIN_PASSWORD", "admin123456"),
 	}
 }
 

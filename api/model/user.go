@@ -13,6 +13,7 @@ type User struct {
 	Bio          string    `json:"bio"`
 	CreatedAt    time.Time `json:"createdAt"`
 	Role         string    `json:"role"`
+	LastLoginAt  string    `json:"lastLoginAt"`
 }
 
 func (u *User) ToRedisHash() map[string]interface{} {
@@ -27,6 +28,7 @@ func (u *User) ToRedisHash() map[string]interface{} {
 		"bio":          u.Bio,
 		"createdAt":    u.CreatedAt.Format(time.RFC3339),
 		"role":         u.Role,
+		"lastLoginAt":  u.LastLoginAt,
 	}
 }
 
@@ -43,28 +45,49 @@ func UserFromRedisHash(h map[string]string) *User {
 		Bio:          h["bio"],
 		CreatedAt:    createdAt,
 		Role:         h["role"],
+		LastLoginAt:  h["lastLoginAt"],
 	}
 }
 
 // UserDTO 对外暴露（不含密码）
 type UserDTO struct {
-	UserID    string `json:"userId"`
-	Username  string `json:"username"`
-	Nickname  string `json:"nickname"`
-	Avatar    string `json:"avatar"`
-	Bio       string `json:"bio"`
-	Role      string `json:"role"`
-	CreatedAt string `json:"createdAt"`
+	UserID      string `json:"userId"`
+	Username    string `json:"username"`
+	Nickname    string `json:"nickname"`
+	Avatar      string `json:"avatar"`
+	Bio         string `json:"bio"`
+	Role        string `json:"role"`
+	CreatedAt   string `json:"createdAt"`
+	LastLoginAt string `json:"lastLoginAt"`
+	Phone       string `json:"phone"`
+	Email       string `json:"email"`
 }
 
 func (u *User) ToDTO() *UserDTO {
 	return &UserDTO{
-		UserID:    u.UserID,
-		Username:  u.Username,
-		Nickname:  u.Nickname,
-		Avatar:    u.Avatar,
-		Bio:       u.Bio,
-		Role:      u.Role,
-		CreatedAt: u.CreatedAt.Format(time.RFC3339),
+		UserID:      u.UserID,
+		Username:    u.Username,
+		Nickname:    u.Nickname,
+		Avatar:      u.Avatar,
+		Bio:         u.Bio,
+		Role:        u.Role,
+		CreatedAt:   u.CreatedAt.Format(time.RFC3339),
+		LastLoginAt: u.LastLoginAt,
+	}
+}
+
+// ToAdminDTO 管理员视图（含手机/邮箱）
+func (u *User) ToAdminDTO() *UserDTO {
+	return &UserDTO{
+		UserID:      u.UserID,
+		Username:    u.Username,
+		Nickname:    u.Nickname,
+		Avatar:      u.Avatar,
+		Bio:         u.Bio,
+		Role:        u.Role,
+		CreatedAt:   u.CreatedAt.Format(time.RFC3339),
+		LastLoginAt: u.LastLoginAt,
+		Phone:       u.Phone,
+		Email:       u.Email,
 	}
 }

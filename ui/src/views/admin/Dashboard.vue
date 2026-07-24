@@ -53,14 +53,22 @@
       <div class="admin-table-card">
         <div class="table-header">
           <h3 class="table-title">用户管理</h3>
-          <el-input
-            v-model="searchKeyword"
-            placeholder="搜索用户名/昵称/手机/邮箱"
-            prefix-icon="el-icon-search"
-            size="small"
-            clearable
-            style="width: 280px"
-          />
+          <div style="display:flex;gap:10px;align-items:center">
+            <el-button
+              size="small"
+              icon="el-icon-refresh"
+              :loading="migrateLoading"
+              @click="handleMigrate"
+            >导入历史用户</el-button>
+            <el-input
+              v-model="searchKeyword"
+              placeholder="搜索用户名/昵称/手机/邮箱"
+              prefix-icon="el-icon-search"
+              size="small"
+              clearable
+              style="width: 280px"
+            />
+          </div>
         </div>
 
         <el-table
@@ -170,7 +178,7 @@
 </template>
 
 <script>
-import { listUsers, resetUserPassword, setUserRole, deleteUser } from '@/api/admin'
+import { listUsers, resetUserPassword, setUserRole, deleteUser, migrateUsers } from '@/api/admin'
 
 export default {
   name: 'AdminDashboard',
@@ -185,6 +193,7 @@ export default {
     return {
       adminUser: JSON.parse(localStorage.getItem('admin_user') || '{}'),
       tableLoading: false,
+      migrateLoading: false,
       userList: [],
       searchKeyword: '',
       resetDialog: {
@@ -286,6 +295,18 @@ export default {
         this.loadUsers()
       } catch (e) {
         // 拦截器处理
+      }
+    },
+    async handleMigrate() {
+      this.migrateLoading = true
+      try {
+        const res = await migrateUsers()
+        this.$message.success(`迁移完成，共导入 ${res.data.migratedCount} 个用户`)
+        this.loadUsers()
+      } catch (e) {
+        // 拦截器处理
+      } finally {
+        this.migrateLoading = false
       }
     },
     handleLogout() {

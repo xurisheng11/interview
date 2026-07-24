@@ -30,3 +30,8 @@ export function setUserRole(userId, role) {
 export function deleteUser(userId) {
   return adminRequest.delete(`/admin/users/${userId}`)
 }
+
+// 一次性迁移老用户数据
+export function migrateUsers() {
+  return adminRequest.post('/admin/migrate-users')
+}

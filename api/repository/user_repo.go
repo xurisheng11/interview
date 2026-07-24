@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/go-redis/redis/v8"
 	"interview-sim/model"
@@ -84,7 +85,48 @@ func SaveLastLogin(userID string, loginTime string) error {
 	return RDB.HSet(Ctx, userKey(userID), "lastLoginAt", loginTime).Err()
 }
 
-// DeleteUser 删除用户及其所有相关 Redis 数据
+// MigrateUsersToList 一次性迁移：把 Redis 中所有现有用户补录进 users:all
+// 通过 SCAN 找到所有 user:{id} hash key（排除 user:account:* 索引）
+func MigrateUsersToList() (int, error) {
+	var cursor uint64
+	count := 0
+	for {
+		keys, nextCursor, err := RDB.Scan(Ctx, cursor, userKeyPrefix+"*", 100).Result()
+		if err != nil {
+			return count, err
+		}
+		for _, key := range keys {
+			// 跳过账号索引 key（user:account:xxx）
+			if len(key) > len(userAccountKeyPrefix) && key[:len(userAccountKeyPrefix)] == userAccountKeyPrefix {
+				continue
+			}
+			// 取出用户 hash 里的 createdAt 和 userId
+			vals, err := RDB.HMGet(Ctx, key, "userId", "createdAt").Result()
+			if err != nil || vals[0] == nil {
+				continue
+			}
+			userID := vals[0].(string)
+			if userID == "" {
+				continue
+			}
+			// 解析 createdAt 作为 score，解析失败则用 0
+			score := float64(0)
+			if vals[1] != nil {
+				if t, err := time.Parse(time.RFC3339, vals[1].(string)); err == nil {
+					score = float64(t.Unix())
+				}
+			}
+			// ZAdd NX：只在不存在时插入，不覆盖已有记录
+			RDB.ZAddNX(Ctx, "users:all", &redis.Z{Score: score, Member: userID})
+			count++
+		}
+		cursor = nextCursor
+		if cursor == 0 {
+			break
+		}
+	}
+	return count, nil
+}
 // 需要传入完整用户对象以清理所有账号索引
 func DeleteUser(user *model.User) error {
 	// 1. 删除用户数据 + 所有账号索引（用户名、手机、邮箱）

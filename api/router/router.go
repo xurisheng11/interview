@@ -90,6 +90,7 @@ func Setup() *gin.Engine {
 			admin.PUT("/users/:id/password", handler.AdminResetPassword)
 			admin.PUT("/users/:id/role", handler.AdminSetRole)
 			admin.DELETE("/users/:id", handler.AdminDeleteUser)
+			admin.POST("/migrate-users", handler.AdminMigrateUsers)
 		}
 	}
 	api.GET("/reports/share/:token", handler.GetSharedReport)

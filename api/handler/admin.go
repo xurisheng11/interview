@@ -85,3 +85,14 @@ func AdminDeleteUser(c *gin.Context) {
 	}
 	response.SuccessMsg(c, "用户已删除", nil)
 }
+
+// AdminMigrateUsers POST /api/v1/admin/migrate-users
+// 一次性迁移接口：把 Redis 中的老用户补录进 users:all，用完可以不再调用
+func AdminMigrateUsers(c *gin.Context) {
+	count, err := service.AdminMigrateUsers()
+	if err != nil {
+		response.InternalError(c, "迁移失败: "+err.Error())
+		return
+	}
+	response.SuccessMsg(c, "迁移完成", gin.H{"migratedCount": count})
+}

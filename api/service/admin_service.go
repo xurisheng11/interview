@@ -103,3 +103,8 @@ func AdminDeleteUser(operatorID, targetUserID string) error {
 	}
 	return repository.DeleteUser(user)
 }
+
+// AdminMigrateUsers 一次性把老用户补录进 users:all
+func AdminMigrateUsers() (int, error) {
+	return repository.MigrateUsersToList()
+}

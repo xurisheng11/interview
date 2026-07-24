@@ -19,9 +19,28 @@
     </el-card>
 
     <!-- 文章列表 -->
-    <el-card shadow="never" class="list-card" v-loading="loading">
-      <div v-if="articles.length === 0 && !loading" class="empty-tip">
-        暂无文章，点击「AI 知识获取」生成你感兴趣的内容
+    <el-card shadow="never" class="list-card">
+      <!-- 骨架屏：首次加载时显示 -->
+      <div v-if="loading && articles.length === 0">
+        <div v-for="i in 8" :key="i" class="skeleton-item">
+          <div class="skeleton-main">
+            <div class="skeleton-line skeleton-title"></div>
+            <div class="skeleton-line skeleton-tags"></div>
+          </div>
+          <div class="skeleton-stats">
+            <div class="skeleton-line skeleton-stat"></div>
+          </div>
+        </div>
+      </div>
+      <!-- 加载更多时的 loading 遮罩 -->
+      <div v-if="loading && articles.length > 0" class="loading-mask">
+        <i class="el-icon-loading"></i> 加载中...
+      </div>
+      <!-- 正常内容 -->
+      <div v-if="!loading && articles.length === 0" class="empty-tip">
+        <i class="el-icon-document"></i>
+        <p>正在为你准备内容，稍后刷新试试</p>
+        <el-button type="primary" size="small" @click="loadArticles">刷新</el-button>
       </div>
       <div
         v-for="article in articles"
@@ -120,9 +139,30 @@ export default {
     }
   },
   created() {
+    this.initCategory()
     this.loadArticles()
   },
   methods: {
+    // 根据用户信息自动选择分类
+    initCategory() {
+      const userInfo = this.$store.getters['user/userInfo']
+      if (!userInfo) return
+      // 尝试从用户 bio 或 role 里匹配分类关键词（简单启发式）
+      const hint = ((userInfo.bio || '') + ' ' + (userInfo.nickname || '')).toLowerCase()
+      const mapping = [
+        { keywords: ['前端', 'frontend', 'vue', 'react', 'js', 'css'], cat: 'frontend' },
+        { keywords: ['后端', 'backend', 'java', 'go', 'python', 'spring', 'mysql'], cat: 'backend' },
+        { keywords: ['大数据', 'bigdata', 'spark', 'hadoop', 'flink', 'hive'], cat: 'bigdata' },
+        { keywords: ['ai', '算法', '机器学习', '深度学习', 'ml', 'nlp'], cat: 'ai' },
+        { keywords: ['会计', '财务', '审计', 'accounting', '税务'], cat: 'accounting' },
+      ]
+      for (const { keywords, cat } of mapping) {
+        if (keywords.some(k => hint.includes(k))) {
+          this.activeCategory = cat
+          return
+        }
+      }
+    },
     async loadArticles() {
       this.loading = true
       try {
@@ -209,4 +249,31 @@ export default {
 .stat-item.time { color: #bbb; }
 .pagination-wrap { display: flex; justify-content: center; margin-top: 20px; }
 .empty-tip { text-align: center; color: #999; padding: 40px 0; font-size: 14px; }
+.empty-tip p { margin: 12px 0; }
+.loading-mask { text-align: center; color: #999; padding: 12px 0; font-size: 13px; }
+
+/* 骨架屏 */
+.skeleton-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 16px 0;
+  border-bottom: 1px solid #f0f0f0;
+  gap: 16px;
+}
+.skeleton-main { flex: 1; }
+.skeleton-stats { flex-shrink: 0; width: 120px; }
+.skeleton-line {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 4px;
+}
+.skeleton-title { height: 18px; width: 70%; margin-bottom: 10px; }
+.skeleton-tags { height: 14px; width: 40%; }
+.skeleton-stat { height: 14px; width: 100%; }
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
 </style>

@@ -22,7 +22,7 @@ var (
 )
 
 type RegisterReq struct {
-	Username        string `json:"username" binding:"required,min=3,max=20"`
+	Username        string `json:"username" binding:"required,min=2,max=20"`
 	Account         string `json:"account" binding:"required"`
 	Password        string `json:"password" binding:"required"`
 	ConfirmPassword string `json:"confirmPassword" binding:"required"`

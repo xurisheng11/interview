@@ -50,7 +50,7 @@
 </template>
 
 <script>
-import { login } from '@/api/auth'
+import { adminLogin } from '@/api/admin'
 
 export default {
   name: 'AdminLogin',
@@ -73,16 +73,15 @@ export default {
         if (!valid) return
         this.loading = true
         try {
-          const res = await login({ account: this.form.account, password: this.form.password })
+          const res = await adminLogin({ account: this.form.account, password: this.form.password })
           const user = res.data.user
           if (user.role !== 'admin') {
             this.$message.error('权限不足，请使用管理员账号登录')
             return
           }
+          // 只存 admin 专用 key，不覆盖主应用 token
           localStorage.setItem('admin_token', res.data.token)
           localStorage.setItem('admin_user', JSON.stringify(user))
-          // 同时写入主 token，复用 request 拦截器
-          localStorage.setItem('token', res.data.token)
           this.$message.success('登录成功')
           this.$router.push('/admin/dashboard')
         } catch (e) {

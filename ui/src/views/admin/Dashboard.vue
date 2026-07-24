@@ -291,7 +291,6 @@ export default {
     handleLogout() {
       localStorage.removeItem('admin_token')
       localStorage.removeItem('admin_user')
-      localStorage.removeItem('token')
       this.$router.push('/admin/login')
     },
     async handleDelete(user) {

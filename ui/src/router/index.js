@@ -127,22 +127,30 @@ router.beforeEach((to, from, next) => {
   const adminToken = localStorage.getItem('admin_token')
   const adminUser = JSON.parse(localStorage.getItem('admin_user') || 'null')
 
-  // 管理后台路由守卫
-  if (to.meta.requiresAdminAuth) {
-    if (!adminToken || !adminUser || adminUser.role !== 'admin') {
-      next({ path: '/admin/login' })
+  // 所有 /admin/* 路由优先处理，不经过普通路由守卫
+  if (to.meta.isAdmin) {
+    // 需要管理员认证的页面
+    if (to.meta.requiresAdminAuth) {
+      if (!adminToken || !adminUser || adminUser.role !== 'admin') {
+        next({ path: '/admin/login' })
+        return
+      }
+      if (to.meta.title) document.title = `${to.meta.title} - MockInterview`
+      next()
       return
     }
-    if (to.meta && to.meta.title) {
-      document.title = `${to.meta.title} - MockInterview`
+    // 管理员登录页：已有有效 admin session 则跳仪表盘
+    if (to.path === '/admin/login') {
+      if (adminToken && adminUser && adminUser.role === 'admin') {
+        next({ path: '/admin/dashboard', replace: true })
+        return
+      }
+      if (to.meta.title) document.title = `${to.meta.title} - MockInterview`
+      next()
+      return
     }
+    // 其他 isAdmin 路由直接放行
     next()
-    return
-  }
-
-  // 管理后台登录页：已登录则直接跳仪表盘
-  if (to.path === '/admin/login' && adminToken && adminUser && adminUser.role === 'admin') {
-    next({ path: '/admin/dashboard', replace: true })
     return
   }
 
@@ -155,7 +163,6 @@ router.beforeEach((to, from, next) => {
     next()
   }
 
-  // 设置页面标题
   if (to.meta && to.meta.title) {
     document.title = `${to.meta.title} - MockInterview`
   }

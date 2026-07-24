@@ -1,0 +1,25 @@
+# 环境变量（含密钥，绝对不能提交）
+api/.env
+.env
+*.env
+
+# Go 编译产物
+api/server
+api/*.exe
+
+# Node
+ui/node_modules/
+ui/dist/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Kiro specs（可选，按需保留）
+# .kiro/

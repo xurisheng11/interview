@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>面试模拟系统 - 原型图</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Amazon Ember", Arial, sans-serif; background: #f3f3f3; color: #111; }
+
+  /* 顶部导航 - 亚马逊风格 */
+  .navbar {
+    background: #131921;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    padding: 8px 20px;
+    gap: 16px;
+    position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  }
+  .navbar .logo { font-size: 22px; font-weight: bold; color: #ff9900; letter-spacing: 1px; white-space: nowrap; }
+  .navbar .search-bar { flex: 1; display: flex; }
+  .navbar .search-bar input {
+    flex: 1; padding: 8px 12px; font-size: 14px; border: none; border-radius: 4px 0 0 4px; outline: none;
+  }
+  .navbar .search-bar button {
+    background: #febd69; border: none; padding: 8px 14px; border-radius: 0 4px 4px 0; cursor: pointer; font-size: 16px;
+  }
+  .navbar .nav-links { display: flex; gap: 12px; font-size: 13px; }
+  .navbar .nav-links a { color: #fff; text-decoration: none; padding: 4px 8px; border-radius: 3px; transition: background .2s; }
+  .navbar .nav-links a:hover { background: #232f3e; outline: 1px solid #fff; }
+  .navbar .user-btn {
+    background: #febd69; border: none; padding: 8px 14px; border-radius: 4px; cursor: pointer;
+    font-size: 13px; font-weight: bold; transition: background .2s;
+  }
+  .navbar .user-btn:hover { background: #f3a847; }
+
+  /* 二级导航 */
+  .subnav {
+    background: #232f3e;
+    color: #fff;
+    display: flex;
+    gap: 0;
+    padding: 0 20px;
+    margin-top: 52px;
+    overflow-x: auto;
+  }
+  .subnav a {
+    color: #fff; text-decoration: none; padding: 10px 14px; font-size: 13px;
+    white-space: nowrap; transition: background .2s;
+  }
+  .subnav a:hover, .subnav a.active { background: #37475a; }
+
+  /* 页面容器 */
+  .page { display: none; padding: 20px; max-width: 1200px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  /* 卡片 */
+  .card {
+    background: #fff; border: 1px solid #ddd; border-radius: 4px;
+    padding: 20px; margin-bottom: 16px;
+  }
+  .card-title { font-size: 18px; font-weight: bold; margin-bottom: 16px; color: #111; border-left: 4px solid #ff9900; padding-left: 10px; }
+
+  /* 按钮 */
+  .btn { padding: 8px 18px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; transition: all .2s; }
+  .btn-primary { background: #ff9900; color: #111; font-weight: bold; }
+  .btn-primary:hover { background: #f3a847; }
+  .btn-secondary { background: #fff; color: #111; border: 1px solid #aaa; }
+  .btn-secondary:hover { background: #f7f7f7; border-color: #ff9900; }
+  .btn-danger { background: #c7511f; color: #fff; }
+  .btn-success { background: #067d62; color: #fff; }
+
+  /* 表单 */
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 6px; color: #333; }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%; padding: 8px 10px; border: 1px solid #aaa; border-radius: 3px;
+    font-size: 14px; outline: none; transition: border .2s;
+  }
+  .form-group input:focus, .form-group select:focus { border-color: #ff9900; box-shadow: 0 0 0 2px rgba(255,153,0,.2); }
+
+  /* 徽章 */
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;
+  }
+  .badge-orange { background: #ff9900; color: #111; }
+  .badge-blue { background: #0066c0; color: #fff; }
+  .badge-green { background: #067d62; color: #fff; }
+  .badge-red { background: #c7511f; color: #fff; }
+  .badge-gray { background: #888; color: #fff; }
+
+  /* 登录页 */
+  .login-wrap { max-width: 400px; margin: 40px auto; }
+  .login-logo { text-align: center; font-size: 28px; font-weight: bold; color: #ff9900; margin-bottom: 24px; }
+  .login-tabs { display: flex; border-bottom: 2px solid #ff9900; margin-bottom: 20px; }
+  .login-tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; font-weight: bold; color: #888; transition: all .2s; }
+  .login-tab.active { color: #ff9900; border-bottom: 2px solid #ff9900; margin-bottom: -2px; }
+
+  /* 仪表盘 */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+  .stat-card { background: #fff; border: 1px solid #ddd; border-radius: 4px; padding: 20px; text-align: center; }
+  .stat-card .num { font-size: 32px; font-weight: bold; color: #ff9900; }
+  .stat-card .label { font-size: 13px; color: #666; margin-top: 6px; }
+  .dashboard-row { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+
+  /* 面试配置 */
+  .config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .tag-select { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tag { padding: 6px 14px; border-radius: 20px; border: 1px solid #ddd; cursor: pointer; font-size: 13px; transition: all .2s; }
+  .tag:hover, .tag.selected { background: #ff9900; border-color: #ff9900; color: #111; font-weight: bold; }
+
+  /* 答题页 */
+  .progress-bar { background: #ddd; border-radius: 4px; height: 8px; margin-bottom: 20px; overflow: hidden; }
+  .progress-fill { background: #ff9900; height: 100%; border-radius: 4px; transition: width .5s; }
+  .question-box { background: #fff; border: 1px solid #ddd; padding: 24px; border-radius: 4px; margin-bottom: 16px; }
+  .question-num { font-size: 13px; color: #888; margin-bottom: 8px; }
+  .question-text { font-size: 16px; font-weight: bold; line-height: 1.6; margin-bottom: 12px; }
+  .answer-area { width: 100%; border: 1px solid #aaa; border-radius: 3px; padding: 12px; font-size: 14px; min-height: 120px; resize: vertical; outline: none; }
+  .answer-area:focus { border-color: #ff9900; }
+  .ai-comment { background: #fffbf0; border: 1px solid #febd69; border-radius: 4px; padding: 16px; margin-top: 12px; }
+  .ai-comment .ai-title { color: #ff9900; font-weight: bold; margin-bottom: 8px; }
+
+  /* 题库 */
+  .question-list-item {
+    background: #fff; border: 1px solid #ddd; border-radius: 4px; padding: 16px;
+    margin-bottom: 10px; display: flex; align-items: flex-start; gap: 16px; transition: box-shadow .2s;
+  }
+  .question-list-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+  .question-list-item .q-main { flex: 1; }
+  .question-list-item .q-title { font-size: 15px; font-weight: bold; margin-bottom: 6px; color: #0066c0; cursor: pointer; }
+  .question-list-item .q-title:hover { text-decoration: underline; }
+  .question-list-item .q-meta { font-size: 12px; color: #888; }
+
+  /* 社区 */
+  .article-item {
+    background: #fff; border: 1px solid #ddd; border-radius: 4px; padding: 16px;
+    margin-bottom: 10px; display: flex; gap: 16px; transition: box-shadow .2s;
+  }
+  .article-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+  .article-item .art-cover { width: 100px; height: 70px; background: #eee; border-radius: 3px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #aaa; font-size: 24px; }
+  .article-item .art-title { font-size: 15px; font-weight: bold; color: #0066c0; cursor: pointer; margin-bottom: 6px; }
+  .article-item .art-title:hover { text-decoration: underline; }
+  .article-item .art-meta { font-size: 12px; color: #888; }
+
+  /* 报告 */
+  .score-circle { width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, #ff9900, #f3a847); display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto 20px; }
+  .score-circle .score-num { font-size: 36px; font-weight: bold; color: #fff; }
+  .score-circle .score-label { font-size: 13px; color: #fff; }
+  .radar-placeholder { width: 100%; height: 200px; background: #f9f9f9; border: 1px dashed #ddd; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #aaa; font-size: 14px; margin-bottom: 16px; }
+
+  /* 面试结果通过状态横幅 */
+  .result-banner { border-radius: 8px; padding: 20px 28px; margin-bottom: 20px; display: flex; align-items: center; gap: 16px; }
+  .result-banner.pass { background: linear-gradient(135deg, #e8f5e9, #c8e6c9); border: 2px solid #067d62; }
+  .result-banner.pending { background: linear-gradient(135deg, #fff8e1, #ffecb3); border: 2px solid #ff9900; }
+  .result-banner.fail { background: linear-gradient(135deg, #fce4e4, #ffcdd2); border: 2px solid #c7511f; }
+  .result-banner .result-icon { font-size: 48px; flex-shrink: 0; }
+  .result-banner .result-text { flex: 1; }
+  .result-banner .result-title { font-size: 22px; font-weight: bold; margin-bottom: 4px; }
+  .result-banner.pass .result-title { color: #067d62; }
+  .result-banner.pending .result-title { color: #a05c00; }
+  .result-banner.fail .result-title { color: #c7511f; }
+  .result-banner .result-sub { font-size: 14px; color: #555; }
+
+  /* 评分进度条 */
+  .score-bar-wrap { display: flex; align-items: center; gap: 10px; }
+  .score-bar { flex: 1; height: 10px; background: #eee; border-radius: 5px; overflow: hidden; }
+  .score-bar-fill { height: 100%; border-radius: 5px; transition: width .6s; }
+  .score-bar-fill.high { background: #067d62; }
+  .score-bar-fill.mid { background: #ff9900; }
+  .score-bar-fill.low { background: #c7511f; }
+  .score-bar-val { font-size: 14px; font-weight: bold; width: 40px; text-align: right; flex-shrink: 0; }
+
+  /* 题目评分详情 */
+  .q-detail-item { border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 14px; overflow: hidden; }
+  .q-detail-header { background: #f9f9f9; padding: 12px 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; border-bottom: 1px solid #eee; }
+  .q-detail-header:hover { background: #f3f3f3; }
+  .q-detail-header .q-num-badge { background: #131921; color: #fff; border-radius: 4px; padding: 2px 8px; font-size: 13px; font-weight: bold; flex-shrink: 0; }
+  .q-detail-header .q-title-text { flex: 1; font-size: 14px; font-weight: bold; color: #111; }
+  .q-detail-header .q-score-tag { font-size: 15px; font-weight: bold; flex-shrink: 0; }
+  .q-detail-body { padding: 16px; display: none; }
+  .q-detail-body.open { display: block; }
+  .q-section-label { font-size: 12px; font-weight: bold; color: #888; text-transform: uppercase; margin-bottom: 6px; margin-top: 14px; }
+  .q-section-label:first-child { margin-top: 0; }
+  .q-answer-box { background: #f9f9f9; border: 1px solid #eee; border-radius: 4px; padding: 10px 14px; font-size: 13px; line-height: 1.8; color: #333; white-space: pre-wrap; }
+  .q-ref-toggle { color: #0066c0; cursor: pointer; font-size: 13px; display: inline-block; margin-top: 6px; }
+  .q-ref-box { display: none; background: #f0f7ff; border: 1px solid #b3d4f5; border-radius: 4px; padding: 10px 14px; font-size: 13px; line-height: 1.8; color: #333; margin-top: 8px; }
+  .q-skipped-mark { background: #fef9f0; border: 1px solid #febd69; border-radius: 4px; padding: 10px 14px; font-size: 13px; color: #a05c00; font-style: italic; }
+
+  /* 知识点模块 */
+  .module-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+  .module-card { background: #f9f9f9; border: 1px solid #eee; border-radius: 6px; padding: 14px; }
+  .module-card .mod-name { font-size: 13px; font-weight: bold; color: #333; margin-bottom: 6px; }
+  .module-card .mod-score { font-size: 22px; font-weight: bold; color: #ff9900; margin-bottom: 4px; }
+  .module-card .mod-meta { font-size: 12px; color: #888; }
+
+  /* 筛选按钮组 */
+  .filter-tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .filter-tab { padding: 5px 14px; border-radius: 20px; border: 1px solid #ddd; background: #fff; font-size: 13px; cursor: pointer; transition: all .2s; }
+  .filter-tab:hover, .filter-tab.active { background: #ff9900; border-color: #ff9900; color: #111; font-weight: bold; }
+
+  /* 动画 */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .page.active { animation: fadeIn .3s ease; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading { width: 30px; height: 30px; border: 3px solid #ddd; border-top-color: #ff9900; border-radius: 50%; animation: spin 1s linear infinite; margin: 20px auto; }
+
+  /* 响应式 */
+  @media (max-width: 768px) {
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .dashboard-row, .config-grid { grid-template-columns: 1fr; }
+    .navbar .search-bar { display: none; }
+  }
+
+  /* 侧边栏 */
+  .layout { display: flex; min-height: calc(100vh - 90px); margin-top: 90px; }
+  .sidebar { width: 200px; background: #fff; border-right: 1px solid #ddd; flex-shrink: 0; padding: 10px 0; }
+  .sidebar-item { padding: 10px 20px; font-size: 14px; cursor: pointer; color: #333; transition: background .2s; display: flex; align-items: center; gap: 8px; }
+  .sidebar-item:hover { background: #f3f3f3; }
+  .sidebar-item.active { background: #fff8ee; color: #ff9900; font-weight: bold; border-left: 3px solid #ff9900; }
+  .sidebar-group-title { padding: 8px 20px 4px; font-size: 12px; color: #888; font-weight: bold; text-transform: uppercase; }
+  .main-content { flex: 1; padding: 20px; overflow: auto; }
+</style>
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<nav class="navbar">
+  <div class="logo">🎯 面试模拟系统</div>
+  <!-- 搜索栏：仅登录后显示 -->
+  <div class="search-bar" id="navbar-search" style="display:none;">
+    <input type="text" placeholder="搜索岗位、题目、知识点...">
+    <button>🔍</button>
+  </div>
+  <!-- 功能链接：仅登录后显示 -->
+  <div class="nav-links" id="navbar-links" style="display:none;">
+    <a href="#" onclick="showPage('dashboard')">首页</a>
+    <a href="#" onclick="showPage('interview-config')">面试中心</a>
+    <a href="#" onclick="showPage('questions')">题库</a>
+    <a href="#" onclick="showPage('community')">社区</a>
+  </div>
+  <!-- 未登录：显示登录/注册按钮 -->
+  <button class="user-btn" id="navbar-login-btn" onclick="showPage('login')">👤 登录/注册</button>
+  <!-- 已登录：显示用户信息和退出 -->
+  <div id="navbar-user" style="display:none;align-items:center;gap:10px;">
+    <span style="color:#fff;font-size:13px;">👤 <span id="navbar-username">张同学</span></span>
+    <button class="user-btn" onclick="logout()">退出登录</button>
+  </div>
+</nav>
+
+<!-- 二级导航：仅登录后显示 -->
+<div class="subnav" id="subnav" style="display:none;">
+  <a href="#" onclick="showPage('dashboard')" id="nav-dashboard">📊 仪表盘</a>
+  <a href="#" onclick="showPage('interview-config')" id="nav-interview-config">🚀 发起面试</a>
+  <a href="#" onclick="showPage('interview-doing')" id="nav-interview-doing">📝 进行中</a>
+  <a href="#" onclick="showPage('report')" id="nav-report">📋 面试报告</a>
+  <a href="#" onclick="showPage('questions')" id="nav-questions">📚 题库练习</a>
+  <a href="#" onclick="showPage('community')" id="nav-community">💬 知识社区</a>
+  <a href="#" onclick="showPage('profile')" id="nav-profile">👤 个人中心</a>
+</div>
+
+<!-- 登录页 -->
+<div id="page-login" class="page active" style="padding-top:20px;margin-top:52px;">
+  <!-- 未登录时无二级导航，页面直接在顶部导航下方 -->
+  <div class="login-wrap">
+    <div class="login-logo">🎯 面试模拟系统</div>
+    <div class="card">
+      <div class="login-tabs">
+        <div class="login-tab active" onclick="switchLoginTab(this,'login-form')">登录</div>
+        <div class="login-tab" onclick="switchLoginTab(this,'register-form')">注册</div>
+      </div>
+      <!-- 登录表单 -->
+      <div id="login-form">
+        <div class="form-group">
+          <label>手机号 / 邮箱</label>
+          <input type="text" placeholder="请输入手机号或邮箱">
+        </div>
+        <div class="form-group">
+          <label>密码</label>
+          <input type="password" placeholder="请输入密码">
+        </div>
+        <button class="btn btn-primary" style="width:100%;padding:10px;" onclick="doLogin()">登 录</button>
+        <div style="text-align:right;margin-top:10px;font-size:13px;color:#0066c0;cursor:pointer;">忘记密码？</div>
+      </div>
+      <!-- 注册表单 -->
+      <div id="register-form" style="display:none;">
+        <div class="form-group"><label>用户名</label><input type="text" placeholder="请输入用户名（3-20位）"></div>
+        <div class="form-group"><label>手机号 / 邮箱</label><input type="text" placeholder="请输入手机号或邮箱"></div>
+        <div class="form-group"><label>密码</label><input type="password" placeholder="至少8位，包含字母和数字"></div>
+        <div class="form-group"><label>确认密码</label><input type="password" placeholder="再次输入密码"></div>
+        <button class="btn btn-primary" style="width:100%;padding:10px;" onclick="doRegister()">立即注册</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 仪表盘 -->
+<div id="page-dashboard" class="page">
+  <div class="layout">
+    <div class="sidebar">
+      <div class="sidebar-group-title">主导航</div>
+      <div class="sidebar-item active" onclick="showPage('dashboard')">📊 首页仪表盘</div>
+      <div class="sidebar-group-title">面试中心</div>
+      <div class="sidebar-item" onclick="showPage('interview-config')">🚀 发起面试</div>
+      <div class="sidebar-item" onclick="showPage('history')">📁 我的记录</div>
+      <div class="sidebar-item" onclick="showPage('report')">📋 面试报告</div>
+      <div class="sidebar-group-title">题库练习</div>
+      <div class="sidebar-item" onclick="showPage('questions')">📚 全部题目</div>
+      <div class="sidebar-item">⭐ 我的收藏</div>
+      <div class="sidebar-group-title">知识社区</div>
+      <div class="sidebar-item" onclick="showPage('community')">💬 社区首页</div>
+      <div class="sidebar-item">🤖 AI知识获取</div>
+      <div class="sidebar-group-title">个人</div>
+      <div class="sidebar-item" onclick="showPage('profile')">👤 个人中心</div>
+    </div>
+    <div class="main-content">
+      <h2 style="margin-bottom:20px;">👋 你好，张同学！今天也要继续加油备考～</h2>
+      <!-- 统计卡片 -->
+      <div class="stats-row">
+        <div class="stat-card"><div class="num">12</div><div class="label">累计面试次数</div></div>
+        <div class="stat-card"><div class="num">78</div><div class="label">平均得分</div></div>
+        <div class="stat-card"><div class="num">95</div><div class="label">最高得分</div></div>
+        <div class="stat-card"><div class="num">3</div><div class="label">连续练习天数</div></div>
+      </div>
+      <div class="dashboard-row">
+        <!-- 近期记录 -->
+        <div class="card">
+          <div class="card-title">近期面试记录</div>
+          <table style="width:100%;border-collapse:collapse;font-size:14px;">
+            <tr style="background:#f9f9f9;">
+              <th style="padding:8px;text-align:left;border-bottom:1px solid #eee;">岗位</th>
+              <th style="padding:8px;text-align:left;border-bottom:1px solid #eee;">轮次</th>
+              <th style="padding:8px;text-align:left;border-bottom:1px solid #eee;">得分</th>
+              <th style="padding:8px;text-align:left;border-bottom:1px solid #eee;">时间</th>
+              <th style="padding:8px;text-align:left;border-bottom:1px solid #eee;">操作</th>
+            </tr>
+            <tr><td style="padding:8px;border-bottom:1px solid #eee;">后端开发</td><td style="padding:8px;border-bottom:1px solid #eee;"><span class="badge badge-blue">一面</span></td><td style="padding:8px;border-bottom:1px solid #eee;font-weight:bold;color:#ff9900;">85</td><td style="padding:8px;border-bottom:1px solid #eee;color:#888;">2小时前</td><td style="padding:8px;border-bottom:1px solid #eee;"><button class="btn btn-secondary" style="padding:4px 10px;font-size:12px;" onclick="showPage('report')">查看报告</button></td></tr>
+            <tr><td style="padding:8px;border-bottom:1px solid #eee;">前端开发</td><td style="padding:8px;border-bottom:1px solid #eee;"><span class="badge badge-orange">二面</span></td><td style="padding:8px;border-bottom:1px solid #eee;font-weight:bold;color:#ff9900;">72</td><td style="padding:8px;border-bottom:1px solid #eee;color:#888;">昨天</td><td style="padding:8px;border-bottom:1px solid #eee;"><button class="btn btn-secondary" style="padding:4px 10px;font-size:12px;">查看报告</button></td></tr>
+            <tr><td style="padding:8px;">AI算法</td><td style="padding:8px;"><span class="badge badge-red">三面</span></td><td style="padding:8px;font-weight:bold;color:#067d62;">91</td><td style="padding:8px;color:#888;">3天前</td><td style="padding:8px;"><button class="btn btn-secondary" style="padding:4px 10px;font-size:12px;">查看报告</button></td></tr>
+          </table>
+        </div>
+        <!-- 推荐 -->
+        <div>
+          <div class="card">
+            <div class="card-title">🎯 今日推荐练习</div>
+            <div style="font-size:14px;line-height:2;">
+              <div style="padding:6px 0;border-bottom:1px solid #eee;cursor:pointer;color:#0066c0;">Redis 缓存穿透如何解决？</div>
+              <div style="padding:6px 0;border-bottom:1px solid #eee;cursor:pointer;color:#0066c0;">Vue2 响应式原理详解</div>
+              <div style="padding:6px 0;cursor:pointer;color:#0066c0;">MySQL 索引失效场景</div>
+            </div>
+            <button class="btn btn-primary" style="width:100%;margin-top:12px;" onclick="showPage('interview-config')">🚀 开始新的模拟面试</button>
+          </div>
+          <div class="card">
+            <div class="card-title">📈 得分趋势</div>
+            <div style="height:100px;background:#f9f9f9;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:13px;">📈 折线图（近10次得分）</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 面试配置页 -->
+<div id="page-interview-config" class="page">
+  <div class="layout">
+    <div class="sidebar">
+      <div class="sidebar-group-title">面试中心</div>
+      <div class="sidebar-item active">🚀 发起面试</div>
+      <div class="sidebar-item" onclick="showPage('history')">📁 我的记录</div>
+      <div class="sidebar-item" onclick="showPage('report')">📋 面试报告</div>
+    </div>
+    <div class="main-content">
+      <div class="card">
+        <div class="card-title">🚀 发起模拟面试</div>
+        <div class="config-grid">
+          <div>
+            <div class="form-group">
+              <label>🏢 目标岗位 <span style="color:red;">*</span></label>
+              <div class="tag-select" id="job-tags">
+                <div class="tag selected" onclick="toggleTag(this)">后端开发</div>
+                <div class="tag" onclick="toggleTag(this)">前端开发</div>
+                <div class="tag" onclick="toggleTag(this)">大数据工程师</div>
+                <div class="tag" onclick="toggleTag(this)">AI算法工程师</div>
+                <div class="tag" onclick="toggleTag(this)">会计/财务</div>
+                <div class="tag" onclick="toggleTag(this)">产品经理</div>
+                <div class="tag" onclick="toggleTag(this)">测试工程师</div>
+                <div class="tag" onclick="toggleTag(this)">运维工程师</div>
+                <div class="tag" onclick="toggleTag(this)">移动端开发</div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>📊 面试难度 <span style="color:red;">*</span></label>
+              <div class="tag-select">
+                <div class="tag" onclick="singleTag(this,'diff')">初级</div>
+                <div class="tag selected" onclick="singleTag(this,'diff')">中级</div>
+                <div class="tag" onclick="singleTag(this,'diff')">高级</div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="form-group">
+              <label>💼 工作经验 <span style="color:red;">*</span></label>
+              <div class="tag-select">
+                <div class="tag" onclick="singleTag(this,'exp')">应届生</div>
+                <div class="tag selected" onclick="singleTag(this,'exp')">1-3年</div>
+                <div class="tag" onclick="singleTag(this,'exp')">3-5年</div>
+                <div class="tag" onclick="singleTag(this,'exp')">5年以上</div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>🔄 面试轮次 <span style="color:red;">*</span></label>
+              <div class="tag-select">
+                <div class="tag selected" onclick="singleTag(this,'round')">一面（基础）</div>
+                <div class="tag" onclick="singleTag(this,'round')">二面（技术深度）</div>
+                <div class="tag" onclick="singleTag(this,'round')">三面（综合/HR）</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>🏷️ 重点方向（可多选）</label>
+          <div class="tag-select">
+            <div class="tag selected" onclick="toggleTag(this)">算法与数据结构</div>
+            <div class="tag selected" onclick="toggleTag(this)">数据库</div>
+            <div class="tag" onclick="toggleTag(this)">系统设计</div>
+            <div class="tag" onclick="toggleTag(this)">项目经验</div>
+            <div class="tag" onclick="toggleTag(this)">计算机网络</div>
+            <div class="tag" onclick="toggleTag(this)">操作系统</div>
+            <div class="tag" onclick="toggleTag(this)">框架原理</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>📝 补充说明（选填）</label>
+          <textarea placeholder="描述你的项目经验、技术栈等，帮助 AI 生成更精准的题目..." style="width:100%;padding:10px;border:1px solid #aaa;border-radius:3px;font-size:14px;min-height:80px;resize:vertical;"></textarea>
+        </div>
+        <div style="text-align:center;margin-top:10px;">
+          <button class="btn btn-primary" style="padding:12px 60px;font-size:16px;" onclick="startInterview()">🚀 发起面试</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 面试加载中 -->
+<div id="page-interview-loading" class="page">
+  <div style="text-align:center;padding:80px 20px;">
+    <div class="loading"></div>
+    <div style="font-size:18px;font-weight:bold;margin-top:20px;">🤖 AI 正在为你生成专属面试题...</div>
+    <div style="color:#888;margin-top:10px;font-size:14px;">根据你的配置（后端开发 · 中级 · 一面）精准搜索题目中</div>
+    <div id="loading-tips" style="margin-top:20px;padding:16px;background:#fff8ee;border-radius:4px;max-width:400px;margin-inline:auto;font-size:13px;color:#555;">💡 小贴士：面试前调整好状态，深呼吸，自信表达！</div>
+  </div>
+</div>
+
+<!-- 答题页 -->
+<div id="page-interview-doing" class="page">
+  <div class="layout">
+    <div class="sidebar">
+      <div style="padding:14px 16px;font-size:13px;font-weight:bold;color:#888;">题目导航</div>
+      <div id="q-nav"></div>
+    </div>
+    <div class="main-content">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div style="font-size:14px;color:#555;">🏢 后端开发 · 中级 · 一面</div>
+        <div style="font-size:14px;color:#c7511f;font-weight:bold;" id="timer">⏱ 45:00</div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progress" style="width:30%;"></div></div>
+      <div class="question-box">
+        <div class="question-num">第 3 题 / 共 10 题 · <span class="badge badge-orange">算法</span> <span class="badge badge-gray">中等</span></div>
+        <div class="question-text">请介绍 Redis 的持久化方式（RDB 和 AOF），以及各自的优缺点？</div>
+        <div style="font-size:13px;color:#888;margin-bottom:12px;">预计作答时间：3 分钟</div>
+        <textarea class="answer-area" id="answer-input" placeholder="请在此输入你的答案...支持代码块（```代码```）"></textarea>
+        <div style="display:flex;gap:10px;margin-top:12px;">
+          <button class="btn btn-primary" onclick="submitAnswer()">✅ 提交答案</button>
+          <button class="btn btn-secondary" onclick="nextQuestion()">⏭ 跳过此题</button>
+        </div>
+        <div class="ai-comment" id="ai-comment" style="display:none;">
+          <div class="ai-title">🤖 AI 点评</div>
+          <div><strong>得分：</strong><span style="color:#ff9900;font-size:18px;font-weight:bold;">82</span> / 100</div>
+          <div style="margin-top:8px;"><strong>✅ 优点：</strong>基本概念描述准确，区分了 RDB 和 AOF 的触发机制。</div>
+          <div style="margin-top:6px;"><strong>⚠️ 不足：</strong>未提及 AOF 重写机制（BGREWRITEAOF）和混合持久化策略。</div>
+          <div style="margin-top:10px;">
+            <span style="color:#0066c0;cursor:pointer;font-size:13px;" onclick="toggleRef()">📖 查看参考答案 ▼</span>
+            <div id="ref-answer" style="display:none;margin-top:8px;padding:10px;background:#f9f9f9;border-radius:4px;font-size:13px;line-height:1.8;">
+              RDB 是快照持久化，定期将内存数据序列化到磁盘，恢复速度快但可能丢失最后一次快照之间的数据；AOF 是追加日志，每次写操作都记录命令，数据安全性高但文件体积大；Redis 4.0+ 支持混合持久化，兼顾两者优势。
+            </div>
+          </div>
+          <button class="btn btn-primary" style="margin-top:12px;" onclick="nextQuestion()">下一题 ➡</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 面试报告 -->
+<div id="page-report" class="page">
+  <div class="layout">
+    <div class="sidebar">
+      <div class="sidebar-item" onclick="showPage('dashboard')">📊 仪表盘</div>
+      <div class="sidebar-item active">📋 面试报告</div>
+      <div class="sidebar-item" onclick="showPage('interview-config')">🚀 再次面试</div>
+    </div>
+    <div class="main-content">
+      <div class="card" style="text-align:center;">
+        <div class="card-title" style="text-align:left;">📋 面试报告 - 后端开发 · 一面 · 中级</div>
+        <div class="score-circle"><div class="score-num">85</div><div class="score-label">良好</div></div>
+        <div style="display:flex;justify-content:center;gap:30px;margin-bottom:20px;font-size:14px;">
+          <div><span style="color:#888;">作答题数：</span><strong>9/10</strong></div>
+          <div><span style="color:#888;">用时：</span><strong>42分钟</strong></div>
+          <div><span style="color:#888;">岗位：</span><strong>后端开发</strong></div>
+        </div>
+        <div class="radar-placeholder">📊 知识点得分雷达图（算法 82 | 数据库 90 | 网络 78 | 框架 88 | 设计 75）</div>
+      </div>
+      <div class="card">
+        <div class="card-title">📝 各题得分详情</div>
+        <div style="font-size:14px;">
+          <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee;">
+            <div style="flex:1;"><span class="badge badge-blue" style="margin-right:8px;">Q1</span>请做一下自我介绍</div>
+            <div style="color:#ff9900;font-weight:bold;width:50px;text-align:right;">90分</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee;">
+            <div style="flex:1;"><span class="badge badge-blue" style="margin-right:8px;">Q2</span>TCP 和 UDP 的区别？</div>
+            <div style="color:#ff9900;font-weight:bold;width:50px;text-align:right;">85分</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee;">
+            <div style="flex:1;"><span class="badge badge-blue" style="margin-right:8px;">Q3</span>Redis 持久化方式</div>
+            <div style="color:#ff9900;font-weight:bold;width:50px;text-align:right;">82分</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:10px 0;">
+            <div style="flex:1;"><span class="badge badge-gray" style="margin-right:8px;">Q10</span>手写单例模式</div>
+            <div style="color:#888;font-weight:bold;width:50px;text-align:right;">跳过</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">💡 AI 改进建议</div>
+        <div style="font-size:14px;line-height:2;color:#333;">
+          <div>✅ <strong>优势：</strong>基础知识掌握扎实，Redis 和数据库相关题目表现优秀。</div>
+          <div>⚠️ <strong>待提升：</strong>系统设计类题目表达较薄弱，建议多练习分布式架构设计。</div>
+          <div>📚 <strong>推荐学习：</strong>
+            <span style="color:#0066c0;cursor:pointer;">《分布式系统设计入门》</span>、
+            <span style="color:#0066c0;cursor:pointer;">《JVM调优实践》</span>
+          </div>
+        </div>
+        <div style="margin-top:16px;display:flex;gap:10px;">
+          <button class="btn btn-primary" onclick="showPage('interview-config')">🔁 再来一次</button>
+          <button class="btn btn-secondary">📄 导出 PDF</button>
+          <button class="btn btn-secondary">🔗 分享报告</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 题库 -->
+<div id="page-questions" class="page">
+  <div class="layout">
+    <div class="sidebar">
+      <div class="sidebar-group-title">题库分类</div>
+      <div class="sidebar-item active">📚 全部题目</div>
+      <div class="sidebar-item">💻 后端开发</div>
+      <div class="sidebar-item">🌐 前端开发</div>
+      <div class="sidebar-item">📊 大数据</div>
+      <div class="sidebar-item">🤖 AI算法</div>
+      <div class="sidebar-item">💰 会计/财务</div>
+      <div class="sidebar-item">🧪 算法专题</div>
+      <div class="sidebar-item">🏗️ 系统设计</div>
+      <div class="sidebar-item">⭐ 我的收藏</div>
+    </div>
+    <div class="main-content">
+      <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center;">
+        <input type="text" placeholder="搜索题目关键词..." style="flex:1;padding:8px 12px;border:1px solid #aaa;border-radius:3px;font-size:14px;">
+        <select style="padding:8px;border:1px solid #aaa;border-radius:3px;font-size:14px;">
+          <option>全部难度</option><option>初级</option><option>中级</option><option>高级</option>
+        </select>
+        <select style="padding:8px;border:1px solid #aaa;border-radius:3px;font-size:14px;">
+          <option>全部类型</option><option>基础知识</option><option>算法</option><option>系统设计</option>
+        </select>
+        <button class="btn btn-primary">搜索</button>
+      </div>
+      <div class="question-list-item">
+        <div class="q-main">
+          <div class="q-title">请解释 Java 中 HashMap 和 HashTable 的区别？</div>
+          <div class="q-meta"><span class="badge badge-blue" style="margin-right:6px;">后端开发</span><span class="badge badge-orange">中级</span> · 知识点：集合框架 · 作答：1.2k次 · 平均分：78</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+          <button class="btn btn-primary" style="padding:6px 14px;font-size:13px;">练习</button>
+          <button class="btn btn-secondary" style="padding:6px 14px;font-size:13px;">⭐ 收藏</button>
+        </div>
+      </div>
+      <div class="question-list-item">
+        <div class="q-main">
+          <div class="q-title">MySQL 中 B+ 树索引的工作原理是什么？</div>
+          <div class="q-meta"><span class="badge badge-blue" style="margin-right:6px;">后端开发</span><span class="badge badge-red">高级</span> · 知识点：数据库 · 作答：980次 · 平均分：72</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+          <button class="btn btn-primary" style="padding:6px 14px;font-size:13px;">练习</button>
+          <button class="btn btn-secondary" style="padding:6px 14px;font-size:13px;">⭐ 收藏</button>
+        </div>
+      </div>
+      <div class="question-list-item">
+        <div class="q-main">
+          <div class="q-title">Vue2 双向绑定原理（Object.defineProperty）详解</div>
+          <div class="q-meta"><span class="badge badge-green" style="margin-right:6px;">前端开发</span><span class="badge badge-orange">中级</span> · 知识点：框架原理 · 作答：2.1k次 · 平均分：81</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+          <button class="btn btn-primary" style="padding:6px 14px;font-size:13px;">练习</button>
+          <button class="btn btn-secondary" style="padding:6px 14px;font-size:13px;">⭐ 收藏</button>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:16px;">
+        <button class="btn btn-secondary">上一页</button>
+        <span style="padding:0 16px;font-size:14px;color:#555;">第 1 页 / 共 28 页</span>
+        <button class="btn btn-secondary">下一页</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 知识社区 -->
+<div id="page-community" class="page">
+  <div class="layout">
+    <div class="sidebar">
+      <div class="sidebar-group-title">社区专区</div>
+      <div class="sidebar-item active">💬 社区首页</div>
+      <div class="sidebar-item">💻 后端开发专区</div>
+      <div class="sidebar-item">🌐 前端开发专区</div>
+      <div class="sidebar-item">📊 大数据专区</div>
+      <div class="sidebar-item">🤖 AI算法专区</div>
+      <div class="sidebar-item">💰 会计/财务专区</div>
+      <div class="sidebar-item">🤖 AI知识获取</div>
+      <div class="sidebar-item">📌 我的收藏</div>
+    </div>
+    <div class="main-content">
+      <div style="display:flex;gap:10px;margin-bottom:16px;">
+        <input type="text" placeholder="输入想了解的知识点，让 AI 为你生成文章..." style="flex:1;padding:8px 12px;border:1px solid #aaa;border-radius:3px;font-size:14px;">
+        <button class="btn btn-primary" onclick="generateArticle()">🤖 AI 生成</button>
+        <button class="btn btn-secondary">发布文章</button>
+      </div>
+      <div id="ai-generating" style="display:none;text-align:center;padding:20px;">
+        <div class="loading"></div>
+        <div style="color:#888;font-size:14px;margin-top:10px;">AI 正在生成文章...</div>
+      </div>
+      <div class="article-item">
+        <div class="art-cover">📖</div>
+        <div>
+          <div class="art-title">【后端】Redis 分布式锁完全指南：从原理到实战</div>
+          <div style="font-size:13px;color:#555;line-height:1.8;margin-bottom:6px;">本文深入讲解 Redis 分布式锁的实现原理，包括 SETNX 命令、Redlock 算法、以及在 SpringBoot 中的实际应用...</div>
+          <div class="art-meta"><span class="badge badge-blue" style="margin-right:6px;">后端开发</span> 🤖 AI生成 · 👍 238 · ⭐ 156 · 💬 42 · 1小时前</div>
+        </div>
+      </div>
+      <div class="article-item">
+        <div class="art-cover">📖</div>
+        <div>
+          <div class="art-title">【前端】Vue3 Composition API vs Options API 深度对比</div>
+          <div style="font-size:13px;color:#555;line-height:1.8;margin-bottom:6px;">本文从代码组织、类型支持、逻辑复用等维度对比两种 API 风格，帮你做出正确的技术选型...</div>
+          <div class="art-meta"><span class="badge badge-green" style="margin-right:6px;">前端开发</span> 🤖 AI生成 · 👍 189 · ⭐ 103 · 💬 31 · 3小时前</div>
+        </div>
+      </div>
+      <div class="article-item">
+        <div class="art-cover">📖</div>
+        <div>
+          <div class="art-title">【大数据】Spark 与 Flink 流批处理架构选型分析</div>
+          <div style="font-size:13px;color:#555;line-height:1.8;margin-bottom:6px;">详细分析 Spark Streaming 和 Flink 在实时计算场景下的性能差异、容错机制和适用场景...</div>
+          <div class="art-meta"><span class="badge badge-orange" style="margin-right:6px;">大数据</span> 🤖 AI生成 · 👍 145 · ⭐ 88 · 💬 19 · 昨天</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 个人中心 -->
+<div id="page-profile" class="page">
+  <div class="layout">
+    <div class="sidebar">
+      <div class="sidebar-group-title">个人中心</div>
+      <div class="sidebar-item active">👤 个人信息</div>
+      <div class="sidebar-item" onclick="showPage('history')">📁 面试历史</div>
+      <div class="sidebar-item">📈 成长轨迹</div>
+      <div class="sidebar-item">⭐ 我的收藏</div>
+      <div class="sidebar-item">🔒 修改密码</div>
+    </div>
+    <div class="main-content">
+      <div class="card" style="display:flex;gap:24px;align-items:flex-start;">
+        <div style="text-align:center;">
+          <div style="width:80px;height:80px;border-radius:50%;background:#ff9900;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:10px;">😎</div>
+          <button class="btn btn-secondary" style="font-size:12px;padding:4px 10px;">更换头像</button>
+        </div>
+        <div style="flex:1;">
+          <div class="card-title">基本信息</div>
+          <div class="config-grid">
+            <div class="form-group"><label>昵称</label><input type="text" value="张同学"></div>
+            <div class="form-group"><label>手机号</label><input type="text" value="138****8888" disabled style="background:#f9f9f9;"></div>
+            <div class="form-group"><label>邮箱</label><input type="text" value="zhang@example.com"></div>
+            <div class="form-group"><label>目标岗位</label><input type="text" value="后端开发工程师"></div>
+          </div>
+          <div class="form-group"><label>个人简介</label><textarea style="width:100%;padding:8px;border:1px solid #aaa;border-radius:3px;font-size:14px;min-height:60px;resize:vertical;">热爱编程，正在备战秋招，目标大厂后端！</textarea></div>
+          <button class="btn btn-primary">保存修改</button>
+        </div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="num">12</div><div class="label">累计面试</div></div>
+        <div class="stat-card"><div class="num">78</div><div class="label">平均得分</div></div>
+        <div class="stat-card"><div class="num">95</div><div class="label">最高得分</div></div>
+        <div class="stat-card"><div class="num">26</div><div class="label">题目收藏</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 面试历史 -->
+<div id="page-history" class="page">
+  <div class="layout">
+    <div class="sidebar">
+      <div class="sidebar-item" onclick="showPage('dashboard')">📊 仪表盘</div>
+      <div class="sidebar-item active">📁 面试历史</div>
+      <div class="sidebar-item" onclick="showPage('report')">📋 报告详情</div>
+    </div>
+    <div class="main-content">
+      <div class="card">
+        <div class="card-title">📁 我的面试历史</div>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;">
+          <tr style="background:#f9f9f9;">
+            <th style="padding:10px;text-align:left;border-bottom:1px solid #eee;">时间</th>
+            <th style="padding:10px;text-align:left;border-bottom:1px solid #eee;">岗位</th>
+            <th style="padding:10px;text-align:left;border-bottom:1px solid #eee;">轮次</th>
+            <th style="padding:10px;text-align:left;border-bottom:1px solid #eee;">难度</th>
+            <th style="padding:10px;text-align:left;border-bottom:1px solid #eee;">得分</th>
+            <th style="padding:10px;text-align:left;border-bottom:1px solid #eee;">操作</th>
+          </tr>
+          <tr><td style="padding:10px;border-bottom:1px solid #eee;">2026-07-23 16:30</td><td style="padding:10px;border-bottom:1px solid #eee;">后端开发</td><td style="padding:10px;border-bottom:1px solid #eee;"><span class="badge badge-blue">一面</span></td><td style="padding:10px;border-bottom:1px solid #eee;">中级</td><td style="padding:10px;border-bottom:1px solid #eee;font-weight:bold;color:#ff9900;">85</td><td style="padding:10px;border-bottom:1px solid #eee;"><button class="btn btn-secondary" style="padding:4px 10px;font-size:12px;" onclick="showPage('report')">报告</button> <button class="btn btn-primary" style="padding:4px 10px;font-size:12px;" onclick="showPage('interview-config')">再来一次</button></td></tr>
+          <tr><td style="padding:10px;border-bottom:1px solid #eee;">2026-07-22 20:15</td><td style="padding:10px;border-bottom:1px solid #eee;">前端开发</td><td style="padding:10px;border-bottom:1px solid #eee;"><span class="badge badge-orange">二面</span></td><td style="padding:10px;border-bottom:1px solid #eee;">中级</td><td style="padding:10px;border-bottom:1px solid #eee;font-weight:bold;color:#ff9900;">72</td><td style="padding:10px;border-bottom:1px solid #eee;"><button class="btn btn-secondary" style="padding:4px 10px;font-size:12px;">报告</button></td></tr>
+          <tr><td style="padding:10px;">2026-07-20 14:00</td><td style="padding:10px;">AI算法</td><td style="padding:10px;"><span class="badge badge-red">三面</span></td><td style="padding:10px;">高级</td><td style="padding:10px;font-weight:bold;color:#067d62;">91</td><td style="padding:10px;"><button class="btn btn-secondary" style="padding:4px 10px;font-size:12px;">报告</button></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== 登录状态管理 =====
+var isLoggedIn = false;
+var currentUser = { name: '张同学' };
+
+// 需要登录才能访问的页面列表
+var protectedPages = ['dashboard','interview-config','interview-loading','interview-doing','report','questions','community','profile','history'];
+
+// 更新导航栏显示状态
+function updateNavbar() {
+  var loginBtn    = document.getElementById('navbar-login-btn');
+  var userArea    = document.getElementById('navbar-user');
+  var links       = document.getElementById('navbar-links');
+  var searchBar   = document.getElementById('navbar-search');
+  var subnav      = document.getElementById('subnav');
+
+  if (isLoggedIn) {
+    loginBtn.style.display  = 'none';
+    userArea.style.display  = 'flex';
+    links.style.display     = 'flex';
+    searchBar.style.display = 'flex';
+    subnav.style.display    = 'flex';
+    document.getElementById('navbar-username').textContent = currentUser.name;
+    // 已登录时所有 .page 顶部留出二级导航高度
+    document.querySelectorAll('.page').forEach(function(p) {
+      p.style.marginTop = '';
+    });
+    document.getElementById('page-login').style.marginTop = '90px';
+  } else {
+    loginBtn.style.display  = 'block';
+    userArea.style.display  = 'none';
+    links.style.display     = 'none';
+    searchBar.style.display = 'none';
+    subnav.style.display    = 'none';
+    // 未登录时页面紧接顶部导航（无二级导航）
+    document.querySelectorAll('.page').forEach(function(p) {
+      p.style.marginTop = '52px';
+    });
+  }
+}
+
+// 页面切换（含路由守卫）
+function showPage(name) {
+  // 路由守卫：未登录访问受保护页面 → 重定向到登录页
+  if (!isLoggedIn && protectedPages.indexOf(name) !== -1) {
+    alert('请先登录后再访问该功能');
+    name = 'login';
+  }
+  // 已登录访问登录页 → 重定向到仪表盘
+  if (isLoggedIn && name === 'login') {
+    name = 'dashboard';
+  }
+
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  var el = document.getElementById('page-' + name);
+  if (el) el.classList.add('active');
+  // 更新二级导航高亮
+  document.querySelectorAll('.subnav a').forEach(function(a) { a.classList.remove('active'); });
+  var navEl = document.getElementById('nav-' + name);
+  if (navEl) navEl.classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// 登录操作（原型演示：直接模拟登录成功）
+function doLogin() {
+  isLoggedIn = true;
+  updateNavbar();
+  showPage('dashboard');
+}
+
+// 注册操作（原型演示：直接模拟注册并登录）
+function doRegister() {
+  isLoggedIn = true;
+  updateNavbar();
+  showPage('dashboard');
+}
+
+// 退出登录
+function logout() {
+  isLoggedIn = false;
+  updateNavbar();
+  showPage('login');
+}
+
+// 初始化：未登录态
+updateNavbar();
+
+// ===== 登录/注册 tab 切换 =====
+function switchLoginTab(tab, formId) {
+  document.querySelectorAll('.login-tab').forEach(function(t) { t.classList.remove('active'); });
+  tab.classList.add('active');
+  document.getElementById('login-form').style.display = formId === 'login-form' ? 'block' : 'none';
+  document.getElementById('register-form').style.display = formId === 'register-form' ? 'block' : 'none';
+}
+
+// 标签单选
+function singleTag(el, group) {
+  el.closest('.tag-select').querySelectorAll('.tag').forEach(function(t) { t.classList.remove('selected'); });
+  el.classList.add('selected');
+}
+// 标签多选
+function toggleTag(el) {
+  el.classList.toggle('selected');
+}
+
+// 发起面试 → 显示加载，3秒后跳转答题
+function startInterview() {
+  showPage('interview-loading');
+  var tips = ["💡 一面重点考察基础知识，要思路清晰！", "💡 遇到不会的题目可以先说思路", "💡 Redis、数据库、网络是后端必考三件套", "💡 回答前先停顿2秒整理思路"];
+  var i = 0;
+  var interval = setInterval(function() {
+    document.getElementById('loading-tips').textContent = tips[i++ % tips.length];
+  }, 1000);
+  setTimeout(function() {
+    clearInterval(interval);
+    initQuestionNav();
+    showPage('interview-doing');
+    startTimer();
+  }, 3000);
+}
+
+// 初始化题目导航
+function initQuestionNav() {
+  var nav = document.getElementById('q-nav');
+  nav.innerHTML = '';
+  for (var i = 1; i <= 10; i++) {
+    var div = document.createElement('div');
+    div.className = 'sidebar-item' + (i === 3 ? ' active' : '');
+    div.style.fontSize = '13px';
+    div.innerHTML = '第' + i + '题';
+    if (i < 3) div.style.color = '#067d62';
+    nav.appendChild(div);
+  }
+}
+
+// 提交答案
+function submitAnswer() {
+  var input = document.getElementById('answer-input');
+  if (!input.value.trim()) { alert('请先输入答案！'); return; }
+  document.getElementById('ai-comment').style.display = 'block';
+  input.disabled = true;
+  document.getElementById('progress').style.width = '40%';
+}
+
+// 下一题
+function nextQuestion() {
+  document.getElementById('ai-comment').style.display = 'none';
+  document.getElementById('answer-input').disabled = false;
+  document.getElementById('answer-input').value = '';
+}
+
+// 查看参考答案
+function toggleRef() {
+  var ref = document.getElementById('ref-answer');
+  ref.style.display = ref.style.display === 'none' ? 'block' : 'none';
+}
+
+// 倒计时
+var timeLeft = 2700;
+var timerInterval;
+function startTimer() {
+  clearInterval(timerInterval);
+  timerInterval = setInterval(function() {
+    timeLeft--;
+    if (timeLeft <= 0) { clearInterval(timerInterval); return; }
+    var m = Math.floor(timeLeft / 60);
+    var s = timeLeft % 60;
+    var el = document.getElementById('timer');
+    if (el) el.textContent = '⏱ ' + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+    if (timeLeft <= 300) { if (el) el.style.color = '#c7511f'; }
+  }, 1000);
+}
+
+// AI生成文章
+function generateArticle() {
+  var gen = document.getElementById('ai-generating');
+  gen.style.display = 'block';
+  setTimeout(function() { gen.style.display = 'none'; }, 2500);
+}
+</script>
+</body>
+</html>

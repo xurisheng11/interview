@@ -98,13 +98,18 @@ func doChat(body []byte) (string, error) {
 }
 
 // ---- 题目生成 ----
-
-func GenerateQuestions(cfg *model.InterviewConfig) ([]model.Question, error) {
+// resumeContext 为可选参数，传入时会附加到 prompt 中，使题目与候选人简历强关联
+func GenerateQuestions(cfg *model.InterviewConfig, resumeContext ...string) ([]model.Question, error) {
 	roundReq := getRoundRequirement(cfg.Round)
 	count := config.Cfg.InterviewQuestionCount
 
 	// 获取面试形式描述
 	interviewTypeDesc := getInterviewTypeDesc(cfg.InterviewTypes)
+
+	resumeBlock := ""
+	if len(resumeContext) > 0 && resumeContext[0] != "" {
+		resumeBlock = resumeContext[0]
+	}
 
 	prompt := fmt.Sprintf(`你是一位资深技术面试官，请为以下面试场景生成 %d 道面试题目。
 
@@ -116,6 +121,7 @@ func GenerateQuestions(cfg *model.InterviewConfig) ([]model.Question, error) {
 - 重点方向：%s
 - 补充说明：%s
 - 面试形式：%s
+%s
 
 题目构成要求：
 %s
@@ -133,6 +139,7 @@ type 取值：basic/algorithm/design/hr`,
 		strings.Join(cfg.FocusAreas, "、"),
 		cfg.Remark,
 		interviewTypeDesc,
+		resumeBlock,
 		roundReq,
 	)
 

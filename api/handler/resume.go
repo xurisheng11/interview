@@ -64,7 +64,7 @@ func UploadResume(c *gin.Context) {
 	// 提取文本
 	rawText, err := service.ExtractTextFromFile(data, mimeType)
 	if err != nil {
-		response.BadRequest(c, "无法读取文件内容："+err.Error()+"，请确认文件可正常打开")
+		response.BadRequest(c, "无法读取文件内容："+err.Error())
 		return
 	}
 

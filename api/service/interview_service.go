@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -12,9 +13,9 @@ import (
 
 type CreateInterviewReq struct {
 	JobTitle        string   `json:"jobTitle" binding:"required"`
-	Difficulty      string   `json:"difficulty" binding:"required"`
-	Experience      string   `json:"experience" binding:"required"`
-	Round          string   `json:"round" binding:"required"`
+	Difficulty      string   `json:"difficulty" binding:"required"` // easy/medium/hard
+	Experience      string   `json:"experience" binding:"required"` // fresh/1-3/3-5/5+
+	Round           string   `json:"round" binding:"required"`      // round1/round2/round3
 	FocusAreas     []string `json:"focusAreas"`
 	Remark         string   `json:"remark"`
 	Mode           string   `json:"mode"` // "text" | "video"，默认 "text"
@@ -26,6 +27,9 @@ type CreateInterviewReq struct {
 	ThinkTime       int      `json:"thinkTime"`       // 思考时间(秒)
 	VirtualBackground bool  `json:"virtualBackground"` // 虚拟背景
 	BgStyle         string   `json:"bgStyle"`        // 背景样式: office, blue, gray, blur
+
+	// 简历关联（可选，传了则生成题目时注入简历上下文）
+	ResumeID        string   `json:"resumeId"`
 }
 
 type SubmitAnswerReq struct {
@@ -36,7 +40,37 @@ type SubmitAnswerReq struct {
 	VerbalTics      []string               `json:"verbalTics,omitempty"`    // 识别到的口头禅
 }
 
-// CreateInterview 创建面试（含题目生成）
+// formatResumeContext 将简历结构化内容格式化为 AI prompt 上下文
+func formatResumeContext(content *model.ResumeContent) string {
+	var sb strings.Builder
+	sb.WriteString("\n\n【候选人简历背景】（请在出题时围绕以下经历深挖）\n")
+
+	if content.JobTitle != "" {
+		sb.WriteString(fmt.Sprintf("目标岗位：%s\n", content.JobTitle))
+	}
+
+	if len(content.WorkExperience) > 0 {
+		sb.WriteString("工作经历：\n")
+		for _, w := range content.WorkExperience {
+			sb.WriteString(fmt.Sprintf("  - [%s @ %s (%s)]: %s\n", w.Position, w.Company, w.Duration, w.Desc))
+		}
+	}
+
+	if len(content.Projects) > 0 {
+		sb.WriteString("项目经历：\n")
+		for _, p := range content.Projects {
+			sb.WriteString(fmt.Sprintf("  - [%s | 角色: %s | 技术栈: %s]: %s\n", p.Name, p.Role, p.Stack, p.Desc))
+		}
+	}
+
+	if len(content.Skills) > 0 {
+		sb.WriteString(fmt.Sprintf("技能关键词：%s\n", strings.Join(content.Skills, "、")))
+	}
+
+	return sb.String()
+}
+
+// CreateInterview 创建面试（含题目生成，可选注入简历上下文）
 func CreateInterview(userID string, req *CreateInterviewReq) (*model.InterviewSession, error) {
 	cfg := &model.InterviewConfig{
 		JobTitle:   req.JobTitle,
@@ -79,15 +113,26 @@ func CreateInterview(userID string, req *CreateInterviewReq) (*model.InterviewSe
 		BgStyle:        req.BgStyle,
 	}
 
-	// 1. 查题目缓存
+	// 1. 如果传了简历 ID，读取简历内容注入到题目生成
+	var resumeContext string
+	if req.ResumeID != "" {
+		if r, err := repository.GetResume(req.ResumeID); err == nil && r != nil && r.UserID == userID {
+			if len(r.ParsedContent.Projects) > 0 || len(r.ParsedContent.WorkExperience) > 0 || len(r.ParsedContent.Skills) > 0 {
+				resumeContext = formatResumeContext(&r.ParsedContent)
+				session.ResumeID = req.ResumeID
+			}
+		}
+	}
+
+	// 2. 查题目缓存
 	questions, err := repository.GetQuestionsCache(cfg)
 	if err != nil || questions == nil {
-		// 2. 调 DeepSeek 生成
-		questions, err = GenerateQuestions(cfg)
+		// 3. 调 DeepSeek 生成（注入简历上下文）
+		questions, err = GenerateQuestions(cfg, resumeContext)
 		if err != nil {
 			return nil, fmt.Errorf("题目生成失败: %w", err)
 		}
-		// 3. 写缓存
+		// 4. 写缓存
 		_ = repository.SetQuestionsCache(cfg, questions)
 	}
 

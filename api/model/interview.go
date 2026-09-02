@@ -8,7 +8,8 @@ import (
 // InterviewConfig 面试配置
 type InterviewConfig struct {
 	JobTitle       string   `json:"jobTitle"`
-	Difficulty     string   `json:"difficulty"`   // junior/middle/senior
+// Difficulty: easy/medium/hard（与题目难度对齐）
+	Difficulty     string   `json:"difficulty"`   // easy/medium/hard
 	Experience     string   `json:"experience"`   // fresh/1-3/3-5/5+
 	Round          string   `json:"round"`        // round1/round2/round3
 	FocusAreas     []string `json:"focusAreas"`
@@ -72,6 +73,7 @@ type InterviewSession struct {
 	ThinkTime           int      `json:"thinkTime"`           // 思考时间(秒)
 	VirtualBackground   bool     `json:"virtualBackground"`    // 虚拟背景
 	BgStyle             string   `json:"bgStyle"`             // 背景样式
+	ResumeID            string   `json:"resumeId,omitempty"`  // 关联简历ID（用于简历关联出题）
 }
 
 func (s *InterviewSession) ToJSON() (string, error) {

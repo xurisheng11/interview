@@ -64,7 +64,7 @@
         <div class="result-company">{{ result.company }}</div>
         <div class="result-meta">
           <el-tag type="primary" v-if="result.jobTitle">{{ result.jobTitle }}</el-tag>
-          <el-tag :type="difficultyTagType(result.difficulty)">难度：{{ result.difficulty }}</el-tag>
+          <el-tag :type="difficultyTagType(result.difficulty)">难度：{{ difficultyLabel(result.difficulty) }}</el-tag>
           <el-button type="primary" size="small" @click="startInterview">🚀 发起模拟面试</el-button>
         </div>
       </div>
@@ -311,6 +311,11 @@ export default {
       } finally {
         this.answerLoading = false
       }
+    },
+
+    difficultyLabel(d) {
+      const map = { easy: '简单', medium: '中等', hard: '困难' }
+      return map[d] || d || '未知'
     }
   }
 }

@@ -14,12 +14,40 @@
 
       <!-- 语音识别状态 -->
       <div class="speech-status-row">
-        <SpeechIndicator 
-          :stream="mediaStream" 
-          :active="isSpeechActive" 
-          :supported="isSpeechSupported" 
+        <SpeechIndicator
+          :stream="mediaStream"
+          :active="isSpeechActive"
+          :supported="isSpeechSupported"
         />
       </div>
+
+      <!-- 口头禅实时监控面板 -->
+      <div v-if="isSpeechActive && Object.keys(currentTicCount).length > 0" class="tic-panel">
+        <div class="tic-panel-title">口头禅监控</div>
+        <div
+          v-for="(count, tic) in currentTicCount"
+          :key="tic"
+          class="tic-item"
+          :class="{ 'tic-warn': count >= 3 }"
+        >
+          <span class="tic-name">{{ tic }}</span>
+          <span class="tic-badge" :class="{ 'badge-warn': count >= 3 }">{{ count }}次</span>
+        </div>
+      </div>
+
+      <!-- 口头禅警告弹窗（首次触发时显示一次） -->
+      <transition name="el-fade-in">
+        <div v-if="ticAlertVisible" class="tic-alert-box">
+          <div class="tic-alert-icon">!</div>
+          <div class="tic-alert-text">
+            检测到 <strong>{{ latestTicAlert.tic }}</strong> 已说 <strong>{{ latestTicAlert.count }}</strong> 次
+          </div>
+          <div class="tic-alert-hint">注意控制口头禅，尝试用停顿代替</div>
+          <el-button size="mini" type="warning" class="tic-alert-close" @click="ticAlertVisible = false">
+            我知道了
+          </el-button>
+        </div>
+      </transition>
     </div>
 
     <!-- 右侧答题区 -->
@@ -46,7 +74,7 @@
         <div class="question-header">
           <span class="q-index">第 {{ currentIdx + 1 }} 题</span>
           <span class="q-difficulty" :class="'diff-' + currentQuestion.difficulty">
-            {{ currentQuestion.difficulty || '中等' }}
+            {{ diffLabel(currentQuestion.difficulty) }}
           </span>
           <el-tag
             v-for="tag in (currentQuestion.tags || [])"
@@ -63,7 +91,7 @@
       <!-- 答案输入区（未提交） -->
       <div class="answer-area" v-if="!currentAnswerState.submitted && !currentAnswerState.skipped">
         <div class="answer-label">
-          📝 你的答案
+          你的答案
           <span class="hint">（语音自动填入，也可手动编辑）</span>
         </div>
         <textarea
@@ -133,25 +161,25 @@
         <!-- 非语言指标 -->
         <div v-if="currentAnswerState.nonVerbalMetrics" class="metrics-row">
           <span class="metric-item">
-            🗣️ 语速：{{ currentAnswerState.nonVerbalMetrics.speechRate }} 字/分钟
+            语速：{{ currentAnswerState.nonVerbalMetrics.speechRate }} 字/分钟
           </span>
           <span class="metric-item">
-            ⏸️ 停顿：{{ currentAnswerState.nonVerbalMetrics.pauseCount }} 次
+            停顿：{{ currentAnswerState.nonVerbalMetrics.pauseCount }} 次
           </span>
           <span class="metric-item">
-            ⏱️ 用时：{{ currentAnswerState.nonVerbalMetrics.duration }} 秒
+            用时：{{ currentAnswerState.nonVerbalMetrics.duration }} 秒
           </span>
         </div>
 
         <!-- AI 反馈 -->
         <div class="review-section" v-if="currentAnswerState.pros && currentAnswerState.pros.length">
-          <div class="review-section-title">✅ 优点</div>
+          <div class="review-section-title">优点</div>
           <ul class="review-list pros">
             <li v-for="(p, i) in currentAnswerState.pros" :key="i">{{ p }}</li>
           </ul>
         </div>
         <div class="review-section" v-if="currentAnswerState.cons && currentAnswerState.cons.length">
-          <div class="review-section-title">⚠️ 不足</div>
+          <div class="review-section-title">不足</div>
           <ul class="review-list cons">
             <li v-for="(c, i) in currentAnswerState.cons" :key="i">{{ c }}</li>
           </ul>
@@ -159,30 +187,30 @@
 
         <!-- 表达反馈 -->
         <div class="review-section" v-if="currentAnswerState.expressionFeedback">
-          <div class="review-section-title">🎤 表达反馈</div>
+          <div class="review-section-title">表达反馈</div>
           <p class="expression-feedback">{{ currentAnswerState.expressionFeedback }}</p>
         </div>
 
         <el-collapse class="ref-collapse">
-          <el-collapse-item title="📖 查看参考答案" name="ref">
+          <el-collapse-item title="查看参考答案" name="ref">
             <div class="ref-answer">{{ currentAnswerState.referenceAnswer || '暂无' }}</div>
           </el-collapse-item>
         </el-collapse>
 
         <div class="next-row">
           <el-button type="primary" class="btn-next" @click="handleNext">
-            {{ isLastQuestion ? '🎉 完成面试' : '下一题 →' }}
+            {{ isLastQuestion ? '完成面试' : '下一题' }}
           </el-button>
         </div>
       </div>
 
       <!-- 跳过提示 -->
       <div class="skip-tip" v-if="currentAnswerState.skipped">
-        <div class="skip-icon">⊘</div>
+        <div class="skip-icon">X</div>
         <div class="skip-text">已跳过此题</div>
         <div class="next-row">
           <el-button type="primary" class="btn-next" @click="handleNext">
-            {{ isLastQuestion ? '🎉 完成面试' : '下一题 →' }}
+            {{ isLastQuestion ? '完成面试' : '下一题' }}
           </el-button>
         </div>
       </div>
@@ -212,7 +240,11 @@ export default {
       answers: [],
       timerSeconds: 0,
       timerHandle: null,
-      speechLang: 'zh-CN'
+      speechLang: 'zh-CN',
+      currentTicCount: {},
+      ticAlertVisible: false,
+      latestTicAlert: { tic: '', count: 0 },
+      ticAlertTimer: null
     }
   },
 
@@ -264,22 +296,18 @@ export default {
       this.$router.replace('/interview/config')
       return
     }
-    // 读取语言设置
     this.speechLang = sessionStorage.getItem('speechLang') || 'zh-CN'
     this.answers = Array(this.total).fill(null).map(() => ({}))
     this.startTimer()
   },
 
   mounted() {
-    // 初始化语音识别
     if (this.initSpeechRecognition(this.speechLang)) {
       this.startSpeech()
     }
-    // 启动录制
     if (this.enableRecording && this.mediaStream) {
       this.startRecording(this.mediaStream)
     }
-    // 绑定页面关闭提示
     window.addEventListener('beforeunload', this.handleBeforeUnload)
   },
 
@@ -289,7 +317,6 @@ export default {
   },
 
   beforeRouteLeave(to, from, next) {
-    // 面试进行中但未手动完成时弹出确认
     const allDone = this.answers.every(a => a && (a.submitted || a.skipped))
     if (!allDone && !this.completing) {
       this.$confirm('面试正在进行中，确定离开？媒体流将被关闭。', '提示', {
@@ -355,7 +382,6 @@ export default {
       if (!this.userAnswer.trim()) return
       this.submitting = true
 
-      // 停止语音获取非语言指标
       this.stopSpeech()
       const metrics = this.getNonVerbalMetrics()
 
@@ -382,7 +408,6 @@ export default {
       } catch (err) {
         const msg = err?.response?.data?.message || err?.message || '提交失败，请重试'
         this.$message.error(msg)
-        // 恢复语音识别
         this.startSpeech()
       } finally {
         this.submitting = false
@@ -410,7 +435,7 @@ export default {
         this.currentIdx++
         this.userAnswer = ''
         this.resetTimer()
-        // 开始下一题语音识别
+        this.resetTicState()
         if (this.isSpeechSupported) {
           this.startSpeech()
         }
@@ -420,7 +445,6 @@ export default {
     async handleComplete() {
       this.completing = true
       try {
-        // 停止录制
         if (this.enableRecording) {
           this.stopRecording()
         }
@@ -456,20 +480,43 @@ export default {
       this.stopSpeech()
       this.clearTimer()
       this.$store.commit('interview/RELEASE_MEDIA_STREAM')
+    },
+
+    onVerbalTicDetected(tic, count, totalTics) {
+      this.currentTicCount = { ...totalTics }
+      this.latestTicAlert = { tic, count }
+      this.ticAlertVisible = true
+      if (this.ticAlertTimer) clearTimeout(this.ticAlertTimer)
+      this.ticAlertTimer = setTimeout(() => {
+        this.ticAlertVisible = false
+      }, 6000)
+    },
+
+    resetTicState() {
+      this.currentTicCount = {}
+      this.ticAlertVisible = false
+      this.latestTicAlert = { tic: '', count: 0 }
+      if (this.ticAlertTimer) {
+        clearTimeout(this.ticAlertTimer)
+        this.ticAlertTimer = null
+      }
+    },
+
+    diffLabel(d) {
+      const map = { easy: '简单', medium: '中等', hard: '困难' }
+      return map[d] || d || '未知'
     }
   }
 }
 </script>
 
 <style scoped>
-/* Task 16.2 样式 */
 .video-doing-layout {
   display: flex;
   min-height: calc(100vh - 90px);
   background: #f3f3f3;
 }
 
-/* 左侧摄像头区 40% */
 .camera-panel {
   width: 40%;
   min-width: 280px;
@@ -482,7 +529,7 @@ export default {
 
 .camera-preview-wrapper {
   width: 100%;
-  padding-top: 75%; /* 4:3 */
+  padding-top: 75%;
   position: relative;
   border-radius: 8px;
   overflow: hidden;
@@ -492,7 +539,6 @@ export default {
   inset: 0;
 }
 
-/* 录制状态红点闪烁 */
 .recording-status {
   display: flex;
   align-items: center;
@@ -521,7 +567,72 @@ export default {
   border-radius: 4px;
 }
 
-/* 右侧答题区 60% */
+.tic-panel {
+  background: rgba(255,255,255,0.1);
+  border-radius: 6px;
+  padding: 8px 10px;
+  max-height: 140px;
+  overflow-y: auto;
+}
+.tic-panel-title {
+  font-size: 12px;
+  color: rgba(255,255,255,0.7);
+  margin-bottom: 6px;
+  font-weight: bold;
+}
+.tic-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 0;
+  font-size: 13px;
+  color: rgba(255,255,255,0.8);
+  transition: color 0.3s;
+}
+.tic-item.tic-warn .tic-name {
+  color: #ffb74d;
+  font-weight: bold;
+}
+.tic-badge {
+  font-size: 11px;
+  background: rgba(255,255,255,0.15);
+  padding: 1px 6px;
+  border-radius: 8px;
+  color: rgba(255,255,255,0.7);
+}
+.tic-badge.badge-warn {
+  background: #e65100;
+  color: #fff;
+  font-weight: bold;
+}
+
+.tic-alert-box {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  background: rgba(20, 20, 20, 0.95);
+  border: 1px solid #ff9800;
+  border-radius: 8px;
+  padding: 12px 14px;
+  text-align: center;
+  z-index: 10;
+  box-shadow: 0 4px 16px rgba(255, 152, 0, 0.3);
+}
+.tic-alert-icon { font-size: 24px; margin-bottom: 4px; }
+.tic-alert-text {
+  font-size: 14px;
+  color: #fff;
+  margin-bottom: 4px;
+}
+.tic-alert-text strong { color: #ffb74d; }
+.tic-alert-hint {
+  font-size: 12px;
+  color: rgba(255,255,255,0.6);
+  margin-bottom: 8px;
+}
+.tic-alert-close { font-size: 12px; }
+
 .main-panel {
   flex: 1;
   padding: 16px;
@@ -531,7 +642,6 @@ export default {
   gap: 14px;
 }
 
-/* 进度条 */
 .top-bar {
   display: flex;
   align-items: center;
@@ -563,10 +673,8 @@ export default {
   white-space: nowrap;
   transition: color 0.3s, border-color 0.3s;
 }
-/* 倒计时最后10秒变红 */
 .timer.warning { color: #f56c6c; border-color: #f56c6c; background: #fff6f6; }
 
-/* 题目卡片 */
 .question-card {
   background: #fff;
   border: 1px solid #ddd;
@@ -600,7 +708,6 @@ export default {
 .q-time-hint { font-size: 12px; color: #999; margin-left: auto; }
 .question-content { font-size: 15px; line-height: 1.8; color: #222; white-space: pre-wrap; }
 
-/* 答案区 */
 .answer-area {
   background: #fff;
   border: 1px solid #ddd;
@@ -629,7 +736,6 @@ export default {
 }
 .answer-input:focus { border-color: #ff9900; }
 
-/* 临时识别结果（灰色斜体） */
 .interim-text {
   font-size: 13px;
   color: #999;
@@ -660,7 +766,6 @@ export default {
   font-weight: bold !important;
 }
 
-/* AI点评区 */
 .review-area {
   background: #fff;
   border: 1px solid #ddd;
@@ -706,7 +811,6 @@ export default {
   border-radius: 4px;
 }
 
-/* 跳过提示 */
 .skip-tip {
   background: #fff;
   border: 1px dashed #ccc;

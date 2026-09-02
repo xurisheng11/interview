@@ -65,6 +65,7 @@
         ref="upload"
         class="resume-upload"
         drag
+        action="#"
         :auto-upload="false"
         :limit="1"
         :on-change="handleFileChange"

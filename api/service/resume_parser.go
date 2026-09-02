@@ -80,7 +80,7 @@ func extractPDF(data []byte) (string, error) {
 
 	text := sb.String()
 	if strings.TrimSpace(text) == "" {
-		return "", fmt.Errorf("PDF 中未提取到文本内容，可能为扫描件或图片型 PDF")
+		return "", fmt.Errorf("PDF 中未提取到文本内容，可能为扫描件或图片型 PDF，建议：① 使用文字型 PDF（可直接选中文本的 PDF）② 将 Word 简历另存为 PDF ③ 或上传 Word 格式的简历")
 	}
 	return text, nil
 }

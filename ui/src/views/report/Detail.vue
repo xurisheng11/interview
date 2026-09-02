@@ -172,7 +172,7 @@
                 <div class="q-content">{{ q.content }}</div>
                 <div class="q-tags">
                   <el-tag v-for="tag in (q.tags || [])" :key="tag" size="mini" type="info" class="q-tag-item">{{ tag }}</el-tag>
-                  <el-tag size="mini" :type="diffTagType(q.difficulty)" class="q-tag-item">{{ q.difficulty }}</el-tag>
+                  <el-tag size="mini" :type="diffTagType(q.difficulty)" class="q-tag-item">{{ diffLabel(q.difficulty) }}</el-tag>
                 </div>
               </div>
               <div class="q-section" v-if="!q.skipped">
@@ -426,6 +426,11 @@ export default {
     diffTagType(diff) {
       const map = { easy: 'success', medium: 'warning', hard: 'danger' }
       return map[diff] || 'info'
+    },
+
+    diffLabel(d) {
+      const map = { easy: '简单', medium: '中等', hard: '困难' }
+      return map[d] || d || '未知'
     },
 
     formatDuration(secs) {

@@ -80,7 +80,69 @@
           </el-autocomplete>
         </div>
 
-        <div class="config-grid">
+        <!-- 简历关联（可选） -->
+        <div class="form-group">
+          <label>📄 关联简历 <span class="optional">（可选，AI 将围绕你的简历深挖提问）</span></label>
+          <div class="resume-select-row">
+            <el-select
+              v-model="config.resumeId"
+              placeholder="选择已上传的简历（让面试围绕你的经历展开）"
+              clearable
+              filterable
+              class="resume-select"
+              :loading="resumeLoading"
+              @focus="loadUserResumes"
+            >
+              <el-option
+                v-for="r in userResumes"
+                :key="r.id"
+                :label="r.filename"
+                :value="r.id"
+              >
+                <div class="resume-option">
+                  <span class="resume-name">{{ r.filename }}</span>
+                  <el-tag v-if="r.analysisStatus === 'done'" type="success" size="mini">已分析</el-tag>
+                  <el-tag v-else type="info" size="mini">{{ r.analysisStatus }}</el-tag>
+                </div>
+              </el-option>
+            </el-select>
+            <el-button size="small" @click="$router.push('/resumes')">
+              上传新简历
+            </el-button>
+          </div>
+          <div v-if="config.resumeId" class="resume-tip">
+            <i class="el-icon-info"></i>
+            关联简历后，系统将围绕你的项目经历和技术栈出题，面试更有针对性
+          </div>
+        </div>
+
+        <!-- 求职类型（新增） -->
+      <div class="form-group">
+        <label>🎯 求职类型 <span class="optional">（选择后匹配对应面试题目策略）</span></label>
+        <div class="tag-select job-type-select">
+          <div
+            v-for="opt in jobTypeOptions"
+            :key="opt.value"
+            class="tag type-tag"
+            :class="{ selected: config.jobType === opt.value }"
+            @click="config.jobType = opt.value; onJobTypeChange(opt.value)"
+          >
+            <span class="type-icon">{{ opt.icon }}</span>
+            <div class="type-info">
+              <span class="type-label">{{ opt.label }}</span>
+              <span class="type-desc">{{ opt.desc }}</span>
+            </div>
+          </div>
+        </div>
+        <!-- 求职类型说明 -->
+        <div v-if="currentJobTypeInfo" class="jobtype-hint">
+          <el-alert type="info" :closable="false" show-icon>
+            <strong>{{ currentJobTypeInfo.label }}：</strong>{{ currentJobTypeInfo.hint }}
+          </el-alert>
+        </div>
+      </div>
+
+      <div class="config-grid">
           <!-- 左列：目标岗位 + 面试难度 -->
           <div>
             <!-- 目标岗位 -->
@@ -308,6 +370,7 @@ export default {
         company: '',
         companyId: '',
         jobTitle: '',
+        jobType: '',       // 求职类型
         difficulty: '',
         experience: '',
         round: '',
@@ -317,8 +380,20 @@ export default {
         mode: 'text',
         thinkTime: 15, // 思考时间(秒)
         virtualBackground: false,
-        bgStyle: 'blur'
+        bgStyle: 'blur',
+        resumeId: ''  // 关联简历ID
       },
+
+      // 用户简历列表
+      userResumes: [],
+      resumeLoading: false,
+
+      jobTypeOptions: [
+        { label: '校园招聘', value: 'campus', icon: '🎓', desc: '校招/应届', hint: '重点考察基础知识、算法、逻辑思维，题目相对基础但覆盖面广' },
+        { label: '社会招聘', value: 'social', icon: '💼', desc: '社招/跳槽', hint: '围绕项目经验深挖，考察技术深度、架构思维、解决问题能力' },
+        { label: '事业单位', value: 'institution', icon: '🏛️', desc: '公务员/国企', hint: '结构化面试为主，重点考综合分析、计划组织、应急应变、人际沟通' },
+        { label: '实习', value: 'intern', icon: '🌱', desc: '日常实习', hint: '题目最友好，考察学习能力、基础认知和实习动机' }
+      ],
 
       sidebarItems: [
         {
@@ -359,9 +434,9 @@ export default {
       },
 
       difficultyOptions: [
-        { label: '初级', value: 'junior', desc: '校招/入门级' },
-        { label: '中级', value: 'middle', desc: '1-3年经验' },
-        { label: '高级', value: 'senior', desc: '资深/专家级' }
+        { label: '🟢 初级', value: 'easy', desc: '校招/入门级' },
+        { label: '🟡 中级', value: 'medium', desc: '1-3年经验' },
+        { label: '🔴 高级', value: 'hard', desc: '资深/专家级' }
       ],
 
       experienceOptions: [
@@ -405,6 +480,11 @@ export default {
   },
 
   computed: {
+    currentJobTypeInfo() {
+      if (!this.config.jobType) return null
+      return this.jobTypeOptions.find(opt => opt.value === this.config.jobType) || null
+    },
+
     isFormValid() {
       return (
         !!this.config.jobTitle &&
@@ -416,6 +496,14 @@ export default {
   },
 
   methods: {
+    onJobTypeChange(value) {
+      // 求职类型变更时，可以自动调整难度和经验选项的默认值
+      // 例如：实习自动设置为初级难度
+      if (value === 'intern' && !this.config.difficulty) {
+        this.config.difficulty = 'easy'
+      }
+    },
+
     toggleFocus(opt) {
       const idx = this.config.focusAreas.indexOf(opt)
       if (idx === -1) {
@@ -458,6 +546,24 @@ export default {
       this.config.companyId = item.id || ''
     },
 
+    // 加载用户简历列表（按需触发）
+    async loadUserResumes() {
+      if (this.userResumes.length > 0) return  // 已加载过则跳过
+      this.resumeLoading = true
+      try {
+        const { getResumeList } = await import('@/api/resume')
+        const res = await getResumeList()
+        const list = res.data || res || []
+        // 只展示分析完成的简历
+        this.userResumes = list.filter(r => r.analysisStatus === 'done')
+      } catch (e) {
+        // 简历服务不可用时静默忽略
+        this.userResumes = []
+      } finally {
+        this.resumeLoading = false
+      }
+    },
+
     goToQuestionBank() {
       this.$router.push('/questions')
     },
@@ -492,10 +598,18 @@ export default {
         if (this.config.interviewTypes.length) {
           payload.interviewTypes = this.config.interviewTypes
         }
+        // 求职类型
+        if (this.config.jobType) {
+          payload.jobType = this.config.jobType
+        }
         if (this.config.mode === 'video') {
           payload.thinkTime = this.config.thinkTime
           payload.virtualBackground = this.config.virtualBackground
           payload.bgStyle = this.config.bgStyle
+        }
+        // 简历关联出题
+        if (this.config.resumeId) {
+          payload.resumeId = this.config.resumeId
         }
 
         const res = await createInterview(payload)
@@ -709,6 +823,41 @@ export default {
   background: #fff7e6;
   padding: 2px 6px;
   border-radius: 4px;
+}
+
+/* 简历关联选择 */
+.resume-select-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.resume-select {
+  flex: 1;
+  max-width: 400px;
+}
+
+.resume-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.resume-name {
+  font-size: 14px;
+}
+
+.resume-tip {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #67c23a;
+  background: #f0f9eb;
+  border: 1px solid #c2e7b0;
+  border-radius: 4px;
+  padding: 5px 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 /* 标签选择区域 */

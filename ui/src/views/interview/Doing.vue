@@ -61,7 +61,7 @@
         <div class="question-header">
           <span class="q-index">第 {{ currentIdx + 1 }} 题</span>
           <span class="q-difficulty" :class="'diff-' + currentQuestion.difficulty">
-            {{ currentQuestion.difficulty || '中等' }}
+            {{ diffLabel(currentQuestion.difficulty) }}
           </span>
           <el-tag
             v-for="tag in (currentQuestion.tags || [])"
@@ -380,6 +380,11 @@ export default {
       } finally {
         this.pausing = false
       }
+    },
+
+    diffLabel(d) {
+      const map = { easy: '简单', medium: '中等', hard: '困难' }
+      return map[d] || d || '未知'
     }
   }
 }

@@ -172,7 +172,9 @@ export default {
     },
     formatTime(val) {
       if (!val) return ''
-      const d = new Date(val)
+      // Handle Unix timestamp in seconds (backend sends seconds)
+      const timestamp = typeof val === 'number' && val < 10000000000 ? val * 1000 : val
+      const d = new Date(timestamp)
       if (isNaN(d.getTime())) return val
       const pad = n => String(n).padStart(2, '0')
       return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`

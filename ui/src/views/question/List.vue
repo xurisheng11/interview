@@ -10,9 +10,10 @@
         </el-form-item>
         <el-form-item label="难度">
           <el-select v-model="filters.difficulty" placeholder="全部难度" clearable size="small">
-            <el-option label="初级" value="junior" />
-            <el-option label="中级" value="middle" />
-            <el-option label="高级" value="senior" />
+            <el-option label="全部" value="" />
+            <el-option label="🟢 初级" value="easy" />
+            <el-option label="🟡 中级" value="medium" />
+            <el-option label="🔴 高级" value="hard" />
           </el-select>
         </el-form-item>
         <el-form-item label="类型">

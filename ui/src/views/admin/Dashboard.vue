@@ -250,7 +250,7 @@ export default {
     },
     formatTime(iso) {
       if (!iso) return '-'
-      const d = new Date(iso)
+      const d = new Date(typeof iso === 'number' && iso < 10000000000 ? iso * 1000 : iso)
       const pad = n => String(n).padStart(2, '0')
       return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
     },

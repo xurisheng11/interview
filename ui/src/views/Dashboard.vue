@@ -10,11 +10,14 @@
           <el-button type="primary" size="small" class="banner-btn" @click="$router.push('/interview/config')">
             🚀 发起面试
           </el-button>
+          <el-button size="small" class="banner-btn-primary" @click="$router.push('/learn')">
+            📚 学习路径
+          </el-button>
           <el-button size="small" class="banner-btn-ghost" @click="$router.push('/questions')">
-            📚 题库练习
+            📝 题库练习
           </el-button>
           <el-button size="small" class="banner-btn-ghost" @click="$router.push('/company/intel')">
-            🏢 公司面试知识库
+            🏢 公司知识库
           </el-button>
         </div>
       </div>
@@ -315,7 +318,7 @@ export default {
     handleResize() { if (this.trendChart) this.trendChart.resize() },
     formatTime(val) {
       if (!val) return '—'
-      const d = new Date(val)
+      const d = new Date(typeof val === 'number' && val < 10000000000 ? val * 1000 : val)
       if (isNaN(d.getTime())) return val
       const p = n => String(n).padStart(2, '0')
       return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`
@@ -381,6 +384,20 @@ export default {
   border-color: #ff9900 !important;
   color: #ff9900 !important;
 }
+
+.banner-btn-primary {
+  background: #fff !important;
+  border-color: #fff !important;
+  color: #ff9900 !important;
+  font-weight: bold !important;
+}
+
+.banner-btn-primary:hover {
+  background: rgba(255,255,255,0.9) !important;
+  border-color: #fff !important;
+  color: #e68a00 !important;
+}
+
 .welcome-right { flex-shrink: 0; }
 .banner-decoration {
   font-size: 72px;

@@ -1,7 +1,16 @@
 /**
  * 语音识别 Mixin
- * 封装 Web Speech API，支持实时转文字、语速/停顿计算
+ * 封装 Web Speech API，支持实时转文字、语速/停顿计算、口头禅实时检测
  */
+
+// 常见中文口头禅列表（用户说3次以上时触发提示）
+const VERBAL_TICS = [
+  '然后', '这个', '那个', '嗯', '呃', '啊', '就是', '就是说',
+  '的话', '其实', '基本上', '大概', '可能', '应该', '好像',
+  '对吧', '是吧', '好吗', '好吧', '那个', '所以', '然后呢',
+  '那个什么', '就', '就这样', '反正'
+]
+
 export const speechMixin = {
   data() {
     return {
@@ -13,29 +22,22 @@ export const speechMixin = {
       speechMetrics: {
         startTime: null,
         totalWords: 0,
-        pauseThreshold: 2000, // 2秒静默视为停顿
+        pauseThreshold: 2000,
         pauseCount: 0,
         lastResultTime: null
-      }
+      },
+      verbalTicCount: {},
+      ticAlertShown: {}
     }
   },
 
   methods: {
-    /**
-     * 检测语音识别是否可用
-     * @returns {boolean}
-     */
     checkSpeechSupport() {
       const supported = !!(window.SpeechRecognition || window.webkitSpeechRecognition)
       this.isSpeechSupported = supported
       return supported
     },
 
-    /**
-     * 初始化语音识别
-     * @param {string} lang - 语言代码，默认 'zh-CN'
-     * @returns {boolean} 是否初始化成功
-     */
     initSpeechRecognition(lang = 'zh-CN') {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
       if (!SpeechRecognition) {
@@ -44,9 +46,8 @@ export const speechMixin = {
       }
       this.isSpeechSupported = true
 
-      // 如果已存在实例先清理
       if (this.recognition) {
-        try { this.recognition.abort() } catch (e) { /* ignore */ }
+        try { this.recognition.abort() } catch (e) { }
         this.recognition = null
       }
 
@@ -58,7 +59,6 @@ export const speechMixin = {
 
       this.recognition.onresult = (event) => {
         const now = Date.now()
-        // 检测停顿
         if (this.speechMetrics.lastResultTime) {
           const gap = now - this.speechMetrics.lastResultTime
           if (gap > this.speechMetrics.pauseThreshold) {
@@ -74,13 +74,13 @@ export const speechMixin = {
           if (event.results[i].isFinal) {
             final += text
             this.speechMetrics.totalWords += text.length
+            this._scanVerbalTics(text)
           } else {
             interim += text
           }
         }
         if (final) this.finalTranscript += final
         this.interimTranscript = interim
-        // 同步到父组件答案框
         if (typeof this.userAnswer !== 'undefined') {
           this.userAnswer = this.finalTranscript
         }
@@ -88,7 +88,7 @@ export const speechMixin = {
 
       this.recognition.onerror = (event) => {
         if (event.error !== 'no-speech' && event.error !== 'aborted') {
-          this.$message && this.$message.warning(`语音识别错误：${event.error}`)
+          this.$message && this.$message.warning('语音识别错误：' + event.error)
         }
         if (event.error === 'not-allowed') {
           this.isSpeechActive = false
@@ -96,18 +96,38 @@ export const speechMixin = {
       }
 
       this.recognition.onend = () => {
-        // continuous 模式下意外结束时自动重启（除非主动停止）
         if (this.isSpeechActive) {
-          try { this.recognition.start() } catch (e) { /* ignore */ }
+          try { this.recognition.start() } catch (e) { }
         }
       }
 
       return true
     },
 
-    /**
-     * 开始语音识别（新题开始时调用，重置计数器）
-     */
+    _scanVerbalTics(text) {
+      VERBAL_TICS.forEach(tic => {
+        const regex = new RegExp(tic, 'g')
+        const matches = text.match(regex)
+        if (matches) {
+          const count = matches.length
+          this.verbalTicCount[tic] = (this.verbalTicCount[tic] || 0) + count
+          if (this.verbalTicCount[tic] >= 3 && !this.ticAlertShown[tic]) {
+            this.ticAlertShown[tic] = true
+            if (this.$EventBus && this.$EventBus.$emit) {
+              this.$EventBus.$emit('verbal-tic-detected', {
+                tic,
+                count: this.verbalTicCount[tic],
+                totalTics: { ...this.verbalTicCount }
+              })
+            }
+            if (typeof this.onVerbalTicDetected === 'function') {
+              this.onVerbalTicDetected(tic, this.verbalTicCount[tic], { ...this.verbalTicCount })
+            }
+          }
+        }
+      })
+    },
+
     startSpeech() {
       if (!this.recognition) return
       this.finalTranscript = ''
@@ -116,28 +136,22 @@ export const speechMixin = {
       this.speechMetrics.totalWords = 0
       this.speechMetrics.pauseCount = 0
       this.speechMetrics.lastResultTime = null
+      this.verbalTicCount = {}
+      this.ticAlertShown = {}
       this.isSpeechActive = true
       try {
         this.recognition.start()
-      } catch (e) {
-        // 已经在运行中，忽略
-      }
+      } catch (e) { }
     },
 
-    /**
-     * 停止语音识别
-     */
     stopSpeech() {
       this.isSpeechActive = false
       this.interimTranscript = ''
       if (this.recognition) {
-        try { this.recognition.stop() } catch (e) { /* ignore */ }
+        try { this.recognition.stop() } catch (e) { }
       }
     },
 
-    /**
-     * 切换语音识别开关
-     */
     toggleSpeech() {
       if (this.isSpeechActive) {
         this.stopSpeech()
@@ -146,14 +160,10 @@ export const speechMixin = {
           this.initSpeechRecognition(this.speechLang || 'zh-CN')
         }
         this.isSpeechActive = true
-        try { this.recognition.start() } catch (e) { /* ignore */ }
+        try { this.recognition.start() } catch (e) { }
       }
     },
 
-    /**
-     * 计算语速（每分钟字数）
-     * @returns {number}
-     */
     calcSpeechRate() {
       if (!this.speechMetrics.startTime) return 0
       const durationMin = (Date.now() - this.speechMetrics.startTime) / 60000
@@ -162,18 +172,18 @@ export const speechMixin = {
         : 0
     },
 
-    /**
-     * 获取非语言指标
-     * @returns {{ speechRate: number, pauseCount: number, duration: number }}
-     */
     getNonVerbalMetrics() {
       const duration = this.speechMetrics.startTime
         ? Math.round((Date.now() - this.speechMetrics.startTime) / 1000)
         : 0
+      const verbalTics = Object.keys(this.verbalTicCount).filter(
+        k => this.verbalTicCount[k] > 0
+      )
       return {
         speechRate: this.calcSpeechRate(),
         pauseCount: this.speechMetrics.pauseCount,
-        duration
+        duration,
+        verbalTics
       }
     }
   },
@@ -181,7 +191,7 @@ export const speechMixin = {
   beforeDestroy() {
     this.stopSpeech()
     if (this.recognition) {
-      try { this.recognition.abort() } catch (e) { /* ignore */ }
+      try { this.recognition.abort() } catch (e) { }
       this.recognition = null
     }
   }

@@ -6,6 +6,7 @@ Vue.use(VueRouter)
 // 懒加载视图组件
 const Login = () => import('@/views/Login.vue')
 const Dashboard = () => import('@/views/Dashboard.vue')
+const LearningCenter = () => import('@/views/learn/Index.vue')
 const InterviewConfig = () => import('@/views/interview/Config.vue')
 const InterviewLoading = () => import('@/views/interview/Loading.vue')
 const InterviewDoing = () => import('@/views/interview/Doing.vue')
@@ -16,6 +17,8 @@ const ReportDetail = () => import('@/views/report/Detail.vue')
 const ReportShare = () => import('@/views/report/Share.vue')
 const QuestionList = () => import('@/views/question/List.vue')
 const QuestionPractice = () => import('@/views/question/Practice.vue')
+const QuestionContribute = () => import('@/views/question/Contribute.vue')
+const QuestionContributions = () => import('@/views/question/Contributions.vue')
 const CommunityIndex = () => import('@/views/community/Index.vue')
 const ArticleDetail = () => import('@/views/community/Article.vue')
 const ProfileIndex = () => import('@/views/profile/Index.vue')
@@ -41,6 +44,12 @@ const routes = [
     name: 'Dashboard',
     component: Dashboard,
     meta: { requiresAuth: true, title: '首页仪表盘' }
+  },
+  {
+    path: '/learn',
+    name: 'LearningCenter',
+    component: LearningCenter,
+    meta: { requiresAuth: true, title: '学习路径' }
   },
   {
     path: '/interview',
@@ -82,7 +91,9 @@ const routes = [
     meta: { requiresAuth: true },
     children: [
       { path: '', name: 'QuestionList', component: QuestionList, meta: { requiresAuth: true, title: '题库练习' } },
-      { path: ':id/practice', name: 'QuestionPractice', component: QuestionPractice, meta: { requiresAuth: true, title: '单题练习' } }
+      { path: ':id/practice', name: 'QuestionPractice', component: QuestionPractice, meta: { requiresAuth: true, title: '单题练习' } },
+      { path: 'contribute', name: 'QuestionContribute', component: QuestionContribute, meta: { requiresAuth: true, title: '贡献题目' } },
+      { path: 'contributions', name: 'QuestionContributions', component: QuestionContributions, meta: { requiresAuth: true, title: '公司面试题库' } }
     ]
   },
   {

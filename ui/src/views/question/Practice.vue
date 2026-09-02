@@ -166,11 +166,11 @@ export default {
       this.reviewResult = null
     },
     diffTagType(d) {
-      const map = { junior: 'success', middle: 'warning', senior: 'danger' }
+      const map = { easy: 'success', medium: 'warning', hard: 'danger' }
       return map[d] || 'info'
     },
     diffLabel(d) {
-      const map = { junior: '初级', middle: '中级', senior: '高级' }
+      const map = { easy: '🟢 初级', medium: '🟡 中级', hard: '🔴 高级' }
       return map[d] || d || '—'
     },
     scoreColor(score) {

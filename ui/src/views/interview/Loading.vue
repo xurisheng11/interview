@@ -34,7 +34,7 @@
           </div>
           <div class="summary-item" v-if="interviewInfo.difficulty">
             <span class="summary-label">面试难度</span>
-            <span class="summary-value">{{ interviewInfo.difficulty }}</span>
+            <span class="summary-value">{{ difficultyLabel(interviewInfo.difficulty) }}</span>
           </div>
           <div class="summary-item" v-if="interviewInfo.experience">
             <span class="summary-label">工作经验</span>
@@ -260,6 +260,11 @@ export default {
     handleBackConfig() {
       this.clearTimers()
       this.$router.push('/interview/config')
+    },
+
+    difficultyLabel(d) {
+      const map = { easy: '简单', medium: '中等', hard: '困难' }
+      return map[d] || d || '未知'
     }
   }
 }

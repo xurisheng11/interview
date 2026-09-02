@@ -57,6 +57,28 @@ func Setup() *gin.Engine {
 			adminQuestions.DELETE("/:id", handler.DeleteQuestion)
 		}
 
+		// 用户贡献题库路由
+		contributions := protected.Group("/contributions")
+		{
+			contributions.POST("/questions", handler.SubmitContributedQuestion)
+			contributions.GET("/me", handler.GetUserContributions)
+			contributions.GET("/credits", handler.GetUserCredits)
+			contributions.GET("/company/:company/questions", handler.GetCompanyContributedQuestions)
+			contributions.GET("/questions/:id", handler.GetContributedQuestion)
+			contributions.POST("/questions/:id/vote", handler.VoteContributedQuestion)
+			contributions.POST("/questions/:id/report", handler.ReportContributedQuestion)
+			contributions.GET("/search", handler.SearchQuestionsFallback)
+		}
+
+		// 贡献题库管理员审核路由
+		adminContributions := protected.Group("/admin/contributions")
+		adminContributions.Use(middleware.AdminRequired())
+		{
+			adminContributions.GET("", handler.ListContributedQuestionsForReview)
+			adminContributions.PUT("/:id/approve", handler.ApproveContributedQuestion)
+			adminContributions.PUT("/:id/reject", handler.RejectContributedQuestion)
+		}
+
 		community := protected.Group("/community")
 		{
 			community.GET("/articles", handler.ListArticles)

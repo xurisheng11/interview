@@ -90,15 +90,51 @@ func ListQuestions(jobTitle, difficulty, questionType, keyword string, page, pag
 		all = append(all, *q)
 	}
 
-	// 4. keyword 过滤（本地，content 字符串包含）
+	// 4. keyword 过滤（语义搜索：调用 AI 按关键词生成匹配题目）
 	if keyword != "" {
-		var filtered []model.QuestionItem
-		for _, q := range all {
-			if strings.Contains(q.Content, keyword) {
-				filtered = append(filtered, q)
+		prompt := fmt.Sprintf(
+			`你是一个技术面试题生成专家。请根据关键词"%s"生成20道高质量的面试题。
+要求：题目应与"%s"紧密相关，覆盖不同角度和难度。
+返回JSON数组，格式如下：
+[{"questionId":"uuid","content":"题目内容","jobTitle":"后端开发","difficulty":"medium","tags":["关键词1","关键词2"],"type":"basic","answerCount":0,"avgScore":0,"createdBy":"system","createdAt":%d}]
+只返回JSON数组，不要其他内容。`,
+			keyword, keyword, time.Now().Unix(),
+		)
+		raw, err := Chat(prompt)
+		aiOK := false
+		if err == nil {
+			raw = cleanJSON(raw)
+			var items []model.QuestionItem
+			if err := json.Unmarshal([]byte(raw), &items); err == nil && len(items) > 0 {
+				now := time.Now().Unix()
+				for i := range items {
+					if items[i].QuestionID == "" {
+						items[i].QuestionID = uuid.New().String()
+					}
+					if items[i].CreatedAt == 0 {
+						items[i].CreatedAt = now
+					}
+					// 写入 Redis Hash，保证点击查看时可获取
+					hash := items[i].ToRedisHash()
+					_ = repository.HSetMap(questionKey(items[i].QuestionID), hash)
+					// 写入 ZSet 索引
+					indexKey := questionIndexKey(fillDefault(items[i].JobTitle), fillDefault(items[i].Difficulty), fillDefault(items[i].Type))
+					_ = repository.ZAdd(indexKey, float64(items[i].CreatedAt), items[i].QuestionID)
+				}
+				all = items
+				aiOK = true
 			}
 		}
-		all = filtered
+		// AI 生成失败时，降级为本地字符串过滤
+		if !aiOK {
+			var filtered []model.QuestionItem
+			for _, q := range all {
+				if strings.Contains(q.Content, keyword) {
+					filtered = append(filtered, q)
+				}
+			}
+			all = filtered
+		}
 	}
 
 	total := len(all)

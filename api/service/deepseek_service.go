@@ -172,21 +172,37 @@ type ReviewResult struct {
 
 // ReviewAnswer 对答案进行 AI 点评，视频模式时附加非语言指标分析
 func ReviewAnswer(question *model.Question, answer string, cfg *model.InterviewConfig, metrics *model.NonVerbalMetrics) (*ReviewResult, error) {
-	prompt := fmt.Sprintf(`你是一位专业技术面试官，请对以下面试答案进行评分和点评。
+	prompt := fmt.Sprintf(`【面试评分任务】严格按以下步骤评分：
 
-题目：%s
-知识点：%s
-岗位：%s，难度：%s
-候选人答案：%s
+【第一步：判断答案是否切题】（必须先做）
+对照题目要求，判断候选人答案是否直接回答了问题：
+- 题目要求：%s
+- 候选人答案：%s
 
-请严格按照以下 JSON 格式返回，不要包含任何其他文字、代码块标记：
-{"score":85,"pros":["优点1","优点2"],"cons":["不足1","不足2"],"referenceAnswer":"参考答案（支持Markdown）"}
+【评分标准】（★关键规则★）
+★ 如果答案与题目要求不相关、不切题、答非所问，必须给 0-19 分！
+★ "不切题"包括：仅回复数字/字母/符号、完全无关的内容、无法理解的乱码、明显敷衍的套话
+★ "基本正确但有缺陷"才给 20-59 分（有一定相关性，但有错误或遗漏）
+★ "基本正确"才给 60-89 分（切题且大部分正确）
+★ "优秀"才给 90-100 分（切题、准确、完整、有深度）
 
-评分标准：完整准确90-100分，基本正确60-80分，有误20-50分，完全错误0-10分。`,
+分数量级参考（严禁跨档给分）：
+- 0-19分：完全不切题 / 答非所问 / 乱码 / 无意义内容
+- 20-39分：略微相关但严重偏离 / 几乎没有正确内容
+- 40-59分：部分相关 / 有较多错误或遗漏
+- 60-79分：切题且基本正确 / 覆盖主要要点
+- 80-89分：切题且正确 / 要点较完整 / 表达较清晰
+- 90-100分：切题且完全正确 / 要点全覆盖 / 有深度见解
+
+【第二步：给出点评】（选 1-2 条）
+- 优点（仅当分数>=60时填写）
+- 缺点/不足
+
+【第三步：写出参考答案】（必须包含完整要点）
+
+请严格按照以下 JSON 格式返回，不要包含任何其他文字：
+{"score":85,"pros":["优点1","优点2"],"cons":["不足1","不足2"],"referenceAnswer":"参考答案"}`,
 		question.Content,
-		strings.Join(question.Tags, "、"),
-		cfg.JobTitle,
-		cfg.Difficulty,
 		answer,
 	)
 
@@ -348,15 +364,45 @@ func calcAvgExpressionScoreFromAnswers(answers []*model.AnswerRecord) int {
 // ---- AI 知识文章生成 ----
 
 // GenerateArticle 调用 DeepSeek 生成知识文章，返回填充好的 model.Article（articleId 留空，由调用方生成）
+// jobCategoryCNMap 将英文分类映射为中文岗位描述
+var jobCategoryCNMap = map[string]string{
+	"backend":   "后端开发",
+	"frontend":  "前端开发",
+	"bigdata":   "大数据开发",
+	"ai":        "AI/算法工程师",
+	"accounting":"会计/财务",
+	"general":   "通用",
+	"all":       "通用技术",
+}
+
+func getJobCategoryCN(jobCategory string) string {
+	if cn, ok := jobCategoryCNMap[jobCategory]; ok {
+		return cn
+	}
+	return jobCategory
+}
+
 func GenerateArticle(topic, jobCategory string) (*model.Article, error) {
-	prompt := fmt.Sprintf(`你是一个技术知识博主。请围绕【%s】这个知识点，为【%s】岗位求职者撰写一篇高质量的备考知识文章。
+	jobCN := getJobCategoryCN(jobCategory)
+	prompt := fmt.Sprintf(`你是一位资深技术面试辅导专家。请围绕【%s】这个知识点，为【%s】岗位求职者撰写一篇高质量的面试备考文章。
+
 要求：
-1. 内容深度适合面试备考，覆盖核心概念、常见考点和实战建议
-2. 正文使用 Markdown 格式，包含标题、代码块、列表等
-3. 文章长度 800-1200 字
+1. 内容必须紧密围绕用户输入的【%s】这个知识点展开，不要偏离
+2. 文章结构必须包含以下部分：
+   - 核心概念定义（用简洁的话解释清楚）
+   - 常见面试考点（高频问题清单，每个问题给出参考答案要点）
+   - 深度追问方向（面试官可能追问的延伸问题）
+   - 易错点/误区提醒
+   - 实战代码示例或图解说明（如适用）
+3. 难度：覆盖从基础到进阶的完整学习路径
+4. 正文使用 Markdown 格式，包含标题、代码块、表格、列表等丰富排版
+5. 文章长度 1000-1500 字，确保内容充实有深度
+6. 标签请从知识点中提取3-5个关键词
+7. 标题要直接体现知识点，让人一眼看出文章主题
+
 请严格按以下 JSON 格式返回，只返回 JSON，不要其他内容：
-{"title":"文章标题","content":"Markdown格式正文","tags":["标签1","标签2","标签3"]}`,
-		topic, jobCategory,
+{"title":"文章标题（直接体现知识点）","content":"Markdown格式正文","tags":["标签1","标签2","标签3"]}`,
+		topic, jobCN, topic,
 	)
 
 	raw, err := Chat(prompt)

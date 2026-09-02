@@ -1,0 +1,81 @@
+[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] POST   /api/v1/auth/register     --> interview-sim/handler.Register (4 handlers)
+[GIN-debug] POST   /api/v1/auth/login        --> interview-sim/handler.Login (4 handlers)
+[GIN-debug] GET    /api/v1/auth/me           --> interview-sim/handler.GetMe (5 handlers)
+[GIN-debug] GET    /api/v1/questions         --> interview-sim/handler.ListQuestions (4 handlers)
+[GIN-debug] GET    /api/v1/questions/:id     --> interview-sim/handler.GetQuestion (4 handlers)
+[GIN-debug] POST   /api/v1/interviews        --> interview-sim/handler.CreateInterview (5 handlers)
+[GIN-debug] GET    /api/v1/interviews        --> interview-sim/handler.GetInterviewList (5 handlers)
+[GIN-debug] GET    /api/v1/interviews/:id    --> interview-sim/handler.GetInterview (5 handlers)
+[GIN-debug] POST   /api/v1/interviews/:id/answers --> interview-sim/handler.SubmitAnswer (5 handlers)
+[GIN-debug] PUT    /api/v1/interviews/:id/pause --> interview-sim/handler.PauseInterview (5 handlers)
+[GIN-debug] PUT    /api/v1/interviews/:id/complete --> interview-sim/handler.CompleteInterview (5 handlers)
+[GIN-debug] GET    /api/v1/reports/:interviewId --> interview-sim/handler.GetReport (5 handlers)
+[GIN-debug] POST   /api/v1/reports/:interviewId/share --> interview-sim/handler.CreateShare (5 handlers)
+[GIN-debug] POST   /api/v1/questions/:id/practice --> interview-sim/handler.PracticeQuestion (5 handlers)
+[GIN-debug] POST   /api/v1/questions/:id/collect --> interview-sim/handler.CollectQuestion (5 handlers)
+[GIN-debug] DELETE /api/v1/questions/:id/collect --> interview-sim/handler.UncollectQuestion (5 handlers)
+[GIN-debug] POST   /api/v1/questions         --> interview-sim/handler.CreateQuestion (6 handlers)
+[GIN-debug] PUT    /api/v1/questions/:id     --> interview-sim/handler.UpdateQuestion (6 handlers)
+[GIN-debug] DELETE /api/v1/questions/:id     --> interview-sim/handler.DeleteQuestion (6 handlers)
+[GIN-debug] POST   /api/v1/contributions/questions --> interview-sim/handler.SubmitContributedQuestion (5 handlers)
+[GIN-debug] GET    /api/v1/contributions/me  --> interview-sim/handler.GetUserContributions (5 handlers)
+[GIN-debug] GET    /api/v1/contributions/credits --> interview-sim/handler.GetUserCredits (5 handlers)
+[GIN-debug] GET    /api/v1/contributions/company/:company/questions --> interview-sim/handler.GetCompanyContributedQuestions (5 handlers)
+[GIN-debug] GET    /api/v1/contributions/questions/:id --> interview-sim/handler.GetContributedQuestion (5 handlers)
+[GIN-debug] POST   /api/v1/contributions/questions/:id/vote --> interview-sim/handler.VoteContributedQuestion (5 handlers)
+[GIN-debug] POST   /api/v1/contributions/questions/:id/report --> interview-sim/handler.ReportContributedQuestion (5 handlers)
+[GIN-debug] GET    /api/v1/contributions/search --> interview-sim/handler.SearchQuestionsFallback (5 handlers)
+[GIN-debug] GET    /api/v1/admin/contributions --> interview-sim/handler.ListContributedQuestionsForReview (6 handlers)
+[GIN-debug] PUT    /api/v1/admin/contributions/:id/approve --> interview-sim/handler.ApproveContributedQuestion (6 handlers)
+[GIN-debug] PUT    /api/v1/admin/contributions/:id/reject --> interview-sim/handler.RejectContributedQuestion (6 handlers)
+[GIN-debug] GET    /api/v1/community/articles --> interview-sim/handler.ListArticles (5 handlers)
+[GIN-debug] POST   /api/v1/community/articles/ai --> interview-sim/handler.GenerateAIArticle (5 handlers)
+[GIN-debug] GET    /api/v1/community/articles/:id --> interview-sim/handler.GetArticle (5 handlers)
+[GIN-debug] POST   /api/v1/community/articles/:id/like --> interview-sim/handler.LikeArticle (5 handlers)
+[GIN-debug] POST   /api/v1/community/articles/:id/collect --> interview-sim/handler.CollectArticle (5 handlers)
+[GIN-debug] GET    /api/v1/community/articles/:id/comments --> interview-sim/handler.ListComments (5 handlers)
+[GIN-debug] POST   /api/v1/community/articles/:id/comments --> interview-sim/handler.AddComment (5 handlers)
+[GIN-debug] GET    /api/v1/profile           --> interview-sim/handler.GetProfile (5 handlers)
+[GIN-debug] PUT    /api/v1/profile           --> interview-sim/handler.UpdateProfile (5 handlers)
+[GIN-debug] PUT    /api/v1/profile/password  --> interview-sim/handler.ChangePassword (5 handlers)
+[GIN-debug] GET    /api/v1/profile/stats     --> interview-sim/handler.GetStats (5 handlers)
+[GIN-debug] GET    /api/v1/profile/trend     --> interview-sim/handler.GetScoreTrend (5 handlers)
+[GIN-debug] GET    /api/v1/profile/collections --> interview-sim/handler.GetCollections (5 handlers)
+[GIN-debug] GET    /api/v1/company/intel     --> interview-sim/handler.GetCompanyIntel (5 handlers)
+[GIN-debug] GET    /api/v1/company/question-answer --> interview-sim/handler.GetCompanyQuestionAnswer (5 handlers)
+[GIN-debug] POST   /api/v1/resumes           --> interview-sim/handler.UploadResume (5 handlers)
+[GIN-debug] GET    /api/v1/resumes           --> interview-sim/handler.ListResumes (5 handlers)
+[GIN-debug] GET    /api/v1/resumes/:id       --> interview-sim/handler.GetResume (5 handlers)
+[GIN-debug] DELETE /api/v1/resumes/:id       --> interview-sim/handler.DeleteResume (5 handlers)
+[GIN-debug] POST   /api/v1/resumes/:id/retry --> interview-sim/handler.RetryAnalyzeResume (5 handlers)
+[GIN-debug] POST   /api/v1/resumes/:id/interview --> interview-sim/handler.CreateResumeInterview (5 handlers)
+[GIN-debug] GET    /api/v1/admin/users       --> interview-sim/handler.AdminListUsers (6 handlers)
+[GIN-debug] GET    /api/v1/admin/users/:id   --> interview-sim/handler.AdminGetUser (6 handlers)
+[GIN-debug] PUT    /api/v1/admin/users/:id/password --> interview-sim/handler.AdminResetPassword (6 handlers)
+[GIN-debug] PUT    /api/v1/admin/users/:id/role --> interview-sim/handler.AdminSetRole (6 handlers)
+[GIN-debug] DELETE /api/v1/admin/users/:id   --> interview-sim/handler.AdminDeleteUser (6 handlers)
+[GIN-debug] POST   /api/v1/admin/migrate-users --> interview-sim/handler.AdminMigrateUsers (6 handlers)
+[GIN-debug] GET    /api/v1/reports/share/:token --> interview-sim/handler.GetSharedReport (4 handlers)
+[GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
+Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies for details.
+[GIN-debug] Listening and serving HTTP on :8080
+[ListQuestions] 调用 DeepSeek semantic search，keyword=深拷贝
+[ListQuestions] Chat 返回原始内容: [
+  {
+    "questionId": "f1b3a2c5-8e7d-4b6a-9c3e-1a2b3c4d5e6f",
+    "content": "请解释深拷贝与浅拷贝的区别，并分别给出J...
+[ListQuestions] 解析到 19 道题目
+[GIN] 2026/09/02 - 16:29:36 | 200 |   16.3787169s |             ::1 | GET      "/api/v1/questions?keyword=%E6%B7%B1%E6%8B%B7%E8%B4%9D"
+[ListQuestions] 调用 DeepSeek semantic search，keyword=深拷贝
+[ListQuestions] Chat 返回原始内容: [
+  {
+    "questionId": "a1f8c3e2-5b4d-4f6a-9c8e-2d1b0a7f3e5a",
+    "content": "请解释深拷贝与浅拷贝的区别，并分别给出一...
+[ListQuestions] 解析到 20 道题目
+[GIN] 2026/09/02 - 16:30:13 | 200 |   18.1325168s |             ::1 | GET      "/api/v1/questions?keyword=%E6%B7%B1%E6%8B%B7%E8%B4%9D"

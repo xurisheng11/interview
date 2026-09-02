@@ -22,7 +22,7 @@ type ReportQuestion struct {
 	// 视频面试专有字段
 	ExpressionScore    int               `json:"expressionScore,omitempty"`
 	ExpressionFeedback string            `json:"expressionFeedback,omitempty"`
-	NonVerbalMetrics   *NonVerbalMetrics `json:"nonVerbalMetrics,omitempty"`
+	NonVerbalMetrics  *NonVerbalMetrics `json:"nonVerbalMetrics,omitempty"`
 }
 
 // ModuleScore 知识点模块得分
@@ -45,6 +45,13 @@ type AISummaryReport struct {
 	Strengths  []string         `json:"strengths"`
 	Weaknesses []WeaknessDetail `json:"weaknesses"`
 	Roadmap    string           `json:"roadmap"`
+}
+
+// VerbalTicReport 口头禅分析报告
+type VerbalTicReport struct {
+	DetectedTics []string `json:"detectedTics"` // 检测到的口头禅列表
+	TicFrequency int      `json:"ticFrequency"`  // 口头禅总出现次数
+	Suggestions  []string `json:"suggestions"`  // 改进建议
 }
 
 // InterviewReport 完整面试报告
@@ -71,10 +78,15 @@ type InterviewReport struct {
 	CreatedAt     time.Time        `json:"createdAt"`
 
 	// 视频面试专有字段
-	Mode               string  `json:"mode"`
-	ExpressionSummary  string  `json:"expressionSummary,omitempty"`
-	AvgExpressionScore int     `json:"avgExpressionScore,omitempty"`
-	AvgSpeechRate      float64 `json:"avgSpeechRate,omitempty"`
+	Mode               string           `json:"mode"`
+	ExpressionSummary  string           `json:"expressionSummary,omitempty"`
+	AvgExpressionScore int              `json:"avgExpressionScore,omitempty"`
+	AvgSpeechRate      float64          `json:"avgSpeechRate,omitempty"`
+	VerbalTicReport    *VerbalTicReport `json:"verbalTicReport,omitempty"` // 口头禅分析
+
+	// 新增字段
+	CompanyName    string `json:"companyName,omitempty"`    // 目标公司
+	InterviewTypes []string `json:"interviewTypes,omitempty"` // 面试形式
 }
 
 // CalcAvgExpressionScore 计算平均表达得分（仅视频模式）
@@ -106,6 +118,58 @@ func CalcAvgSpeechRate(questions []ReportQuestion) float64 {
 		return 0
 	}
 	return total / float64(count)
+}
+
+// CalcVerbalTicReport 汇总口头禅
+func CalcVerbalTicReport(questions []ReportQuestion) *VerbalTicReport {
+	ticCount := make(map[string]int)
+	for _, q := range questions {
+		if !q.Skipped && q.NonVerbalMetrics != nil {
+			for _, tic := range q.NonVerbalMetrics.VerbalTics {
+				ticCount[tic]++
+			}
+		}
+	}
+	var tics []string
+	totalCount := 0
+	for tic, count := range ticCount {
+		tics = append(tics, tic)
+		totalCount += count
+	}
+	if len(tics) == 0 {
+		return nil
+	}
+	return &VerbalTicReport{
+		DetectedTics: tics,
+		TicFrequency: totalCount,
+		Suggestions:  []string{"建议减少口头禅的使用", "可以有意识地放慢语速", "提前准备关键词避免紧张"},
+	}
+}
+
+// CalcVerbalTicReportFromAnswers 从AnswerRecord列表汇总口头禅
+func CalcVerbalTicReportFromAnswers(answers []*AnswerRecord) *VerbalTicReport {
+	ticCount := make(map[string]int)
+	for _, a := range answers {
+		if a != nil && !a.Skipped && a.NonVerbalMetrics != nil {
+			for _, tic := range a.NonVerbalMetrics.VerbalTics {
+				ticCount[tic]++
+			}
+		}
+	}
+	var tics []string
+	totalCount := 0
+	for tic, count := range ticCount {
+		tics = append(tics, tic)
+		totalCount += count
+	}
+	if len(tics) == 0 {
+		return nil
+	}
+	return &VerbalTicReport{
+		DetectedTics: tics,
+		TicFrequency: totalCount,
+		Suggestions:  []string{"建议减少口头禅的使用", "可以有意识地放慢语速", "提前准备关键词避免紧张"},
+	}
 }
 
 // CalcGrade 根据分数返回等级

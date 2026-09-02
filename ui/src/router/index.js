@@ -172,7 +172,8 @@ router.beforeEach((to, from, next) => {
 const originalPush = VueRouter.prototype.push
 VueRouter.prototype.push = function push(location) {
   return originalPush.call(this, location).catch(err => {
-    if (err && err.name !== 'NavigationDuplicated' && !err.message.includes('Redirected')) {
+    // 允许导航取消（cancelled）和重定向，避免控制台报错
+    if (err && err.name !== 'NavigationDuplicated' && !err.message.includes('Redirected') && !err.message.includes('Navigation cancelled')) {
       return Promise.reject(err)
     }
   })
@@ -181,7 +182,7 @@ VueRouter.prototype.push = function push(location) {
 const originalReplace = VueRouter.prototype.replace
 VueRouter.prototype.replace = function replace(location) {
   return originalReplace.call(this, location).catch(err => {
-    if (err && err.name !== 'NavigationDuplicated' && !err.message.includes('Redirected')) {
+    if (err && err.name !== 'NavigationDuplicated' && !err.message.includes('Redirected') && !err.message.includes('Navigation cancelled')) {
       return Promise.reject(err)
     }
   })

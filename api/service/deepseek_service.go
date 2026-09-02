@@ -103,6 +103,9 @@ func GenerateQuestions(cfg *model.InterviewConfig) ([]model.Question, error) {
 	roundReq := getRoundRequirement(cfg.Round)
 	count := config.Cfg.InterviewQuestionCount
 
+	// 获取面试形式描述
+	interviewTypeDesc := getInterviewTypeDesc(cfg.InterviewTypes)
+
 	prompt := fmt.Sprintf(`你是一位资深技术面试官，请为以下面试场景生成 %d 道面试题目。
 
 面试信息：
@@ -112,6 +115,7 @@ func GenerateQuestions(cfg *model.InterviewConfig) ([]model.Question, error) {
 - 面试轮次：%s
 - 重点方向：%s
 - 补充说明：%s
+- 面试形式：%s
 
 题目构成要求：
 %s
@@ -128,6 +132,7 @@ type 取值：basic/algorithm/design/hr`,
 		getRoundName(cfg.Round),
 		strings.Join(cfg.FocusAreas, "、"),
 		cfg.Remark,
+		interviewTypeDesc,
 		roundReq,
 	)
 
@@ -155,6 +160,7 @@ type ReviewResult struct {
 	ReferenceAnswer    string   `json:"referenceAnswer"`
 	ExpressionScore    int      `json:"expressionScore,omitempty"`
 	ExpressionFeedback string   `json:"expressionFeedback,omitempty"`
+	DetectedVerbalTics []string `json:"detectedVerbalTics,omitempty"` // 识别到的口头禅
 }
 
 // ReviewAnswer 对答案进行 AI 点评，视频模式时附加非语言指标分析
@@ -179,12 +185,20 @@ func ReviewAnswer(question *model.Question, answer string, cfg *model.InterviewC
 
 	// 视频模式：附加非语言指标上下文
 	if metrics != nil {
+		verbalTicInfo := ""
+		if len(metrics.VerbalTics) > 0 {
+			verbalTicInfo = fmt.Sprintf("\n识别到的口头禅：%s", strings.Join(metrics.VerbalTics, "、"))
+		}
+
 		prompt += fmt.Sprintf(`
 
 [语音表达数据]
-语速：%.0f字/分钟（推荐范围120-150），停顿次数：%d次，作答时长：%d秒。
-请额外在JSON中新增字段：expressionScore（0-100，评估口头表达流畅度、逻辑性、语言规范性）和 expressionFeedback（针对口头表达的具体改进建议，含语速和停顿反馈）。`,
-			metrics.SpeechRate, metrics.PauseCount, metrics.Duration,
+语速：%.0f字/分钟（推荐范围120-150），停顿次数：%d次，作答时长：%d秒，思考时长：%d秒%s
+请额外在JSON中新增字段：
+- expressionScore（0-100，评估口头表达流畅度、逻辑性、语言规范性）
+- expressionFeedback（针对口头表达的具体改进建议，含语速和停顿反馈）
+- detectedVerbalTics（检测到的口头禅列表，如"然后"、"这个"、"嗯"等高频词）`,
+			metrics.SpeechRate, metrics.PauseCount, metrics.Duration, metrics.ThinkDuration, verbalTicInfo,
 		)
 	}
 
@@ -256,17 +270,23 @@ func GenerateReportSummary(jobTitle, round string, totalScore int, scoresSummary
 func GenerateVideoExpressionSummary(jobTitle string, answers []*model.AnswerRecord) (string, error) {
 	avgRate := calcAvgSpeechRateFromAnswers(answers)
 	avgScore := calcAvgExpressionScoreFromAnswers(answers)
+	ticReport := model.CalcVerbalTicReportFromAnswers(answers)
+
+	ticInfo := ""
+	if ticReport != nil && len(ticReport.DetectedTics) > 0 {
+		ticInfo = fmt.Sprintf("\n口头禅检测：检测到 %d 次口头禅，包括：%s", ticReport.TicFrequency, strings.Join(ticReport.DetectedTics, "、"))
+	}
 
 	prompt := fmt.Sprintf(`你是一位资深面试顾问，请根据以下视频面试数据给出整体口头表达能力评价。
 
 岗位：%s
 完成题数：%d
 平均语速：%.0f字/分钟（推荐120-150）
-平均表达得分：%d分
+平均表达得分：%d分%s
 
 请严格按照以下 JSON 格式返回，不要包含任何其他文字：
 {"summary":"整体口头表达能力评价（100字以内）","suggestions":["改进建议1","改进建议2","改进建议3"]}`,
-		jobTitle, len(answers), avgRate, avgScore,
+		jobTitle, len(answers), avgRate, avgScore, ticInfo,
 	)
 
 	raw, err := Chat(prompt)
@@ -384,6 +404,24 @@ func getRoundRequirement(round string) string {
 	default:
 		return "均衡分配各类题目"
 	}
+}
+
+func getInterviewTypeDesc(types []string) string {
+	if len(types) == 0 {
+		return "半结构化面试（最常见）"
+	}
+	var descs []string
+	for _, t := range types {
+		switch t {
+		case "structured":
+			descs = append(descs, "结构化面试")
+		case "semi-structured":
+			descs = append(descs, "半结构化面试")
+		case "random":
+			descs = append(descs, "随机问答")
+		}
+	}
+	return strings.Join(descs, "、")
 }
 
 func cleanJSON(s string) string {

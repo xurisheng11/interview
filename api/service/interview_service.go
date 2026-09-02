@@ -11,19 +11,29 @@ import (
 )
 
 type CreateInterviewReq struct {
-	JobTitle   string   `json:"jobTitle" binding:"required"`
-	Difficulty string   `json:"difficulty" binding:"required"`
-	Experience string   `json:"experience" binding:"required"`
-	Round      string   `json:"round" binding:"required"`
-	FocusAreas []string `json:"focusAreas"`
-	Remark     string   `json:"remark"`
-	Mode       string   `json:"mode"` // "text" | "video"，默认 "text"
+	JobTitle        string   `json:"jobTitle" binding:"required"`
+	Difficulty      string   `json:"difficulty" binding:"required"`
+	Experience      string   `json:"experience" binding:"required"`
+	Round          string   `json:"round" binding:"required"`
+	FocusAreas     []string `json:"focusAreas"`
+	Remark         string   `json:"remark"`
+	Mode           string   `json:"mode"` // "text" | "video"，默认 "text"
+
+	// 新增字段
+	CompanyID       string   `json:"companyId"`
+	CompanyName     string   `json:"companyName"`
+	InterviewTypes  []string `json:"interviewTypes"`  // ["structured", "semi-structured", "random"]
+	ThinkTime       int      `json:"thinkTime"`       // 思考时间(秒)
+	VirtualBackground bool  `json:"virtualBackground"` // 虚拟背景
+	BgStyle         string   `json:"bgStyle"`        // 背景样式: office, blue, gray, blur
 }
 
 type SubmitAnswerReq struct {
 	QuestionIndex    int                    `json:"questionIndex" binding:"min=0"`
 	Answer           string                 `json:"answer" binding:"required"`
 	NonVerbalMetrics *model.NonVerbalMetrics `json:"nonVerbalMetrics,omitempty"` // 视频模式附加
+	ThinkDuration    int                    `json:"thinkDuration,omitempty"` // 思考时长(秒)
+	VerbalTics      []string               `json:"verbalTics,omitempty"`    // 识别到的口头禅
 }
 
 // CreateInterview 创建面试（含题目生成）
@@ -37,8 +47,36 @@ func CreateInterview(userID string, req *CreateInterviewReq) (*model.InterviewSe
 		Remark:     req.Remark,
 		Mode:       req.Mode,
 	}
+
+	// 设置默认值
 	if cfg.Mode == "" {
 		cfg.Mode = "text"
+	}
+	if req.ThinkTime <= 0 {
+		req.ThinkTime = 15 // 默认15秒思考时间
+	}
+	if req.BgStyle == "" {
+		req.BgStyle = "blur"
+	}
+
+	// 创建会话
+	session := &model.InterviewSession{
+		InterviewID:  uuid.New().String(),
+		UserID:       userID,
+		Config:       *cfg,
+		CurrentIndex: 0,
+		Answers:      make(map[int]*model.AnswerRecord),
+		Status:       "ongoing",
+		Mode:         cfg.Mode,
+		StartTime:    time.Now(),
+
+		// 新增字段
+		CompanyID:      req.CompanyID,
+		CompanyName:    req.CompanyName,
+		InterviewTypes: req.InterviewTypes,
+		ThinkTime:      req.ThinkTime,
+		VirtualBackground: req.VirtualBackground,
+		BgStyle:        req.BgStyle,
 	}
 
 	// 1. 查题目缓存
@@ -53,18 +91,7 @@ func CreateInterview(userID string, req *CreateInterviewReq) (*model.InterviewSe
 		_ = repository.SetQuestionsCache(cfg, questions)
 	}
 
-	// 创建会话
-	session := &model.InterviewSession{
-		InterviewID:  uuid.New().String(),
-		UserID:       userID,
-		Config:       *cfg,
-		Questions:    questions,
-		CurrentIndex: 0,
-		Answers:      make(map[int]*model.AnswerRecord),
-		Status:       "ongoing",
-		Mode:         cfg.Mode,
-		StartTime:    time.Now(),
-	}
+	session.Questions = questions
 
 	// 保存到 Redis
 	if err := repository.SaveSession(session); err != nil {
@@ -95,6 +122,20 @@ func SubmitAnswer(userID, interviewID string, req *SubmitAnswerReq) (*ReviewResu
 		return nil, fmt.Errorf("AI 点评失败: %w", err)
 	}
 
+	// 构建非语言指标扩展
+	var extendedMetrics *model.NonVerbalMetrics
+	if req.NonVerbalMetrics != nil {
+		extendedMetrics = req.NonVerbalMetrics
+		// 添加口头禅信息
+		if len(req.VerbalTics) > 0 {
+			extendedMetrics.VerbalTics = req.VerbalTics
+		}
+		// 添加思考时长
+		if req.ThinkDuration > 0 {
+			extendedMetrics.ThinkDuration = req.ThinkDuration
+		}
+	}
+
 	// 保存答案记录
 	record := &model.AnswerRecord{
 		UserAnswer:         req.Answer,
@@ -106,7 +147,7 @@ func SubmitAnswer(userID, interviewID string, req *SubmitAnswerReq) (*ReviewResu
 		SubmittedAt:        time.Now().Format(time.RFC3339),
 		ExpressionScore:    result.ExpressionScore,
 		ExpressionFeedback: result.ExpressionFeedback,
-		NonVerbalMetrics:   req.NonVerbalMetrics,
+		NonVerbalMetrics:   extendedMetrics,
 	}
 	_ = repository.UpdateSessionAnswer(interviewID, req.QuestionIndex, record)
 	return result, nil
@@ -175,6 +216,8 @@ func GetInterviewList(userID string) ([]*model.InterviewListItem, error) {
 			Difficulty:  session.Config.Difficulty,
 			Status:      session.Status,
 			StartTime:   session.StartTime.Format(time.RFC3339),
+			CompanyName: session.CompanyName,
+			Mode:        session.Mode,
 		}
 		// 如果已完成，尝试从报告读取得分
 		if session.Status == "completed" {

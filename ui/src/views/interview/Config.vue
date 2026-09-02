@@ -5,24 +5,106 @@
 
     <!-- 主内容区 -->
     <div class="main-content">
-      <div class="card">
-        <div class="card-title">🚀 发起模拟面试</div>
+      <!-- 练习模式选择 -->
+      <div class="mode-tabs">
+        <div
+          class="mode-tab"
+          :class="{ active: practiceMode === 'interview' }"
+          @click="practiceMode = 'interview'"
+        >
+          <div class="mode-icon">🎯</div>
+          <div class="mode-title">完整模拟面试</div>
+          <div class="mode-desc">模拟真实面试流程,连贯答题</div>
+        </div>
+        <div
+          class="mode-tab"
+          :class="{ active: practiceMode === 'single' }"
+          @click="practiceMode = 'single'"
+        >
+          <div class="mode-icon">✏️</div>
+          <div class="mode-title">单题练习</div>
+          <div class="mode-desc">逐个击破,打好基础</div>
+        </div>
+        <div
+          class="mode-tab"
+          :class="{ active: practiceMode === 'category' }"
+          @click="practiceMode = 'category'"
+        >
+          <div class="mode-icon">📚</div>
+          <div class="mode-title">分类练习</div>
+          <div class="mode-desc">按知识点批量练习</div>
+        </div>
+      </div>
+
+      <!-- 单题练习/分类练习: 跳转到题库 -->
+      <div v-if="practiceMode === 'single' || practiceMode === 'category'" class="practice-hint">
+        <el-card shadow="hover">
+          <div class="hint-content">
+            <div class="hint-icon">💡</div>
+            <div class="hint-text">
+              <template v-if="practiceMode === 'single'">
+                <p><strong>单题练习</strong>适合面试小白从零开始,逐题积累经验。</p>
+                <p>每道题都有 AI 点评,帮你了解答题要点和改进方向。</p>
+              </template>
+              <template v-else>
+                <p><strong>分类练习</strong>让你按知识点系统性地提升。</p>
+                <p>例如:先把"哈希表"相关的题都练一遍,再准备下一个知识点。</p>
+              </template>
+            </div>
+            <el-button type="primary" @click="goToQuestionBank">
+              前往题库 →
+            </el-button>
+          </div>
+        </el-card>
+      </div>
+
+      <!-- 完整模拟面试配置 -->
+      <div v-if="practiceMode === 'interview'" class="card">
+        <div class="card-title">🎯 发起模拟面试</div>
+
+        <!-- 目标公司（可选） -->
+        <div class="form-group">
+          <label>🏢 目标公司 <span class="optional">（可选，帮助匹配更精准的题目）</span></label>
+          <el-autocomplete
+            v-model="config.company"
+            class="company-input"
+            :fetch-suggestions="searchCompany"
+            placeholder="输入目标公司名称，如：腾讯、阿里..."
+            :trigger-on-focus="false"
+            clearable
+            @select="handleCompanySelect"
+          >
+            <template slot="suffix">
+              <i class="el-icon-search"></i>
+            </template>
+          </el-autocomplete>
+        </div>
 
         <div class="config-grid">
           <!-- 左列：目标岗位 + 面试难度 -->
           <div>
             <!-- 目标岗位 -->
             <div class="form-group">
-              <label>🏢 目标岗位 <span class="required">*</span></label>
-              <div class="tag-select">
-                <div
-                  v-for="opt in jobTitleOptions"
-                  :key="opt.value"
-                  class="tag"
-                  :class="{ selected: config.jobTitle === opt.value }"
-                  @click="config.jobTitle = opt.value"
-                >{{ opt.label }}</div>
-              </div>
+              <label>💼 目标岗位 <span class="required">*</span></label>
+              <el-select
+                v-model="config.jobTitle"
+                placeholder="选择或搜索岗位"
+                filterable
+                class="job-select"
+              >
+                <el-option-group label="技术类">
+                  <el-option v-for="j in jobOptions.tech" :key="j" :label="j" :value="j" />
+                </el-option-group>
+                <el-option-group label="产品与设计">
+                  <el-option v-for="j in jobOptions.product" :key="j" :label="j" :value="j" />
+                </el-option-group>
+                <el-option-group label="运营与市场">
+                  <el-option v-for="j in jobOptions.operation" :key="j" :label="j" :value="j" />
+                </el-option-group>
+                <el-option-group label="职能类">
+                  <el-option v-for="j in jobOptions.admin" :key="j" :label="j" :value="j" />
+                </el-option-group>
+              </el-select>
             </div>
 
             <!-- 面试难度 -->
@@ -35,7 +117,10 @@
                   class="tag"
                   :class="{ selected: config.difficulty === opt.value }"
                   @click="config.difficulty = opt.value"
-                >{{ opt.label }}</div>
+                >
+                  <span class="tag-label">{{ opt.label }}</span>
+                  <span class="tag-desc">{{ opt.desc }}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -72,17 +157,51 @@
           </div>
         </div>
 
+        <!-- 面试形式 -->
+        <div class="form-group">
+          <label>📋 面试形式 <span class="optional">（可多选）</span></label>
+          <div class="tag-select interview-type">
+            <div
+              v-for="opt in interviewTypeOptions"
+              :key="opt.value"
+              class="tag type-tag"
+              :class="{ selected: config.interviewTypes.includes(opt.value) }"
+              @click="toggleInterviewType(opt.value)"
+            >
+              <span class="type-icon">{{ opt.icon }}</span>
+              <span class="type-label">{{ opt.label }}</span>
+            </div>
+          </div>
+          <div class="type-desc">
+            <template v-if="config.interviewTypes.includes('structured')">
+              <el-alert type="info" :closable="false" show-icon>
+                <strong>结构化面试:</strong> 固定题目、统一评分标准,公平性强
+              </el-alert>
+            </template>
+            <template v-else-if="config.interviewTypes.includes('semi-structured')">
+              <el-alert type="info" :closable="false" show-icon>
+                <strong>半结构化面试:</strong> 主干问题固定,追问灵活,最常见的面试形式
+              </el-alert>
+            </template>
+            <template v-else-if="config.interviewTypes.includes('random')">
+              <el-alert type="info" :closable="false" show-icon>
+                <strong>随机问答:</strong> 不固定题目,考验临场反应和真实能力
+              </el-alert>
+            </template>
+          </div>
+        </div>
+
         <!-- 重点方向（多选，跨全宽） -->
         <div class="form-group">
           <label>🏷️ 重点方向 <span class="optional">（可多选）</span></label>
           <div class="tag-select">
             <div
               v-for="opt in focusOptions"
-              :key="opt"
+              :key="opt.value"
               class="tag"
-              :class="{ selected: config.focusAreas.includes(opt) }"
-              @click="toggleFocus(opt)"
-            >{{ opt }}</div>
+              :class="{ selected: config.focusAreas.includes(opt.value) }"
+              @click="toggleFocus(opt.value)"
+            >{{ opt.label }}</div>
           </div>
         </div>
 
@@ -107,13 +226,46 @@
           </div>
         </div>
 
+        <!-- 视频面试选项（仅视频模式显示） -->
+        <div v-if="config.mode === 'video'" class="form-group video-options">
+          <label>📹 视频面试选项</label>
+          <div class="option-row">
+            <div class="option-item">
+              <span class="option-label">思考时间</span>
+              <el-slider
+                v-model="config.thinkTime"
+                :min="0"
+                :max="60"
+                :step="5"
+                :marks="thinkTimeMarks"
+                class="option-slider"
+              ></el-slider>
+              <span class="option-value">{{ config.thinkTime }}秒</span>
+            </div>
+          </div>
+          <div class="option-row">
+            <div class="option-item">
+              <span class="option-label">虚拟背景</span>
+              <el-switch v-model="config.virtualBackground" active-text="开启" inactive-text="关闭"></el-switch>
+            </div>
+            <div class="option-item" v-if="config.virtualBackground">
+              <el-select v-model="config.bgStyle" placeholder="选择背景" size="small">
+                <el-option label="办公室" value="office" />
+                <el-option label="纯色蓝" value="blue" />
+                <el-option label="纯色灰" value="gray" />
+                <el-option label="模糊背景" value="blur" />
+              </el-select>
+            </div>
+          </div>
+        </div>
+
         <!-- 补充说明（选填） -->
         <div class="form-group">
           <label>📝 补充说明 <span class="optional">（选填）</span></label>
           <textarea
             v-model="config.remark"
             class="remark-input"
-            placeholder="描述你的项目经验、技术栈等，帮助 AI 生成更精准的题目..."
+            placeholder="描述你的项目经验、技术栈、目标公司的特殊要求等，帮助 AI 生成更精准的题目..."
           ></textarea>
         </div>
 
@@ -140,7 +292,7 @@
 
 <script>
 import Sidebar from '@/components/layout/Sidebar.vue'
-import { createInterview } from '@/api/interview'
+import { createInterview, searchCompanies } from '@/api/interview'
 
 export default {
   name: 'InterviewConfig',
@@ -148,17 +300,24 @@ export default {
 
   data() {
     return {
+      practiceMode: 'interview', // 'interview' | 'single' | 'category'
       loading: false,
       showHint: false,
 
       config: {
+        company: '',
+        companyId: '',
         jobTitle: '',
         difficulty: '',
         experience: '',
         round: '',
+        interviewTypes: ['semi-structured'], // 默认为半结构化
         focusAreas: [],
         remark: '',
-        mode: 'text'
+        mode: 'text',
+        thinkTime: 15, // 思考时间(秒)
+        virtualBackground: false,
+        bgStyle: 'blur'
       },
 
       sidebarItems: [
@@ -171,44 +330,45 @@ export default {
         }
       ],
 
-      jobTitleOptions: [
-        { label: '后端开发', value: '后端开发' },
-        { label: '前端开发', value: '前端开发' },
-        { label: '全栈开发', value: '全栈开发' },
-        { label: '移动端开发', value: '移动端开发' },
-        { label: '大数据工程师', value: '大数据工程师' },
-        { label: 'AI算法工程师', value: 'AI算法工程师' },
-        { label: '测试工程师', value: '测试工程师' },
-        { label: '运维/DevOps', value: '运维/DevOps' },
-        { label: '网络安全', value: '网络安全' },
-        { label: '嵌入式开发', value: '嵌入式开发' },
-        { label: '产品经理', value: '产品经理' },
-        { label: 'UI/UX设计师', value: 'UI/UX设计师' },
-        { label: '平面设计师', value: '平面设计师' },
-        { label: '数据分析师', value: '数据分析师' },
-        { label: '会计/财务', value: '会计/财务' },
-        { label: '市场营销', value: '市场营销' },
-        { label: '运营专员', value: '运营专员' },
-        { label: '新媒体运营', value: '新媒体运营' },
-        { label: '人力资源', value: '人力资源' },
-        { label: '行政管理', value: '行政管理' },
-        { label: '销售/商务', value: '销售/商务' },
-        { label: '项目管理', value: '项目管理' },
-        { label: '法务/合规', value: '法务/合规' },
-        { label: '客户服务', value: '客户服务' }
-      ],
+      // 岗位选项(按类别分组)
+      jobOptions: {
+        tech: [
+          '后端开发', '前端开发', '全栈开发', '移动端开发(Android)',
+          '移动端开发(iOS)', '大数据工程师', 'AI算法工程师', '测试工程师',
+          '运维/DevOps', '网络安全', '嵌入式开发', '游戏开发',
+          '游戏客户端开发', '游戏服务端开发', '数据分析', '数据工程',
+          '机器学习工程师', '深度学习工程师', 'NLP工程师', '推荐算法工程师'
+        ],
+        product: [
+          '产品经理', '产品助理', '高级产品经理', '数据产品经理',
+          'AI产品经理', 'C端产品经理', 'B端产品经理', '平台产品经理',
+          'UI设计师', 'UX设计师', '视觉设计师', '交互设计师',
+          '平面设计师', '品牌设计师', '视频设计师'
+        ],
+        operation: [
+          '运营专员', '内容运营', '用户运营', '活动运营',
+          '新媒体运营', '电商运营', '社群运营', '游戏运营',
+          '市场策划', '市场营销', '商务拓展', '销售代表',
+          '客户经理', '渠道运营', '增长运营'
+        ],
+        admin: [
+          '会计/财务', '人力资源', '行政管理', '法务/合规',
+          '采购/供应链', '质量管理', '项目协调', ' CEO/总裁助理',
+          '投资关系', '公关媒介'
+        ]
+      },
 
       difficultyOptions: [
-        { label: '初级', value: '初级' },
-        { label: '中级', value: '中级' },
-        { label: '高级', value: '高级' }
+        { label: '初级', value: 'junior', desc: '校招/入门级' },
+        { label: '中级', value: 'middle', desc: '1-3年经验' },
+        { label: '高级', value: 'senior', desc: '资深/专家级' }
       ],
 
       experienceOptions: [
-        { label: '应届生', value: '应届生' },
-        { label: '1-3年', value: '1-3年' },
-        { label: '3-5年', value: '3-5年' },
-        { label: '5年以上', value: '5年以上' }
+        { label: '应届生', value: 'fresh' },
+        { label: '1-3年', value: '1-3' },
+        { label: '3-5年', value: '3-5' },
+        { label: '5年以上', value: '5+' }
       ],
 
       roundOptions: [
@@ -217,7 +377,30 @@ export default {
         { label: '三面（综合/HR）', value: 'round3' }
       ],
 
-      focusOptions: ['算法', '系统设计', '项目经验', '基础知识', '场景题']
+      interviewTypeOptions: [
+        { value: 'structured', label: '结构化面试', icon: '📋' },
+        { value: 'semi-structured', label: '半结构化面试', icon: '🔄' },
+        { value: 'random', label: '随机问答', icon: '🎲' }
+      ],
+
+      focusOptions: [
+        { value: '算法', label: '算法与数据结构' },
+        { value: 'system_design', label: '系统设计' },
+        { value: 'project', label: '项目经验' },
+        { value: 'basic', label: '基础知识' },
+        { value: 'scenario', label: '场景题' },
+        { value: 'behavior', label: '行为面试' }
+      ],
+
+      thinkTimeMarks: {
+        0: '0秒',
+        15: '15秒',
+        30: '30秒',
+        60: '60秒'
+      },
+
+      // 缓存搜索结果
+      companyCache: []
     }
   },
 
@@ -242,6 +425,43 @@ export default {
       }
     },
 
+    toggleInterviewType(type) {
+      const idx = this.config.interviewTypes.indexOf(type)
+      if (idx === -1) {
+        this.config.interviewTypes.push(type)
+      } else if (this.config.interviewTypes.length > 1) {
+        // 至少保留一个
+        this.config.interviewTypes.splice(idx, 1)
+      }
+    },
+
+    async searchCompany(queryString, cb) {
+      if (!queryString || queryString.length < 2) {
+        cb([])
+        return
+      }
+      try {
+        const res = await searchCompanies(queryString)
+        const companies = (res.data || res || []).map(c => ({
+          value: c.name || c.companyName,
+          id: c.id || c.companyId,
+          questionCount: c.questionCount || 0
+        }))
+        this.companyCache = companies
+        cb(companies)
+      } catch (e) {
+        cb([])
+      }
+    },
+
+    handleCompanySelect(item) {
+      this.config.companyId = item.id || ''
+    },
+
+    goToQuestionBank() {
+      this.$router.push('/questions')
+    },
+
     async handleStart() {
       // 如果必填项未完成，显示提示并阻止
       if (!this.isFormValid) {
@@ -262,6 +482,20 @@ export default {
           focusAreas: [...this.config.focusAreas],
           remark: this.config.remark || '',
           mode: this.config.mode || 'text'
+        }
+
+        // 添加新字段
+        if (this.config.companyId) {
+          payload.companyId = this.config.companyId
+          payload.companyName = this.config.company
+        }
+        if (this.config.interviewTypes.length) {
+          payload.interviewTypes = this.config.interviewTypes
+        }
+        if (this.config.mode === 'video') {
+          payload.thinkTime = this.config.thinkTime
+          payload.virtualBackground = this.config.virtualBackground
+          payload.bgStyle = this.config.bgStyle
         }
 
         const res = await createInterview(payload)
@@ -310,16 +544,91 @@ export default {
 .layout {
   display: flex;
   min-height: calc(100vh - 90px);
+  width: 100%;
 }
 
 .main-content {
   flex: 1;
   padding: 20px;
-  background: #f3f3f3;
+  background: #fff;
   overflow: auto;
+  min-width: 0;
 }
 
-/* 卡片 */
+/* ===== 练习模式选择 ===== */
+.mode-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.mode-tab {
+  background: #fff;
+  border: 2px solid #e8e8e8;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.mode-tab:hover {
+  border-color: #ff9900;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 153, 0, 0.15);
+}
+
+.mode-tab.active {
+  border-color: #ff9900;
+  background: linear-gradient(135deg, #fff9f0, #fff);
+}
+
+.mode-icon {
+  font-size: 36px;
+  margin-bottom: 8px;
+}
+
+.mode-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.mode-desc {
+  font-size: 13px;
+  color: #999;
+}
+
+/* ===== 练习提示卡片 ===== */
+.practice-hint {
+  max-width: 700px;
+}
+
+.hint-content {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.hint-icon {
+  font-size: 40px;
+  flex-shrink: 0;
+}
+
+.hint-text {
+  flex: 1;
+}
+
+.hint-text p {
+  margin: 4px 0;
+  font-size: 14px;
+  color: #666;
+  line-height: 1.6;
+}
+
+/* ===== 卡片 ===== */
 .card {
   background: #fff;
   border: 1px solid #ddd;
@@ -328,7 +637,6 @@ export default {
   max-width: 960px;
 }
 
-/* 卡片标题：左侧橙色竖线 */
 .card-title {
   font-size: 18px;
   font-weight: bold;
@@ -338,14 +646,12 @@ export default {
   padding-left: 10px;
 }
 
-/* 两列网格 */
 .config-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0 24px;
 }
 
-/* 表单组 */
 .form-group {
   margin-bottom: 20px;
 }
@@ -370,6 +676,41 @@ export default {
   margin-left: 4px;
 }
 
+/* 岗位选择器 */
+.job-select {
+  width: 100%;
+}
+
+::v-deep .el-select-group__title {
+  font-weight: bold;
+  color: #333;
+}
+
+/* 公司输入 */
+.company-input {
+  width: 100%;
+  max-width: 400px;
+}
+
+.company-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.company-name {
+  font-size: 14px;
+}
+
+.company-tag {
+  font-size: 12px;
+  color: #ff9900;
+  background: #fff7e6;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
 /* 标签选择区域 */
 .tag-select {
   display: flex;
@@ -377,9 +718,8 @@ export default {
   gap: 8px;
 }
 
-/* 单个标签 */
 .tag {
-  padding: 6px 14px;
+  padding: 8px 16px;
   border-radius: 20px;
   border: 1px solid #ddd;
   background: #fff;
@@ -402,7 +742,83 @@ export default {
   font-weight: bold;
 }
 
-/* 补充说明文本域 */
+/* 难度标签带描述 */
+.tag .tag-label {
+  font-weight: bold;
+}
+
+.tag .tag-desc {
+  font-size: 11px;
+  color: #999;
+  margin-left: 4px;
+}
+
+.tag.selected .tag-desc {
+  color: #333;
+}
+
+/* 面试形式标签 */
+.interview-type .type-tag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+}
+
+.type-icon {
+  font-size: 16px;
+}
+
+.type-desc {
+  margin-top: 10px;
+}
+
+.type-desc .el-alert {
+  border-radius: 6px;
+}
+
+/* 视频面试选项 */
+.video-options {
+  background: #f9f9f9;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: -8px;
+}
+
+.option-row {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 12px;
+}
+
+.option-row:last-child {
+  margin-bottom: 0;
+}
+
+.option-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.option-label {
+  font-size: 13px;
+  color: #666;
+  white-space: nowrap;
+}
+
+.option-slider {
+  width: 200px;
+}
+
+.option-value {
+  font-size: 14px;
+  font-weight: bold;
+  color: #ff9900;
+  min-width: 45px;
+}
+
 .remark-input {
   width: 100%;
   padding: 10px;
@@ -422,7 +838,6 @@ export default {
   box-shadow: 0 0 0 2px rgba(255, 153, 0, 0.15);
 }
 
-/* 必填项提示条 */
 .hint-bar {
   background: #fff9f0;
   border: 1px solid #febd69;
@@ -436,13 +851,11 @@ export default {
   gap: 6px;
 }
 
-/* 提交行 */
 .submit-row {
   text-align: center;
   margin-top: 4px;
 }
 
-/* 发起面试按钮 */
 .submit-btn {
   padding: 12px 60px !important;
   font-size: 16px !important;
@@ -450,7 +863,6 @@ export default {
   height: auto !important;
 }
 
-/* 覆盖 Element UI 主色为橙色 */
 ::v-deep .el-button--primary {
   background: #ff9900;
   border-color: #ff9900;
@@ -472,7 +884,6 @@ export default {
   cursor: not-allowed;
 }
 
-/* 视频面试提示 */
 .video-hint {
   margin-top: 8px;
   font-size: 12px;
@@ -486,14 +897,23 @@ export default {
   gap: 6px;
 }
 
-/* 响应式：小屏切单列 */
 @media (max-width: 768px) {
   .config-grid {
     grid-template-columns: 1fr;
   }
 
+  .mode-tabs {
+    grid-template-columns: 1fr;
+  }
+
   .submit-btn {
     padding: 12px 40px !important;
+  }
+
+  .option-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
   }
 }
 </style>

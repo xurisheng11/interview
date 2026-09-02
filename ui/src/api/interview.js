@@ -29,3 +29,23 @@ export function pauseInterview(id) {
 export function completeInterview(id) {
   return request.put(`/interviews/${id}/complete`)
 }
+
+// 搜索公司
+export function searchCompanies(query) {
+  return request.get('/companies/search', { params: { q: query } })
+}
+
+// 获取公司面试题
+export function getCompanyQuestions(companyId, params) {
+  return request.get(`/companies/${companyId}/questions`, { params })
+}
+
+// 提交面试题（用户贡献）
+export function submitInterviewQuestion(data) {
+  return request.post('/questions/contribute', data)
+}
+
+// 获取用户贡献的面试题
+export function getMyContributions() {
+  return request.get('/questions/my-contributions')
+}

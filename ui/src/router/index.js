@@ -10,6 +10,8 @@ const InterviewConfig = () => import('@/views/interview/Config.vue')
 const InterviewLoading = () => import('@/views/interview/Loading.vue')
 const InterviewDoing = () => import('@/views/interview/Doing.vue')
 const InterviewHistory = () => import('@/views/interview/History.vue')
+const ResumeList = () => import('@/views/resume/List.vue')
+const ResumeDetail = () => import('@/views/resume/Detail.vue')
 const ReportDetail = () => import('@/views/report/Detail.vue')
 const ReportShare = () => import('@/views/report/Share.vue')
 const QuestionList = () => import('@/views/question/List.vue')
@@ -64,6 +66,15 @@ const routes = [
     name: 'ReportShare',
     component: ReportShare,
     meta: { requiresAuth: false, title: '分享报告' }
+  },
+  {
+    path: '/resume',
+    component: { render: h => h('router-view') },
+    meta: { requiresAuth: true },
+    children: [
+      { path: '', name: 'ResumeList', component: ResumeList, meta: { requiresAuth: true, title: '我的简历' } },
+      { path: ':id', name: 'ResumeDetail', component: ResumeDetail, meta: { requiresAuth: true, title: '简历详情' } }
+    ]
   },
   {
     path: '/questions',

@@ -20,6 +20,10 @@ func SuccessMsg(c *gin.Context, msg string, data interface{}) {
 	c.JSON(http.StatusOK, Response{Code: 200, Message: msg, Data: data})
 }
 
+func Created(c *gin.Context, data interface{}) {
+	c.JSON(http.StatusCreated, Response{Code: 201, Message: "created", Data: data})
+}
+
 func Fail(c *gin.Context, code int, msg string) {
 	c.JSON(code, Response{Code: code, Message: msg, Data: nil})
 }

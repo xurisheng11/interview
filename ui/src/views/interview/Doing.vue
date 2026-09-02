@@ -1,5 +1,5 @@
 <template>
-  <div class="doing-layout">
+  <div class="doing-layout" v-loading="loading">
     <!-- 左侧题目导航 -->
     <div class="nav-panel">
       <div class="nav-title">题目导航</div>
@@ -154,13 +154,14 @@
 </template>
 
 <script>
-import { submitAnswer, pauseInterview, completeInterview } from '@/api/interview'
+import { submitAnswer, pauseInterview, completeInterview, getInterview } from '@/api/interview'
 
 export default {
   name: 'InterviewDoing',
 
   data() {
     return {
+      loading: true,
       currentIdx: 0,
       currentAnswer: '',
       submitting: false,
@@ -175,7 +176,8 @@ export default {
 
   computed: {
     interviewId() {
-      return this.$store.state.interview.currentInterviewId
+      // 优先从路由参数取（简历面试跳转），其次从 Vuex 取（普通面试）
+      return this.$route.params.id || this.$store.state.interview.currentInterviewId
     },
     questions() {
       return this.$store.state.interview.currentQuestions || []
@@ -210,13 +212,7 @@ export default {
   },
 
   created() {
-    if (!this.interviewId || !this.questions.length) {
-      this.$message.warning('未找到面试信息，请重新配置')
-      this.$router.replace('/interview/config')
-      return
-    }
-    this.answers = Array(this.total).fill(null).map(() => ({}))
-    this.startTimer()
+    this.init()
   },
 
   beforeDestroy() {
@@ -224,6 +220,34 @@ export default {
   },
 
   methods: {
+    async init() {
+      // 优先使用 store 中已有的会话数据（普通面试流程）
+      if (this.questions.length > 0) {
+        this.loading = false
+        this.answers = Array(this.total).fill(null).map(() => ({}))
+        this.startTimer()
+        return
+      }
+      // 否则从 API 加载（简历面试跳转）
+      if (!this.interviewId) {
+        this.$message.warning('未找到面试信息，请重新配置')
+        this.$router.replace('/interview/config')
+        return
+      }
+      try {
+        const res = await getInterview(this.interviewId)
+        const session = res.data || res
+        this.$store.commit('interview/SET_CURRENT_ID', this.interviewId)
+        this.$store.commit('interview/SET_QUESTIONS', session.questions || [])
+        this.answers = Array(session.questions?.length || 0).fill(null).map(() => ({}))
+        this.startTimer()
+      } catch (e) {
+        this.$message.error('未找到面试信息，请重新配置')
+        this.$router.replace('/interview/config')
+      } finally {
+        this.loading = false
+      }
+    },
     navItemClass(idx) {
       const a = this.answers[idx] || {}
       if (a.skipped) return 'skipped'

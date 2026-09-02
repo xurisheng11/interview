@@ -3,6 +3,7 @@
     <router-link to="/dashboard" class="subnav-item" active-class="active">首页</router-link>
     <router-link to="/interview/config" class="subnav-item" active-class="active">开始面试</router-link>
     <router-link to="/interview/history" class="subnav-item" active-class="active">面试历史</router-link>
+    <router-link to="/resume" class="subnav-item" active-class="active">📄 简历</router-link>
     <router-link to="/questions" class="subnav-item" active-class="active">题库</router-link>
     <router-link to="/community" class="subnav-item" active-class="active">知识社区</router-link>
     <router-link to="/company/intel" class="subnav-item" active-class="active">🏢 公司面试知识库</router-link>

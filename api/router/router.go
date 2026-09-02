@@ -81,6 +81,17 @@ func Setup() *gin.Engine {
 		protected.GET("/company/intel", handler.GetCompanyIntel)
 		protected.GET("/company/question-answer", handler.GetCompanyQuestionAnswer)
 
+		// 简历管理
+		resumes := protected.Group("/resumes")
+		{
+			resumes.POST("", handler.UploadResume)
+			resumes.GET("", handler.ListResumes)
+			resumes.GET("/:id", handler.GetResume)
+			resumes.DELETE("/:id", handler.DeleteResume)
+			resumes.POST("/:id/retry", handler.RetryAnalyzeResume)
+			resumes.POST("/:id/interview", handler.CreateResumeInterview)
+		}
+
 		// 管理后台
 		admin := protected.Group("/admin")
 		admin.Use(middleware.AdminRequired())

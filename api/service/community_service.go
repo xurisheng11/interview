@@ -604,6 +604,10 @@ func ListComments(articleID string) ([]model.Comment, error) {
 		if err := c.FromRedisHash(m); err != nil {
 			continue
 		}
+		// 填充用户名
+		if user, err := repository.GetUserByID(c.UserID); err == nil && user != nil {
+			c.Username = user.Username
+		}
 		comments = append(comments, *c)
 	}
 

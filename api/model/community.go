@@ -106,6 +106,7 @@ type Comment struct {
 	CommentID string `json:"commentId"`
 	ArticleID string `json:"articleId"`
 	UserID    string `json:"userId"`
+	Username  string `json:"username"` // 评论者用户名（动态填充）
 	Content   string `json:"content"`
 	CreatedAt int64  `json:"createdAt"`
 }

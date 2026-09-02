@@ -221,7 +221,8 @@ export default {
         { icon: '📚', label: '题库练习', path: '/questions',         bg: '#e3f2fd' },
         { icon: '🏢', label: '公司面试知识库', path: '/company/intel',   bg: '#fce4ec' },
         { icon: '🌐', label: '知识社区', path: '/community',         bg: '#f3e5f5' },
-        { icon: '👤', label: '个人中心', path: '/profile',           bg: '#e0f7fa' }
+        { icon: '👤', label: '个人中心', path: '/profile',           bg: '#e0f7fa' },
+        { icon: '📝', label: '贡献题目', path: '/questions/contribute', bg: '#fff9e6' }
       ]
     }
   },

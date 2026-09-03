@@ -5,9 +5,11 @@
     <router-link to="/interview/history" class="subnav-item" active-class="active">面试历史</router-link>
     <router-link to="/resume" class="subnav-item" active-class="active">📄 简历</router-link>
     <router-link to="/questions" class="subnav-item" active-class="active">题库</router-link>
+    <router-link to="/questions/my-contributions" class="subnav-item" active-class="active">🏆 我的贡献</router-link>
     <router-link to="/community" class="subnav-item" active-class="active">知识社区</router-link>
     <router-link to="/company/intel" class="subnav-item" active-class="active">🏢 公司面试知识库</router-link>
     <router-link to="/profile" class="subnav-item" active-class="active">个人中心</router-link>
+    <router-link to="/help" class="subnav-item" active-class="active">❓ 帮助</router-link>
   </div>
 </template>
 

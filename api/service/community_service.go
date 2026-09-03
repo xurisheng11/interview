@@ -563,6 +563,11 @@ func AddComment(userID, articleID, content string) (*model.Comment, error) {
 		CreatedAt: time.Now().Unix(),
 	}
 
+	// 填充用户名（前端评论区显示用）
+	if user, err := repository.GetUserByID(userID); err == nil && user != nil {
+		comment.Username = user.Username
+	}
+
 	// 写 Hash（永久）
 	hash := comment.ToRedisHash()
 	if err := repository.HSetMap(commentKey(comment.CommentID), hash); err != nil {

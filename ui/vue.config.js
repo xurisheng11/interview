@@ -5,7 +5,8 @@ module.exports = {
     proxy: {
       '/api': {
         target: 'http://localhost:8080',
-        changeOrigin: true
+        changeOrigin: true,
+        proxyTimeout: 300000  // 5 分钟，和前端 axios 超时一致
       }
     }
   }

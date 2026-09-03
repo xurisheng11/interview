@@ -4,7 +4,7 @@ import request from './request'
 export function uploadResume(formData) {
   return request.post('/resumes', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
-    timeout: 60000
+    timeout: 300000  // 5 分钟，大文件OCR处理需要更长时间
   })
 }
 

@@ -1,0 +1,151 @@
+{
+  "num_spans": 50,
+  "first_span": "&#x6559;&#x80b2;&#x80cc;&#x666f;",
+  "first_span_hex": "262378363535393b262378383062323b262378383063633b262378363636663b",
+  "sample_chars": [
+    {
+      "index": 0,
+      "char": "&",
+      "unicode": "U+0026",
+      "is_chinese": false,
+      "is_valid_utf8": true
+    },
+    {
+      "index": 1,
+      "char": "#",
+      "unicode": "U+0023",
+      "is_chinese": false,
+      "is_valid_utf8": true
+    },
+    {
+      "index": 2,
+      "char": "x",
+      "unicode": "U+0078",
+      "is_chinese": false,
+      "is_valid_utf8": true
+    },
+    {
+      "index": 3,
+      "char": "6",
+      "unicode": "U+0036",
+      "is_chinese": false,
+      "is_valid_utf8": true
+    },
+    {
+      "index": 4,
+      "char": "5",
+      "unicode": "U+0035",
+      "is_chinese": false,
+      "is_valid_utf8": true
+    },
+    {
+      "index": 5,
+      "char": "5",
+      "unicode": "U+0035",
+      "is_chinese": false,
+      "is_valid_utf8": true
+    },
+    {
+      "index": 6,
+      "char": "9",
+      "unicode": "U+0039",
+      "is_chinese": false,
+      "is_valid_utf8": true
+    },
+    {
+      "index": 7,
+      "char": ";",
+      "unicode": "U+003B",
+      "is_chinese": false,
+      "is_valid_utf8": true
+    },
+    {
+      "index": 8,
+      "char": "&",
+      "unicode": "U+0026",
+      "is_chinese": false,
+      "is_valid_utf8": true
+    },
+    {
+      "index": 9,
+      "char": "#",
+      "unicode": "U+0023",
+      "is_chinese": false,
+      "is_valid_utf8": true
+    },
+    {
+      "index": 10,
+      "char": "x",
+      "unicode": "U+0078",
+      "is_chinese": false,
+      "is_valid_utf8": true
+    },
+    {
+      "index": 11,
+      "char": "8",
+      "unicode": "U+0038",
+      "is_chinese": false,
+      "is_valid_utf8": true
+    },
+    {
+      "index": 12,
+      "char": "0",
+      "unicode": "U+0030",
+      "is_chinese": false,
+      "is_valid_utf8": true
+    },
+    {
+      "index": 13,
+      "char": "b",
+      "unicode": "U+0062",
+      "is_chinese": false,
+      "is_valid_utf8": true
+    },
+    {
+      "index": 14,
+      "char": "2",
+      "unicode": "U+0032",
+      "is_chinese": false,
+      "is_valid_utf8": true
+    },
+    {
+      "index": 15,
+      "char": ";",
+      "unicode": "U+003B",
+      "is_chinese": false,
+      "is_valid_utf8": true
+    },
+    {
+      "index": 16,
+      "char": "&",
+      "unicode": "U+0026",
+      "is_chinese": false,
+      "is_valid_utf8": true
+    },
+    {
+      "index": 17,
+      "char": "#",
+      "unicode": "U+0023",
+      "is_chinese": false,
+      "is_valid_utf8": true
+    },
+    {
+      "index": 18,
+      "char": "x",
+      "unicode": "U+0078",
+      "is_chinese": false,
+      "is_valid_utf8": true
+    },
+    {
+      "index": 19,
+      "char": "8",
+      "unicode": "U+0038",
+      "is_chinese": false,
+      "is_valid_utf8": true
+    }
+  ],
+  "dict_text_sample": "",
+  "dict_text_hex": "",
+  "text_sample": "教育背景\n2024.09-2025.12｜研究生｜英国格拉斯哥大学｜工商管理（管理学）专业｜理学硕士\nGPA：Merit（二等一学位）\n主修课程：会计管理(Accounting For Management)、市场营销(Marketing Management)、国际管理\n(International Management )、数字营销战略(Digital Marketing Strategy)等",
+  "text_hex": "e69599e882b2e8838ce699af0a323032342e30392d323032352e3132efbd9ce7a094e7a9b6e7949fefbd9ce88bb1e59bbde6a0bce68b89e696afe593a5e5a4a7e5ada6efbd9ce5b7a5e59586e7aea1e79086efbc88e7aea1e79086e5ada6efbc89e4b893e4b89aefbd9ce79086e5ada6e7a195e5a3ab0a475041efbc9a4d65726974efbc88e4ba8ce7ad89e4b880e5ada6e4bd8defbc890ae4b8bbe4bfaee8afbee7a88befbc9ae4bc9ae8aea1e7aea1e79086284163636f756e74696e6720466f72204d616e6167656d656e7429e38081e5b882e59cbae890a5e99480284d61726b6574696e67204d616e6167656d656e7429e38081e59bbde99985e7aea1e790860a28496e7465726e6174696f6e616c204d616e6167656d656e742029e38081e695b0e5ad97e890a5e99480e68898e795a5284469676974616c204d61726b6574696e6720537472617465677929e7ad89"
+}

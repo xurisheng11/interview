@@ -19,9 +19,11 @@ const QuestionList = () => import('@/views/question/List.vue')
 const QuestionPractice = () => import('@/views/question/Practice.vue')
 const QuestionContribute = () => import('@/views/question/Contribute.vue')
 const QuestionContributions = () => import('@/views/question/Contributions.vue')
+const MyContributions = () => import('@/views/question/MyContributions.vue')
 const CommunityIndex = () => import('@/views/community/Index.vue')
 const ArticleDetail = () => import('@/views/community/Article.vue')
 const ProfileIndex = () => import('@/views/profile/Index.vue')
+const Help = () => import('@/views/Help.vue')
 const CompanyIntel = () => import('@/views/company/Intel.vue')
 
 // 管理后台
@@ -93,7 +95,8 @@ const routes = [
       { path: '', name: 'QuestionList', component: QuestionList, meta: { requiresAuth: true, title: '题库练习' } },
       { path: ':id/practice', name: 'QuestionPractice', component: QuestionPractice, meta: { requiresAuth: true, title: '单题练习' } },
       { path: 'contribute', name: 'QuestionContribute', component: QuestionContribute, meta: { requiresAuth: true, title: '贡献题目' } },
-      { path: 'contributions', name: 'QuestionContributions', component: QuestionContributions, meta: { requiresAuth: true, title: '公司面试题库' } }
+      { path: 'contributions', name: 'QuestionContributions', component: QuestionContributions, meta: { requiresAuth: true, title: '公司面试题库' } },
+      { path: 'my-contributions', name: 'MyContributions', component: MyContributions, meta: { requiresAuth: true, title: '我的贡献' } }
     ]
   },
   {
@@ -110,6 +113,12 @@ const routes = [
     name: 'Profile',
     component: ProfileIndex,
     meta: { requiresAuth: true, title: '个人中心' }
+  },
+  {
+    path: '/help',
+    name: 'Help',
+    component: Help,
+    meta: { requiresAuth: true, title: '使用帮助' }
   },
   {
     path: '/company/intel',

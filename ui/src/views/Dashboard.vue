@@ -1,177 +1,173 @@
 <template>
   <div class="dashboard">
 
-    <!-- ① 欢迎横幅 -->
+    <!-- ① 简化的欢迎横幅 -->
     <div class="welcome-banner">
-      <div class="welcome-left">
-        <div class="welcome-greeting">{{ greeting }}，<span class="welcome-name">{{ displayName }}</span> 👋</div>
-        <div class="welcome-sub">{{ motivationalText }}</div>
-        <div class="banner-actions">
-          <el-button type="primary" size="small" class="banner-btn" @click="$router.push('/interview/config')">
-            🚀 发起面试
+      <div class="welcome-content">
+        <div class="welcome-text">
+          <h1 class="welcome-title">{{ greeting }}，<span class="welcome-name">{{ displayName }}</span> 👋</h1>
+          <p class="welcome-sub">{{ motivationalText }}</p>
+        </div>
+        <div class="welcome-actions">
+          <el-button type="primary" size="medium" class="btn-primary-action" @click="$router.push('/interview/config')">
+            🚀 开始面试
           </el-button>
-          <el-button size="small" class="banner-btn-primary" @click="$router.push('/learn')">
-            📚 学习路径
-          </el-button>
-          <el-button size="small" class="banner-btn-ghost" @click="$router.push('/questions')">
-            📝 题库练习
-          </el-button>
-          <el-button size="small" class="banner-btn-ghost" @click="$router.push('/company/intel')">
-            🏢 公司知识库
+          <el-button size="medium" class="btn-secondary-action" @click="$router.push('/help')">
+            📖 新手引导
           </el-button>
         </div>
-      </div>
-      <div class="welcome-right">
-        <div class="banner-decoration">🎯</div>
       </div>
     </div>
 
-    <!-- ② 统计卡片 -->
-    <el-row :gutter="16" class="stats-row">
-      <el-col :span="6" v-for="(card, i) in statCards" :key="i">
-        <div class="stat-card" :class="'stat-card--' + card.theme" v-loading="statsLoading">
-          <div class="stat-card-inner">
-            <div class="stat-icon-big">{{ card.icon }}</div>
-            <div class="stat-right">
-              <div class="stat-num">{{ card.value }}</div>
-              <div class="stat-label">{{ card.label }}</div>
-            </div>
-          </div>
-          <div class="stat-bar">
-            <div class="stat-bar-fill" :style="{ width: card.barWidth }"></div>
+    <!-- ② 简洁功能入口 -->
+    <div class="quick-access">
+      <h2 class="section-title">快捷入口</h2>
+      <div class="access-grid">
+        <div class="access-card access-card--primary" @click="$router.push('/interview/config')">
+          <div class="access-icon">🚀</div>
+          <div class="access-text">
+            <h3>发起面试</h3>
+            <p>AI 模拟真实面试</p>
           </div>
         </div>
-      </el-col>
-    </el-row>
-
-    <!-- ③ 主内容 -->
-    <el-row :gutter="16" class="main-row">
-
-      <!-- 左列：近期记录 + 趋势图 -->
-      <el-col :span="16">
-        <!-- 近期面试记录 -->
-        <el-card shadow="never" class="section-card" style="margin-bottom:16px">
-          <div slot="header" class="card-header">
-            <span class="card-title">📋 近期面试记录</span>
-            <router-link to="/interview/history" class="view-all">查看全部 ›</router-link>
+        <div class="access-card" @click="$router.push('/interview/history')">
+          <div class="access-icon">📁</div>
+          <div class="access-text">
+            <h3>面试记录</h3>
+            <p>查看历史表现</p>
           </div>
-          <el-table
-            :data="interviews"
-            v-loading="interviewsLoading"
-            stripe
-            style="width:100%"
-            empty-text="暂无面试记录，去发起一次面试吧 🚀"
+        </div>
+        <div class="access-card" @click="$router.push('/questions')">
+          <div class="access-icon">📝</div>
+          <div class="access-text">
+            <h3>题库练习</h3>
+            <p>提升答题技巧</p>
+          </div>
+        </div>
+        <div class="access-card" @click="$router.push('/company/intel')">
+          <div class="access-icon">🏢</div>
+          <div class="access-text">
+            <h3>公司知识库</h3>
+            <p>了解目标公司</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ③ 核心数据（仅在有数据时显示） -->
+    <div class="stats-section" v-if="hasStats">
+      <h2 class="section-title">我的数据</h2>
+      <el-row :gutter="16">
+        <el-col :span="6">
+          <div class="mini-stat">
+            <div class="mini-stat-icon">🎯</div>
+            <div class="mini-stat-info">
+              <div class="mini-stat-num">{{ stats.totalInterviews || 0 }}</div>
+              <div class="mini-stat-label">累计面试</div>
+            </div>
+          </div>
+        </el-col>
+        <el-col :span="6">
+          <div class="mini-stat">
+            <div class="mini-stat-icon">📊</div>
+            <div class="mini-stat-info">
+              <div class="mini-stat-num">{{ (stats.avgScore || 0).toFixed(1) }}</div>
+              <div class="mini-stat-label">平均得分</div>
+            </div>
+          </div>
+        </el-col>
+        <el-col :span="6">
+          <div class="mini-stat">
+            <div class="mini-stat-icon">🏆</div>
+            <div class="mini-stat-info">
+              <div class="mini-stat-num">{{ stats.highestScore || 0 }}</div>
+              <div class="mini-stat-label">最高得分</div>
+            </div>
+          </div>
+        </el-col>
+        <el-col :span="6">
+          <div class="mini-stat">
+            <div class="mini-stat-icon">💼</div>
+            <div class="mini-stat-info">
+              <div class="mini-stat-num">{{ stats.topPosition || '—' }}</div>
+              <div class="mini-stat-label">常练岗位</div>
+            </div>
+          </div>
+        </el-col>
+      </el-row>
+    </div>
+
+    <!-- ④ 近期面试记录（精简版） -->
+    <div class="recent-section" v-if="!interviewsLoading">
+      <div class="section-header">
+        <h2 class="section-title">近期面试</h2>
+        <router-link to="/interview/history" class="view-all" v-if="interviews.length > 0">查看全部 ›</router-link>
+      </div>
+      
+      <div v-if="interviews.length === 0" class="empty-state">
+        <div class="empty-icon">📋</div>
+        <p class="empty-text">还没有面试记录</p>
+        <el-button type="primary" size="small" @click="$router.push('/interview/config')">
+          🚀 发起第一次面试
+        </el-button>
+      </div>
+      
+      <div v-else class="interview-list">
+        <div 
+          v-for="item in interviews.slice(0, 3)" 
+          :key="item.interviewId || item.id" 
+          class="interview-item"
+        >
+          <div class="interview-info">
+            <div class="interview-position">{{ item.jobTitle || item.position || '—' }}</div>
+            <div class="interview-meta">
+              <span class="interview-time">{{ formatTime(item.startTime || item.createdAt) }}</span>
+              <el-tag size="mini" :type="statusTagType(item.status)">{{ statusLabel(item.status) }}</el-tag>
+            </div>
+          </div>
+          <div class="interview-score" v-if="item.totalScore ?? item.score">
+            <span :class="scoreClass(item.totalScore ?? item.score)">
+              {{ item.totalScore ?? item.score }}
+            </span>
+          </div>
+          <el-button 
+            v-if="item.status === 'completed'" 
+            type="text" 
+            size="mini" 
+            @click="goReport(item.interviewId || item.id)"
           >
-            <el-table-column label="时间" width="145">
-              <template slot-scope="{ row }">
-                <span class="table-time">{{ formatTime(row.startTime || row.createdAt) }}</span>
-              </template>
-            </el-table-column>
-            <el-table-column label="岗位">
-              <template slot-scope="{ row }">
-                <span class="table-position">{{ row.jobTitle || row.position || '—' }}</span>
-              </template>
-            </el-table-column>
-            <el-table-column label="轮次" width="70" align="center">
-              <template slot-scope="{ row }">
-                <el-tag size="mini" type="info">{{ roundLabel(row.round) }}</el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column label="得分" width="70" align="center">
-              <template slot-scope="{ row }">
-                <span :class="scoreClass(row.totalScore ?? row.score)">
-                  {{ (row.totalScore ?? row.score) != null ? (row.totalScore ?? row.score) : '-' }}
-                </span>
-              </template>
-            </el-table-column>
-            <el-table-column label="状态" width="80" align="center">
-              <template slot-scope="{ row }">
-                <el-tag size="mini" :type="statusTagType(row.status)">{{ statusLabel(row.status) }}</el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column label="操作" width="90" align="center">
-              <template slot-scope="{ row }">
-                <el-button type="text" size="mini" @click="goReport(row.interviewId || row.id)" v-if="row.status === 'completed'">查看报告</el-button>
-                <el-button type="text" size="mini" @click="continueInterview(row.interviewId || row.id)" v-else-if="row.status === 'ongoing' || row.status === 'paused'">继续</el-button>
-                <span v-else class="text-muted">—</span>
-              </template>
-            </el-table-column>
-          </el-table>
-        </el-card>
+            查看报告
+          </el-button>
+        </div>
+      </div>
+    </div>
 
-        <!-- 得分趋势 -->
-        <el-card shadow="never" class="section-card">
-          <div slot="header" class="card-header">
-            <span class="card-title">📈 得分趋势</span>
-            <span class="trend-tip">近期面试得分变化</span>
-          </div>
-          <div v-loading="trendLoading" class="chart-wrap">
-            <div ref="trendChart" class="trend-chart"></div>
-            <div v-if="!trendLoading && trendEmpty" class="empty-chart">
-              <div class="empty-chart-icon">📊</div>
-              <div>完成更多面试后，这里将展示你的进步曲线</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
+    <!-- ⑤ 推荐题目（精简） -->
+    <div class="recommend-section" v-if="!questionsLoading && questions.length > 0">
+      <div class="section-header">
+        <h2 class="section-title">推荐练习</h2>
+        <router-link to="/questions" class="view-all">更多 ›</router-link>
+      </div>
+      <div class="recommend-list">
+        <div 
+          v-for="q in questions.slice(0, 3)" 
+          :key="q.questionId || q.id" 
+          class="recommend-item"
+          @click="goPractice(q.questionId || q.id)"
+        >
+          <span class="recommend-title">{{ q.content || q.title }}</span>
+          <el-tag size="mini" :type="difficultyTagType(q.difficulty)">
+            {{ difficultyLabel(q.difficulty) }}
+          </el-tag>
+        </div>
+      </div>
+    </div>
 
-      <!-- 右列 -->
-      <el-col :span="8">
-        <!-- 快捷导航 -->
-        <el-card shadow="never" class="section-card" style="margin-bottom:16px">
-          <div slot="header" class="card-title">⚡ 快捷导航</div>
-          <div class="quick-nav-grid">
-            <div
-              v-for="nav in quickNavs"
-              :key="nav.path"
-              class="quick-nav-item"
-              @click="$router.push(nav.path)"
-            >
-              <div class="quick-nav-icon" :style="{ background: nav.bg }">{{ nav.icon }}</div>
-              <div class="quick-nav-label">{{ nav.label }}</div>
-            </div>
-          </div>
-        </el-card>
-
-        <!-- 今日推荐练习 -->
-        <el-card shadow="never" class="section-card">
-          <div slot="header" class="card-header">
-            <span class="card-title">💡 今日推荐</span>
-            <router-link to="/questions" class="view-all">更多 ›</router-link>
-          </div>
-          <div v-loading="questionsLoading">
-            <div
-              v-for="q in questions"
-              :key="q.questionId || q.id"
-              class="question-item"
-              @click="goPractice(q.questionId || q.id)"
-            >
-              <div class="question-title">{{ q.content || q.title }}</div>
-              <div class="question-meta">
-                <el-tag size="mini" :type="difficultyTagType(q.difficulty)" class="meta-tag">
-                  {{ difficultyLabel(q.difficulty) }}
-                </el-tag>
-                <el-tag size="mini" type="info" class="meta-tag" v-if="q.jobTitle || q.position">
-                  {{ q.jobTitle || q.position }}
-                </el-tag>
-              </div>
-            </div>
-            <div v-if="!questionsLoading && questions.length === 0" class="empty-tip">暂无推荐题目</div>
-          </div>
-          <div class="start-btn-wrap">
-            <el-button type="primary" size="small" style="width:100%" @click="$router.push('/interview/config')">
-              🚀 发起新面试
-            </el-button>
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
   </div>
 </template>
 
 <script>
 import request from '@/api/request'
-import * as echarts from 'echarts'
 import { mapGetters } from 'vuex'
 
 export default {
@@ -200,132 +196,61 @@ export default {
       ]
       return texts[new Date().getDay() % texts.length]
     },
-    statCards() {
-      const total = this.stats.totalInterviews || 0
-      const avg   = this.stats.avgScore || 0
-      const high  = this.stats.highestScore || 0
-      return [
-        { label: '累计面试', value: total, icon: '🎯', theme: 'orange', barWidth: Math.min(total * 10, 100) + '%' },
-        { label: '平均得分', value: avg ? avg.toFixed(1) : '0.0', icon: '📊', theme: 'blue',   barWidth: avg + '%' },
-        { label: '最高得分', value: high || 0, icon: '🏆', theme: 'green',  barWidth: high + '%' },
-        { label: '最常岗位', value: this.stats.topPosition || '—', icon: '💼', theme: 'purple', barWidth: '60%' }
-      ]
-    },
-    trendEmpty() {
-      return !this.trendData || this.trendData.length === 0
-    },
-    quickNavs() {
-      return [
-        { icon: '🚀', label: '发起面试', path: '/interview/config',  bg: '#fff3e0' },
-        { icon: '📁', label: '面试记录', path: '/interview/history', bg: '#e8f5e9' },
-        { icon: '📚', label: '题库练习', path: '/questions',         bg: '#e3f2fd' },
-        { icon: '🏢', label: '公司面试知识库', path: '/company/intel',   bg: '#fce4ec' },
-        { icon: '🌐', label: '知识社区', path: '/community',         bg: '#f3e5f5' },
-        { icon: '👤', label: '个人中心', path: '/profile',           bg: '#e0f7fa' },
-        { icon: '📝', label: '贡献题目', path: '/questions/contribute', bg: '#fff9e6' }
-      ]
+    hasStats() {
+      return this.stats.totalInterviews > 0 || this.stats.avgScore > 0
     }
   },
   data() {
     return {
-      statsLoading: true,
-      stats: { totalInterviews: 0, avgScore: 0, highestScore: 0, topPosition: '—' },
+      stats: { totalInterviews: 0, avgScore: 0, highestScore: 0, topPosition: '' },
       interviewsLoading: true,
       interviews: [],
       questionsLoading: true,
-      questions: [],
-      trendLoading: true,
-      trendData: [],
-      trendChart: null
+      questions: []
     }
   },
   created() {
-    this.loadAll()
-  },
-  mounted() {
-    window.addEventListener('resize', this.handleResize)
-  },
-  beforeDestroy() {
-    window.removeEventListener('resize', this.handleResize)
-    if (this.trendChart) { this.trendChart.dispose(); this.trendChart = null }
+    this.loadData()
   },
   methods: {
-    async loadAll() {
-      const [statsRes, interviewsRes, questionsRes, trendRes] = await Promise.allSettled([
-        request.get('/profile/stats'),
+    async loadData() {
+      const [interviewsRes, questionsRes, statsRes] = await Promise.allSettled([
         request.get('/interviews', { params: { page: 1, pageSize: 5 } }),
-        request.get('/questions',  { params: { page: 1, pageSize: 4 } }),
-        request.get('/profile/trend')
+        request.get('/questions', { params: { page: 1, pageSize: 4 } }),
+        request.get('/profile/stats')
       ])
+
+      if (interviewsRes.status === 'fulfilled') {
+        const d = interviewsRes.value.data || interviewsRes.value
+        this.interviews = Array.isArray(d) ? d : (d.list || d.items || [])
+      }
+      this.interviewsLoading = false
+
+      if (questionsRes.status === 'fulfilled') {
+        const d = questionsRes.value.data || questionsRes.value
+        this.questions = Array.isArray(d) ? d : (d.list || d.items || [])
+      }
+      this.questionsLoading = false
+
       if (statsRes.status === 'fulfilled') {
         const d = statsRes.value.data || statsRes.value
         this.stats = {
           totalInterviews: d.totalCount ?? d.totalInterviews ?? 0,
           avgScore:        d.avgScore ?? d.avg_score ?? 0,
           highestScore:    d.maxScore ?? d.highestScore ?? 0,
-          topPosition:     d.topJobTitle || d.topPosition || '—'
+          topPosition:     d.topJobTitle || d.topPosition || ''
         }
       }
-      this.statsLoading = false
-      if (interviewsRes.status === 'fulfilled') {
-        const d = interviewsRes.value.data || interviewsRes.value
-        this.interviews = Array.isArray(d) ? d : (d.list || d.items || [])
-      }
-      this.interviewsLoading = false
-      if (questionsRes.status === 'fulfilled') {
-        const d = questionsRes.value.data || questionsRes.value
-        this.questions = Array.isArray(d) ? d : (d.list || d.items || [])
-      }
-      this.questionsLoading = false
-      if (trendRes.status === 'fulfilled') {
-        const d = trendRes.value.data || trendRes.value
-        this.trendData = Array.isArray(d) ? d : (d.list || d.items || [])
-      }
-      this.trendLoading = false
-      this.$nextTick(() => { this.initChart() })
     },
-    initChart() {
-      if (!this.$refs.trendChart || this.trendEmpty) return
-      if (this.trendChart) this.trendChart.dispose()
-      this.trendChart = echarts.init(this.$refs.trendChart)
-      const dates  = this.trendData.map(i => i.date || i.day || '')
-      const scores = this.trendData.map(i => i.score ?? i.avgScore ?? 0)
-      this.trendChart.setOption({
-        tooltip: { trigger: 'axis', formatter: p => `${p[0].axisValue}<br/>得分：<b>${p[0].value}</b>` },
-        grid: { left: 40, right: 20, top: 16, bottom: 40 },
-        xAxis: {
-          type: 'category', data: dates,
-          axisLabel: { fontSize: 12, color: '#888' },
-          axisLine: { lineStyle: { color: '#eee' } },
-          axisTick: { show: false }
-        },
-        yAxis: {
-          type: 'value', min: 0, max: 100, interval: 25,
-          axisLabel: { fontSize: 12, color: '#888' },
-          splitLine: { lineStyle: { color: '#f5f5f5', type: 'dashed' } }
-        },
-        series: [{
-          type: 'line', data: scores, smooth: true,
-          symbol: 'circle', symbolSize: 7,
-          lineStyle: { color: '#ff9900', width: 2.5 },
-          itemStyle: { color: '#ff9900', borderColor: '#fff', borderWidth: 2 },
-          areaStyle: {
-            color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
-              colorStops: [{ offset: 0, color: 'rgba(255,153,0,0.25)' }, { offset: 1, color: 'rgba(255,153,0,0)' }] }
-          }
-        }]
-      })
-    },
-    handleResize() { if (this.trendChart) this.trendChart.resize() },
     formatTime(val) {
       if (!val) return '—'
       const d = new Date(typeof val === 'number' && val < 10000000000 ? val * 1000 : val)
       if (isNaN(d.getTime())) return val
       const p = n => String(n).padStart(2, '0')
-      return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`
+      return `${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`
     },
     scoreClass(s) {
-      if (s == null) return 'score-na'
+      if (s == null) return ''
       if (s >= 80) return 'score-high'
       if (s >= 60) return 'score-mid'
       return 'score-low'
@@ -334,178 +259,262 @@ export default {
     statusLabel(s)   { return { completed: '已完成', in_progress: '进行中', pending: '待开始', failed: '已中断', ongoing: '进行中', paused: '已暂停' }[s] || s || '未知' },
     difficultyTagType(d) { return { easy: 'success', medium: 'warning', hard: 'danger' }[d] || 'info' },
     difficultyLabel(d)   { return { easy: '简单', medium: '中等', hard: '困难' }[d] || d || '未知' },
-    goReport(id)         { this.$router.push(`/report/${id}`) },
-    continueInterview(id){ this.$router.push(`/interview/${id}/doing`) },
-    goPractice(id)       { this.$router.push(`/questions/${id}/practice`) },
-    roundLabel(r)        { return { round1: '一面', round2: '二面', round3: '三面' }[r] || r || '—' }
+    goReport(id)    { this.$router.push(`/report/${id}`) },
+    goPractice(id) { this.$router.push(`/questions/${id}/practice`) }
   }
 }
 </script>
 
 <style scoped>
-.dashboard { padding: 20px; max-width: 1200px; margin: 0 auto; }
+.dashboard { padding: 20px; max-width: 1000px; margin: 0 auto; }
 
-/* ── 欢迎横幅 ── */
+/* 欢迎横幅 */
 .welcome-banner {
   background: linear-gradient(135deg, #131921 0%, #232f3e 60%, #3a4a5c 100%);
   border-radius: 12px;
-  padding: 28px 32px;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  overflow: hidden;
-  position: relative;
+  padding: 32px 36px;
+  margin-bottom: 24px;
 }
-.welcome-greeting {
-  font-size: 24px;
-  font-weight: bold;
+.welcome-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.welcome-title {
+  font-size: 26px;
   color: #fff;
-  margin-bottom: 6px;
+  margin: 0 0 8px 0;
+  font-weight: 600;
 }
 .welcome-name { color: #ff9900; }
 .welcome-sub {
-  font-size: 14px;
+  font-size: 15px;
   color: #aab7c4;
-  margin-bottom: 18px;
+  margin: 0;
 }
-.banner-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-.banner-btn {
+.welcome-actions { display: flex; gap: 12px; }
+.btn-primary-action {
   background: #ff9900 !important;
   border-color: #ff9900 !important;
   color: #111 !important;
   font-weight: bold;
 }
-.banner-btn-ghost {
-  background: transparent !important;
+.btn-secondary-action {
+  background: rgba(255,255,255,0.1) !important;
   border-color: rgba(255,255,255,0.3) !important;
   color: #fff !important;
 }
-.banner-btn-ghost:hover {
-  border-color: #ff9900 !important;
-  color: #ff9900 !important;
+.btn-secondary-action:hover {
+  background: rgba(255,255,255,0.2) !important;
 }
 
-.banner-btn-primary {
-  background: #fff !important;
-  border-color: #fff !important;
-  color: #ff9900 !important;
-  font-weight: bold !important;
+/* 通用标题 */
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111;
+  margin: 0 0 16px 0;
 }
-
-.banner-btn-primary:hover {
-  background: rgba(255,255,255,0.9) !important;
-  border-color: #fff !important;
-  color: #e68a00 !important;
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
 }
-
-.welcome-right { flex-shrink: 0; }
-.banner-decoration {
-  font-size: 72px;
-  opacity: 0.18;
-  line-height: 1;
-  user-select: none;
+.section-header .section-title { margin-bottom: 0; }
+.view-all {
+  font-size: 13px;
+  color: #0066c0;
+  text-decoration: none;
 }
-
-/* ── 统计卡片 ── */
-.stats-row { margin-bottom: 20px; }
-.stat-card {
-  border-radius: 10px;
-  padding: 18px 20px 10px;
-  background: #fff;
-  border: 1px solid #eee;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-  transition: transform 0.2s, box-shadow 0.2s;
-  overflow: hidden;
-}
-.stat-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.09); }
-.stat-card-inner { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
-.stat-icon-big { font-size: 32px; line-height: 1; }
-.stat-num { font-size: 26px; font-weight: bold; line-height: 1.2; color: #111; }
-.stat-label { font-size: 12px; color: #888; margin-top: 3px; }
-.stat-bar { height: 4px; background: #f0f0f0; border-radius: 2px; overflow: hidden; }
-.stat-bar-fill { height: 100%; border-radius: 2px; transition: width 0.8s ease; }
-.stat-card--orange .stat-num { color: #e07b00; }
-.stat-card--orange .stat-bar-fill { background: linear-gradient(90deg, #ff9900, #ffb84d); }
-.stat-card--blue   .stat-num { color: #0066c0; }
-.stat-card--blue   .stat-bar-fill { background: linear-gradient(90deg, #0066c0, #4da6ff); }
-.stat-card--green  .stat-num { color: #067d62; }
-.stat-card--green  .stat-bar-fill { background: linear-gradient(90deg, #067d62, #3dbf9a); }
-.stat-card--purple .stat-num { color: #6e40c9; }
-.stat-card--purple .stat-bar-fill { background: linear-gradient(90deg, #6e40c9, #a07de0); }
-
-/* ── 卡片公共 ── */
-.section-card { height: 100%; }
-.card-header { display: flex; align-items: center; justify-content: space-between; }
-.card-title {
-  font-size: 15px; font-weight: bold; color: #111;
-  border-left: 4px solid #ff9900; padding-left: 10px;
-}
-.view-all { font-size: 13px; color: #0066c0; text-decoration: none; cursor: pointer; }
 .view-all:hover { color: #ff9900; }
-.trend-tip { font-size: 12px; color: #bbb; }
 
-/* ── 表格 ── */
-.table-time   { font-size: 12px; color: #888; }
-.table-position { font-weight: 500; color: #333; }
+/* 功能入口 */
+.quick-access {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+  border: 1px solid #eee;
+}
+.access-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+.access-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 16px;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.access-card:hover {
+  border-color: #ff9900;
+  box-shadow: 0 4px 12px rgba(255, 153, 0, 0.12);
+  transform: translateY(-2px);
+}
+.access-card--primary {
+  background: linear-gradient(135deg, #fff8e6 0%, #fff3d9 100%);
+  border-color: #ffe4a0;
+}
+.access-card--primary:hover {
+  border-color: #ff9900;
+  box-shadow: 0 4px 16px rgba(255, 153, 0, 0.2);
+}
+.access-icon {
+  font-size: 32px;
+  line-height: 1;
+}
+.access-text h3 {
+  font-size: 15px;
+  color: #111;
+  margin: 0 0 4px 0;
+  font-weight: 600;
+}
+.access-text p {
+  font-size: 12px;
+  color: #888;
+  margin: 0;
+}
+
+/* 数据统计 */
+.stats-section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+  border: 1px solid #eee;
+}
+.mini-stat {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  background: #fafafa;
+  border-radius: 10px;
+}
+.mini-stat-icon { font-size: 28px; }
+.mini-stat-num {
+  font-size: 22px;
+  font-weight: bold;
+  color: #111;
+  line-height: 1.2;
+}
+.mini-stat-label {
+  font-size: 12px;
+  color: #888;
+}
 .score-high { color: #067d62; font-weight: bold; }
 .score-mid  { color: #ff9900; font-weight: bold; }
 .score-low  { color: #c7511f; font-weight: bold; }
-.score-na   { color: #ccc; }
-.text-muted { color: #ccc; font-size: 12px; }
 
-/* ── 趋势图 ── */
-.chart-wrap { position: relative; min-height: 220px; }
-.trend-chart { width: 100%; height: 220px; }
-.empty-chart {
-  position: absolute; top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center; color: #bbb; font-size: 13px;
+/* 近期面试 */
+.recent-section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+  border: 1px solid #eee;
 }
-.empty-chart-icon { font-size: 36px; margin-bottom: 8px; }
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+}
+.empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-text { font-size: 15px; color: #888; margin-bottom: 16px; }
+.interview-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.interview-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+  background: #fafafa;
+  border-radius: 10px;
+  transition: background 0.15s;
+}
+.interview-item:hover { background: #f5f5f5; }
+.interview-info { flex: 1; }
+.interview-position {
+  font-size: 15px;
+  font-weight: 500;
+  color: #111;
+  margin-bottom: 4px;
+}
+.interview-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: #888;
+}
+.interview-score {
+  font-size: 20px;
+  font-weight: bold;
+  min-width: 50px;
+  text-align: center;
+}
 
-/* ── 快捷导航 ── */
-.quick-nav-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+/* 推荐题目 */
+.recommend-section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid #eee;
+}
+.recommend-list {
+  display: flex;
+  flex-direction: column;
   gap: 10px;
 }
-.quick-nav-item {
-  display: flex; flex-direction: column; align-items: center;
-  padding: 12px 6px; border-radius: 10px; cursor: pointer;
-  border: 1px solid #f0f0f0; transition: all 0.18s;
+.recommend-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #fafafa;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
 }
-.quick-nav-item:hover {
-  border-color: #ff9900;
-  box-shadow: 0 2px 10px rgba(255,153,0,0.15);
-  transform: translateY(-2px);
+.recommend-item:hover {
+  background: #fff3e0;
+  transform: translateX(4px);
 }
-.quick-nav-icon {
-  width: 40px; height: 40px; border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 20px; margin-bottom: 6px;
+.recommend-title {
+  font-size: 14px;
+  color: #0066c0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.quick-nav-label { font-size: 12px; color: #555; text-align: center; }
 
-/* ── 推荐题目 ── */
-.question-item {
-  padding: 10px 0; border-bottom: 1px solid #f5f5f5; cursor: pointer; transition: 0.15s;
-}
-.question-item:last-child { border-bottom: none; }
-.question-item:hover .question-title { color: #ff9900; }
-.question-title {
-  font-size: 13px; color: #0066c0; margin-bottom: 5px; line-height: 1.5;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-}
-.question-meta { display: flex; flex-wrap: wrap; gap: 4px; }
-.meta-tag { margin: 0; }
-.empty-tip { font-size: 13px; color: #bbb; text-align: center; padding: 16px 0; }
-.start-btn-wrap { margin-top: 14px; padding-top: 12px; border-top: 1px solid #f5f5f5; }
-
-/* ── 覆盖 Element UI 橙色 ── */
+/* 覆盖 Element UI 按钮 */
 ::v-deep .el-button--primary {
-  background: #ff9900; border-color: #ff9900; color: #111;
+  background: #ff9900;
+  border-color: #ff9900;
+  color: #111;
 }
-::v-deep .el-button--primary:hover { background: #f3a847; border-color: #f3a847; }
-::v-deep .el-button--primary.is-disabled { background: #ddd; border-color: #ddd; color: #999; }
+::v-deep .el-button--primary:hover {
+  background: #f3a847;
+  border-color: #f3a847;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .access-grid { grid-template-columns: repeat(2, 1fr); }
+  .welcome-content { flex-direction: column; align-items: flex-start; }
+  .welcome-title { font-size: 22px; }
+}
 </style>

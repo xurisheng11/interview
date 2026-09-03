@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -34,9 +35,18 @@ func main() {
 
 	// 启动路由
 	r := router.Setup()
+
+	// 配置带超时控制的 HTTP 服务器
 	addr := fmt.Sprintf(":%s", config.Cfg.ServerPort)
+	srv := &http.Server{
+		Addr:         addr,
+		Handler:      r,
+		ReadTimeout:  5 * time.Minute,  // 大文件上传可能很慢
+		WriteTimeout: 5 * time.Minute,
+		IdleTimeout:  120 * time.Second,
+	}
 	log.Printf("服务启动，监听 %s", addr)
-	if err := r.Run(addr); err != nil {
+	if err := srv.ListenAndServe(); err != nil {
 		log.Fatalf("服务启动失败: %v", err)
 	}
 }

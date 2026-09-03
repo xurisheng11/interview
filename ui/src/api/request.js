@@ -4,7 +4,7 @@ import router from '@/router'
 
 const request = axios.create({
   baseURL: process.env.VUE_APP_API_BASE_URL || '/api/v1',
-  timeout: 30000
+  timeout: 300000  // 5 分钟，大文件上传+OCR 需要更长时间
 })
 
 // 请求拦截器：自动携带 token

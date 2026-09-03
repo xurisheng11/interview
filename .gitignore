@@ -6,6 +6,7 @@ api/.env
 # Go 编译产物
 api/server
 api/*.exe
+*.exe~
 
 # Node
 ui/node_modules/

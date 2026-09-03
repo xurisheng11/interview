@@ -94,6 +94,7 @@ func Setup() *gin.Engine {
 			profile.GET("", handler.GetProfile)
 			profile.PUT("", handler.UpdateProfile)
 			profile.PUT("/password", handler.ChangePassword)
+			profile.PUT("/job-status", handler.UpdateJobStatus)
 			profile.GET("/stats", handler.GetStats)
 			profile.GET("/trend", handler.GetScoreTrend)
 			profile.GET("/collections", handler.GetCollections)

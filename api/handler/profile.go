@@ -99,3 +99,23 @@ func GetCollections(c *gin.Context) {
 	}
 	response.Success(c, collections)
 }
+
+// UpdateJobStatus PUT /api/v1/profile/job-status
+func UpdateJobStatus(c *gin.Context) {
+	userId := c.GetString("userId")
+
+	var body struct {
+		JobStatus  string `json:"jobStatus"`
+		Experience string `json:"experience"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		response.BadRequest(c, "参数错误: "+err.Error())
+		return
+	}
+
+	if err := service.UpdateJobStatus(userId, body.JobStatus, body.Experience); err != nil {
+		response.InternalError(c, err.Error())
+		return
+	}
+	response.Success(c, gin.H{"message": "求职状态更新成功"})
+}

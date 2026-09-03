@@ -23,15 +23,17 @@ func GetProfile(userId string) (map[string]interface{}, error) {
 		return nil, errors.New("用户不存在")
 	}
 	return map[string]interface{}{
-		"userId":    user.UserID,
-		"username":  user.Username,
-		"nickname":  user.Nickname,
-		"avatar":    user.Avatar,
-		"bio":       user.Bio,
-		"email":     user.Email,
-		"phone":     user.Phone,
-		"createdAt": user.CreatedAt.Format(time.RFC3339),
-		"role":      user.Role,
+		"userId":     user.UserID,
+		"username":   user.Username,
+		"nickname":   user.Nickname,
+		"avatar":     user.Avatar,
+		"bio":        user.Bio,
+		"email":      user.Email,
+		"phone":      user.Phone,
+		"createdAt":  user.CreatedAt.Format(time.RFC3339),
+		"role":       user.Role,
+		"jobStatus":  user.JobStatus,
+		"experience": user.Experience,
 	}, nil
 }
 
@@ -70,6 +72,21 @@ func ChangePassword(userId, oldPwd, newPwd string) error {
 
 	// 更新 Redis Hash 中的 passwordHash 字段
 	return repository.HSet("user:"+userId, "passwordHash", string(hash))
+}
+
+// UpdateJobStatus 更新用户的求职状态和工作年限
+func UpdateJobStatus(userId, jobStatus, experience string) error {
+	updates := map[string]interface{}{}
+	if jobStatus != "" {
+		updates["jobStatus"] = jobStatus
+	}
+	if experience != "" {
+		updates["experience"] = experience
+	}
+	if len(updates) == 0 {
+		return nil
+	}
+	return repository.HSetMap("user:"+userId, updates)
 }
 
 // GetStats 获取用户面试统计数据

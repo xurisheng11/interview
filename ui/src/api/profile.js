@@ -15,6 +15,11 @@ export function changePassword(data) {
   return request.put('/profile/password', data)
 }
 
+// 更新求职状态和工作年限
+export function updateJobStatus(data) {
+  return request.put('/profile/job-status', data)
+}
+
 // 个人统计数据
 export function getStats() {
   return request.get('/profile/stats')

@@ -11,6 +11,8 @@ type User struct {
 	Avatar       string    `json:"avatar"`
 	Nickname     string    `json:"nickname"`
 	Bio          string    `json:"bio"`
+	JobStatus    string    `json:"jobStatus"`    // 求职状态：job_hunting, job_offered, employed_looking, employed_stable, intern, fresh_graduate
+	Experience   string    `json:"experience"`  // 工作经验年限：fresh, 0-1, 1-3, 3-5, 5-10, 10+
 	CreatedAt    time.Time `json:"createdAt"`
 	Role         string    `json:"role"`
 	LastLoginAt  string    `json:"lastLoginAt"`
@@ -26,6 +28,8 @@ func (u *User) ToRedisHash() map[string]interface{} {
 		"avatar":       u.Avatar,
 		"nickname":     u.Nickname,
 		"bio":          u.Bio,
+		"jobStatus":    u.JobStatus,
+		"experience":   u.Experience,
 		"createdAt":    u.CreatedAt.Format(time.RFC3339),
 		"role":         u.Role,
 		"lastLoginAt":  u.LastLoginAt,
@@ -43,6 +47,8 @@ func UserFromRedisHash(h map[string]string) *User {
 		Avatar:       h["avatar"],
 		Nickname:     h["nickname"],
 		Bio:          h["bio"],
+		JobStatus:    h["jobStatus"],
+		Experience:   h["experience"],
 		CreatedAt:    createdAt,
 		Role:         h["role"],
 		LastLoginAt:  h["lastLoginAt"],
@@ -61,6 +67,8 @@ type UserDTO struct {
 	LastLoginAt string `json:"lastLoginAt"`
 	Phone       string `json:"phone"`
 	Email       string `json:"email"`
+	JobStatus   string `json:"jobStatus"`  // 求职状态
+	Experience  string `json:"experience"` // 工作经验年限
 }
 
 func (u *User) ToDTO() *UserDTO {
@@ -73,6 +81,8 @@ func (u *User) ToDTO() *UserDTO {
 		Role:        u.Role,
 		CreatedAt:   u.CreatedAt.Format(time.RFC3339),
 		LastLoginAt: u.LastLoginAt,
+		JobStatus:   u.JobStatus,
+		Experience:  u.Experience,
 	}
 }
 
@@ -89,5 +99,7 @@ func (u *User) ToAdminDTO() *UserDTO {
 		LastLoginAt: u.LastLoginAt,
 		Phone:       u.Phone,
 		Email:       u.Email,
+		JobStatus:   u.JobStatus,
+		Experience:  u.Experience,
 	}
 }

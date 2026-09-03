@@ -14,7 +14,7 @@ import (
 type CreateInterviewReq struct {
 	JobTitle        string   `json:"jobTitle" binding:"required"`
 	Difficulty      string   `json:"difficulty" binding:"required"` // easy/medium/hard
-	Experience      string   `json:"experience" binding:"required"` // fresh/1-3/3-5/5+
+	Experience      string   `json:"experience"`                    // fresh/1-3/3-5/5+ （可选，未传则从用户profile读取）
 	Round           string   `json:"round" binding:"required"`      // round1/round2/round3
 	FocusAreas     []string `json:"focusAreas"`
 	Remark         string   `json:"remark"`
@@ -72,10 +72,24 @@ func formatResumeContext(content *model.ResumeContent) string {
 
 // CreateInterview 创建面试（含题目生成，可选注入简历上下文）
 func CreateInterview(userID string, req *CreateInterviewReq) (*model.InterviewSession, error) {
+	// 如果没有传工作经验，从用户 profile 中读取
+	experience := req.Experience
+	if experience == "" {
+		if profile, err := GetProfile(userID); err == nil {
+			if exp, ok := profile["experience"].(string); ok && exp != "" {
+				experience = exp
+			}
+		}
+	}
+	// 仍然没有，使用默认值
+	if experience == "" {
+		experience = "fresh"
+	}
+
 	cfg := &model.InterviewConfig{
 		JobTitle:   req.JobTitle,
 		Difficulty: req.Difficulty,
-		Experience: req.Experience,
+		Experience: experience,
 		Round:      req.Round,
 		FocusAreas: req.FocusAreas,
 		Remark:     req.Remark,

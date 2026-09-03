@@ -68,7 +68,58 @@
         </el-row>
       </el-tab-pane>
 
-      <!-- Tab 2: 面试历史 -->
+      <!-- Tab 2: 求职状态 -->
+      <el-tab-pane label="💼 求职状态" name="jobStatus">
+        <el-card shadow="never">
+          <div slot="header" class="card-title">求职状态设置</div>
+          <div class="job-status-tip">
+            <i class="el-icon-info"></i>
+            设置你的求职状态后，每次发起面试时系统会自动应用这些配置，无需重复选择
+          </div>
+
+          <el-form :model="jobStatusForm" label-width="100px" v-loading="jobStatusLoading">
+            <!-- 求职状态 -->
+            <el-form-item label="求职状态">
+              <div class="job-status-options">
+                <div
+                  v-for="opt in jobStatusOptions"
+                  :key="opt.value"
+                  class="job-status-item"
+                  :class="{ selected: jobStatusForm.jobStatus === opt.value }"
+                  @click="jobStatusForm.jobStatus = opt.value"
+                >
+                  <div class="job-status-icon">{{ opt.icon }}</div>
+                  <div class="job-status-content">
+                    <div class="job-status-label">{{ opt.label }}</div>
+                    <div class="job-status-desc">{{ opt.desc }}</div>
+                  </div>
+                </div>
+              </div>
+            </el-form-item>
+
+            <!-- 工作经验 -->
+            <el-form-item label="工作经验">
+              <div class="experience-options">
+                <div
+                  v-for="opt in experienceOptions"
+                  :key="opt.value"
+                  class="experience-item"
+                  :class="{ selected: jobStatusForm.experience === opt.value }"
+                  @click="jobStatusForm.experience = opt.value"
+                >
+                  {{ opt.label }}
+                </div>
+              </div>
+            </el-form-item>
+
+            <el-form-item>
+              <el-button type="primary" :loading="savingJobStatus" @click="saveJobStatus">保存求职状态</el-button>
+            </el-form-item>
+          </el-form>
+        </el-card>
+      </el-tab-pane>
+
+      <!-- Tab 3: 面试历史 -->
       <el-tab-pane label="📋 面试历史" name="history">
         <el-card shadow="never" v-loading="historyLoading">
           <el-table :data="interviewHistory" stripe empty-text="暂无面试记录">
@@ -107,7 +158,7 @@
         </el-card>
       </el-tab-pane>
 
-      <!-- Tab 3: 成长轨迹 -->
+      <!-- Tab 4: 成长轨迹 -->
       <el-tab-pane label="📈 成长轨迹" name="trend">
         <el-card shadow="never" v-loading="trendLoading">
           <div slot="header" class="card-title">近30次面试得分趋势</div>
@@ -118,7 +169,7 @@
         </el-card>
       </el-tab-pane>
 
-      <!-- Tab 4: 我的收藏 -->
+      <!-- Tab 5: 我的收藏 -->
       <el-tab-pane label="⭐ 我的收藏" name="collections">
         <el-card shadow="never" v-loading="collectionsLoading">
           <el-tabs v-model="collectTab">
@@ -161,7 +212,7 @@
 </template>
 
 <script>
-import { getProfile, updateProfile, changePassword, getScoreTrend, getCollections } from '@/api/profile'
+import { getProfile, updateProfile, changePassword, getScoreTrend, getCollections, updateJobStatus } from '@/api/profile'
 import request from '@/api/request'
 import * as echarts from 'echarts'
 
@@ -209,7 +260,27 @@ export default {
       // 收藏
       collectionsLoading: false,
       collectedQuestions: [],
-      collectedArticles: []
+      collectedArticles: [],
+
+      // 求职状态
+      jobStatusLoading: false,
+      savingJobStatus: false,
+      jobStatusForm: {
+        jobStatus: '',
+        experience: ''
+      },
+      jobStatusOptions: [
+        { value: 'looking', icon: '🔍', label: '正在找工作', desc: '积极投递简历，准备面试' },
+        { value: 'employed', icon: '💼', label: '在职看机会', desc: '有工作但希望换更好的平台' },
+        { value: 'student', icon: '🎓', label: '在校学生', desc: '还没毕业，提前准备求职' },
+        { value: 'pause', icon: '⏸️', label: '暂时不找', desc: '需要休息或其他安排' }
+      ],
+      experienceOptions: [
+        { value: 'fresh', label: '应届生' },
+        { value: '1-3', label: '1-3年' },
+        { value: '3-5', label: '3-5年' },
+        { value: '5+', label: '5年以上' }
+      ]
     }
   },
   computed: {
@@ -245,6 +316,9 @@ export default {
         this.profileForm.nickname = d.nickname || ''
         this.profileForm.avatar = d.avatar || ''
         this.profileForm.bio = d.bio || ''
+        // 同时加载求职状态
+        this.jobStatusForm.jobStatus = d.jobStatus || ''
+        this.jobStatusForm.experience = d.experience || ''
       } catch (e) {
         this.$message.error('个人信息加载失败')
       } finally {
@@ -308,6 +382,20 @@ export default {
           this.savingPwd = false
         }
       })
+    },
+    async saveJobStatus() {
+      this.savingJobStatus = true
+      try {
+        await updateJobStatus({
+          jobStatus: this.jobStatusForm.jobStatus,
+          experience: this.jobStatusForm.experience
+        })
+        this.$message.success('求职状态保存成功')
+      } catch (e) {
+        this.$message.error('保存失败')
+      } finally {
+        this.savingJobStatus = false
+      }
     },
     async loadHistory() {
       this.historyLoading = true

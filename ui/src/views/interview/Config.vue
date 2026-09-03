@@ -191,7 +191,11 @@
           <div>
             <!-- 工作经验 -->
             <div class="form-group">
-              <label>💼 工作经验 <span class="required">*</span></label>
+              <label>💼 工作经验 <span class="required">*</span>
+                <span v-if="experienceFromProfile" class="profile-hint">
+                  （来自你的资料设置）
+                </span>
+              </label>
               <div class="tag-select">
                 <div
                   v-for="opt in experienceOptions"
@@ -355,6 +359,7 @@
 <script>
 import Sidebar from '@/components/layout/Sidebar.vue'
 import { createInterview, searchCompanies } from '@/api/interview'
+import { getProfile } from '@/api/profile'
 
 export default {
   name: 'InterviewConfig',
@@ -365,6 +370,7 @@ export default {
       practiceMode: 'interview', // 'interview' | 'single' | 'category'
       loading: false,
       showHint: false,
+      profileExperience: '', // 从用户资料读取的工作经验
 
       config: {
         company: '',
@@ -492,7 +498,17 @@ export default {
         !!this.config.experience &&
         !!this.config.round
       )
+    },
+
+    // 工作经验是否来自用户资料
+    experienceFromProfile() {
+      return !!this.profileExperience && this.config.experience === this.profileExperience
     }
+  },
+
+  mounted() {
+    // 从用户资料加载默认工作经验
+    this.loadUserExperience()
   },
 
   methods: {
@@ -648,6 +664,23 @@ export default {
       } finally {
         this.loading = false
       }
+    },
+
+    // 从用户资料加载默认工作经验
+    async loadUserExperience() {
+      try {
+        const res = await getProfile()
+        const d = res.data || res
+        // 如果用户已设置工作经验，自动填入
+        if (d.experience) {
+          this.profileExperience = d.experience
+          if (!this.config.experience) {
+            this.config.experience = d.experience
+          }
+        }
+      } catch (e) {
+        // 静默失败，使用默认值
+      }
     }
   }
 }
@@ -788,6 +821,13 @@ export default {
   font-weight: normal;
   color: #999;
   margin-left: 4px;
+}
+
+.profile-hint {
+  font-size: 12px;
+  font-weight: normal;
+  color: #67c23a;
+  margin-left: 6px;
 }
 
 /* 岗位选择器 */

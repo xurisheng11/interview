@@ -252,7 +252,7 @@ export default {
     },
 
     handleContribute() {
-      this.$router.push('/question/contribute')
+      this.$router.push('/questions/contribute')
     },
 
     goToCompany(company) {

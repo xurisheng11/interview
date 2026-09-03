@@ -36,7 +36,7 @@
     <!-- 积分信息 -->
     <div class="credit-bar">
       <span>💎 当前积分：<strong>{{ credits }}</strong></span>
-      <el-button size="mini" type="primary" @click="$router.push('/question/contribute')">
+      <el-button size="mini" type="primary" @click="$router.push('/questions/contribute')">
         <i class="el-icon-plus"></i> 继续贡献
       </el-button>
     </div>
@@ -47,7 +47,7 @@
         <div class="empty-icon">📝</div>
         <div class="empty-title">还没有贡献记录</div>
         <div class="empty-sub">分享你在面试中遇到的真实题目，帮助更多人</div>
-        <el-button type="primary" @click="$router.push('/question/contribute')">去贡献题目</el-button>
+        <el-button type="primary" @click="$router.push('/questions/contribute')">去贡献题目</el-button>
       </div>
 
       <el-table v-else :data="contributions" stripe>

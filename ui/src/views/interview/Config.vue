@@ -116,57 +116,138 @@
           </div>
         </div>
 
-        <!-- 求职类型（新增） -->
-      <div class="form-group">
-        <label>🎯 求职类型 <span class="optional">（选择后匹配对应面试题目策略）</span></label>
-        <div class="tag-select job-type-select">
-          <div
-            v-for="opt in jobTypeOptions"
-            :key="opt.value"
-            class="tag type-tag"
-            :class="{ selected: config.jobType === opt.value }"
-            @click="config.jobType = opt.value; onJobTypeChange(opt.value)"
-          >
-            <span class="type-icon">{{ opt.icon }}</span>
-            <div class="type-info">
-              <span class="type-label">{{ opt.label }}</span>
-              <span class="type-desc">{{ opt.desc }}</span>
+        <!-- 求职类型 -->
+        <div class="form-group">
+          <label>🎯 求职类型 <span class="optional">（决定面试题目的侧重方向）</span></label>
+          <div class="tag-select job-type-select">
+            <div
+              v-for="opt in jobTypeOptions"
+              :key="opt.value"
+              class="tag type-tag"
+              :class="{ selected: config.jobType === opt.value }"
+              @click="config.jobType = opt.value; onJobTypeChange(opt.value)"
+            >
+              <span class="type-icon">{{ opt.icon }}</span>
+              <div class="type-info">
+                <span class="type-label">{{ opt.label }}</span>
+                <span class="type-desc">{{ opt.desc }}</span>
+              </div>
             </div>
           </div>
+          <!-- 求职类型说明 -->
+          <div v-if="currentJobTypeInfo" class="jobtype-hint">
+            <el-alert type="info" :closable="false" show-icon>
+              <strong>{{ currentJobTypeInfo.label }}：</strong>{{ currentJobTypeInfo.hint }}
+            </el-alert>
+          </div>
         </div>
-        <!-- 求职类型说明 -->
-        <div v-if="currentJobTypeInfo" class="jobtype-hint">
-          <el-alert type="info" :closable="false" show-icon>
-            <strong>{{ currentJobTypeInfo.label }}：</strong>{{ currentJobTypeInfo.hint }}
-          </el-alert>
-        </div>
-      </div>
 
-      <div class="config-grid">
+        <div class="config-grid">
           <!-- 左列：目标岗位 + 面试难度 -->
           <div>
-            <!-- 目标岗位 -->
+            <!-- 目标岗位 - 左右两栏布局 -->
             <div class="form-group">
               <label>💼 目标岗位 <span class="required">*</span></label>
-              <el-select
-                v-model="config.jobTitle"
-                placeholder="选择或搜索岗位"
-                filterable
-                class="job-select"
-              >
-                <el-option-group label="技术类">
-                  <el-option v-for="j in jobOptions.tech" :key="j" :label="j" :value="j" />
-                </el-option-group>
-                <el-option-group label="产品与设计">
-                  <el-option v-for="j in jobOptions.product" :key="j" :label="j" :value="j" />
-                </el-option-group>
-                <el-option-group label="运营与市场">
-                  <el-option v-for="j in jobOptions.operation" :key="j" :label="j" :value="j" />
-                </el-option-group>
-                <el-option-group label="职能类">
-                  <el-option v-for="j in jobOptions.admin" :key="j" :label="j" :value="j" />
-                </el-option-group>
-              </el-select>
+              <div class="job-selector-new">
+                <!-- 左侧：大类列表 -->
+                <div class="job-category-list">
+                  <div
+                    v-for="cat in jobCategories"
+                    :key="cat.name"
+                    class="job-category-item"
+                    :class="{ active: selectedCategory === cat.name }"
+                    @click="selectCategory(cat.name)"
+                  >
+                    <span class="category-icon">{{ cat.icon }}</span>
+                    <span class="category-label">{{ cat.label }}</span>
+                  </div>
+                  <!-- 自定义选项 -->
+                  <div
+                    class="job-category-item custom-category"
+                    :class="{ active: selectedCategory === 'custom' }"
+                    @click="selectCategory('custom')"
+                  >
+                    <span class="category-icon">✏️</span>
+                    <span class="category-label">自定义岗位</span>
+                  </div>
+                </div>
+
+                <!-- 右侧：岗位列表 -->
+                <div class="job-list-panel">
+                  <!-- 搜索框 -->
+                  <div class="job-search-box">
+                    <el-input
+                      v-model="jobSearchQuery"
+                      placeholder="搜索岗位..."
+                      size="small"
+                      clearable
+                      prefix-icon="el-icon-search"
+                      @input="onJobSearch"
+                    >
+                    </el-input>
+                  </div>
+
+                  <!-- 搜索结果 -->
+                  <template v-if="jobSearchQuery">
+                    <div v-if="filteredJobResults.length > 0" class="job-items">
+                      <div
+                        v-for="job in filteredJobResults"
+                        :key="job"
+                        class="job-item"
+                        :class="{ selected: config.jobTitle === job }"
+                        @click="selectJob(job)"
+                      >
+                        {{ job }}
+                      </div>
+                    </div>
+                    <div v-else class="job-empty">
+                      <div class="custom-input-area">
+                        <p>未找到"{{ jobSearchQuery }}"</p>
+                        <el-button size="mini" type="primary" @click="selectJob(jobSearchQuery)">
+                          <i class="el-icon-plus"></i> 使用此岗位
+                        </el-button>
+                      </div>
+                    </div>
+                  </template>
+
+                  <!-- 当前选中分类的岗位列表 -->
+                  <template v-else-if="selectedCategory !== 'custom'">
+                    <div class="category-jobs">
+                      <div
+                        v-for="job in currentCategoryJobs"
+                        :key="job"
+                        class="job-item"
+                        :class="{ selected: config.jobTitle === job }"
+                        @click="selectJob(job)"
+                      >
+                        {{ job }}
+                      </div>
+                    </div>
+                  </template>
+
+                  <!-- 自定义输入模式 -->
+                  <template v-else>
+                    <div class="custom-input-area">
+                      <p class="custom-tip">输入你想要的岗位名称，系统将围绕该岗位生成面试题目</p>
+                      <el-input
+                        v-model="customJobInput"
+                        placeholder="例如：党建专员、内容编辑..."
+                        size="small"
+                        clearable
+                      >
+                        <template slot="append">
+                          <el-button @click="applyCustomJob">确定</el-button>
+                        </template>
+                      </el-input>
+                    </div>
+                  </template>
+                </div>
+              </div>
+              <!-- 已选岗位提示 -->
+              <div v-if="config.jobTitle" class="selected-job-hint">
+                <i class="el-icon-check"></i> 已选择：<strong>{{ config.jobTitle }}</strong>
+                <span v-if="isCustomJob" class="custom-badge">自定义</span>
+              </div>
             </div>
 
             <!-- 面试难度 -->
@@ -189,35 +270,47 @@
 
           <!-- 右列：工作经验 + 面试轮次 -->
           <div>
-            <!-- 工作经验 -->
+            <!-- 工作经验 - 只读显示，从个人中心读取 -->
             <div class="form-group">
-              <label>💼 工作经验 <span class="required">*</span>
-                <span v-if="experienceFromProfile" class="profile-hint">
-                  （来自你的资料设置）
-                </span>
-              </label>
-              <div class="tag-select">
-                <div
-                  v-for="opt in experienceOptions"
-                  :key="opt.value"
-                  class="tag"
-                  :class="{ selected: config.experience === opt.value }"
-                  @click="config.experience = opt.value"
-                >{{ opt.label }}</div>
+              <label>💼 工作经验 <span class="optional">（来自个人资料）</span></label>
+              <div v-if="profileExperience" class="experience-display">
+                <div class="experience-value">
+                  <i class="el-icon-user"></i>
+                  {{ experienceLabel }}
+                </div>
+                <div class="experience-tip">
+                  <i class="el-icon-info"></i>
+                  如需修改，请前往
+                  <el-button type="text" size="mini" @click="$router.push('/profile')">
+                    个人中心 - 求职状态
+                  </el-button>
+                </div>
+              </div>
+              <div v-else class="experience-empty">
+                <div class="experience-empty-icon">⚠️</div>
+                <p>您还未设置工作经验</p>
+                <el-button type="primary" size="small" @click="$router.push('/profile')">
+                  去设置
+                </el-button>
               </div>
             </div>
 
             <!-- 面试轮次 -->
             <div class="form-group">
               <label>🔄 面试轮次 <span class="required">*</span></label>
-              <div class="tag-select">
+              <div class="tag-select round-select">
                 <div
                   v-for="opt in roundOptions"
                   :key="opt.value"
-                  class="tag"
+                  class="tag round-tag"
                   :class="{ selected: config.round === opt.value }"
                   @click="config.round = opt.value"
-                >{{ opt.label }}</div>
+                >
+                  <div class="round-info">
+                    <span class="round-label">{{ opt.label }}</span>
+                    <span class="round-desc">{{ opt.desc }}</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -309,6 +402,11 @@
               <span class="option-value">{{ config.thinkTime }}秒</span>
             </div>
           </div>
+          <div class="think-time-explain">
+            <el-alert type="warning" :closable="false" show-icon>
+              <strong>思考时间说明：</strong>显示题目后，系统会等待 {{ config.thinkTime }} 秒再开始录制你的回答。这段时间你可以先在脑中组织答案。
+            </el-alert>
+          </div>
           <div class="option-row">
             <div class="option-item">
               <span class="option-label">虚拟背景</span>
@@ -338,7 +436,7 @@
         <!-- 必填项提示 -->
         <div v-if="showHint" class="hint-bar">
           <i class="el-icon-warning-outline"></i>
-          请完成所有必填项（岗位、难度、经验、轮次）后再发起面试
+          请完成所有必填项（岗位、难度、轮次）后再发起面试
         </div>
 
         <!-- 提交按钮 -->
@@ -371,6 +469,7 @@ export default {
       loading: false,
       showHint: false,
       profileExperience: '', // 从用户资料读取的工作经验
+      isCustomJob: false, // 是否选择了自定义岗位
 
       config: {
         company: '',
@@ -394,10 +493,15 @@ export default {
       userResumes: [],
       resumeLoading: false,
 
+      // 岗位选择器状态
+      selectedCategory: 'tech', // 默认选中的大类
+      jobSearchQuery: '',
+      customJobInput: '',
+
       jobTypeOptions: [
         { label: '校园招聘', value: 'campus', icon: '🎓', desc: '校招/应届', hint: '重点考察基础知识、算法、逻辑思维，题目相对基础但覆盖面广' },
         { label: '社会招聘', value: 'social', icon: '💼', desc: '社招/跳槽', hint: '围绕项目经验深挖，考察技术深度、架构思维、解决问题能力' },
-        { label: '事业单位', value: 'institution', icon: '🏛️', desc: '公务员/国企', hint: '结构化面试为主，重点考综合分析、计划组织、应急应变、人际沟通' },
+        { label: '事业单位', value: 'institution', icon: '🏛️', desc: '公务员/国企', hint: '结构化面试为主，重点考综合分析、计划组织、应急应变、人际沟通。包含漫画题、情景题等特殊题型。' },
         { label: '实习', value: 'intern', icon: '🌱', desc: '日常实习', hint: '题目最友好，考察学习能力、基础认知和实习动机' }
       ],
 
@@ -411,33 +515,53 @@ export default {
         }
       ],
 
-      // 岗位选项(按类别分组)
-      jobOptions: {
-        tech: [
-          '后端开发', '前端开发', '全栈开发', '移动端开发(Android)',
-          '移动端开发(iOS)', '大数据工程师', 'AI算法工程师', '测试工程师',
-          '运维/DevOps', '网络安全', '嵌入式开发', '游戏开发',
-          '游戏客户端开发', '游戏服务端开发', '数据分析', '数据工程',
-          '机器学习工程师', '深度学习工程师', 'NLP工程师', '推荐算法工程师'
-        ],
-        product: [
-          '产品经理', '产品助理', '高级产品经理', '数据产品经理',
-          'AI产品经理', 'C端产品经理', 'B端产品经理', '平台产品经理',
-          'UI设计师', 'UX设计师', '视觉设计师', '交互设计师',
-          '平面设计师', '品牌设计师', '视频设计师'
-        ],
-        operation: [
-          '运营专员', '内容运营', '用户运营', '活动运营',
-          '新媒体运营', '电商运营', '社群运营', '游戏运营',
-          '市场策划', '市场营销', '商务拓展', '销售代表',
-          '客户经理', '渠道运营', '增长运营'
-        ],
-        admin: [
-          '会计/财务', '人力资源', '行政管理', '法务/合规',
-          '采购/供应链', '质量管理', '项目协调', ' CEO/总裁助理',
-          '投资关系', '公关媒介'
-        ]
-      },
+      // 岗位选项(按类别分组) - 重新组织为数组格式
+      jobCategories: [
+        {
+          name: 'tech',
+          label: '技术类',
+          icon: '💻',
+          jobs: [
+            '后端开发', '前端开发', '全栈开发', '移动端开发(Android)',
+            '移动端开发(iOS)', '大数据工程师', 'AI算法工程师', '测试工程师',
+            '运维/DevOps', '网络安全', '嵌入式开发', '游戏开发',
+            '游戏客户端开发', '游戏服务端开发', '数据分析', '数据工程',
+            '机器学习工程师', '深度学习工程师', 'NLP工程师', '推荐算法工程师'
+          ]
+        },
+        {
+          name: 'product',
+          label: '产品与设计',
+          icon: '🎨',
+          jobs: [
+            '产品经理', '产品助理', '高级产品经理', '数据产品经理',
+            'AI产品经理', 'C端产品经理', 'B端产品经理', '平台产品经理',
+            'UI设计师', 'UX设计师', '视觉设计师', '交互设计师',
+            '平面设计师', '品牌设计师', '视频设计师'
+          ]
+        },
+        {
+          name: 'operation',
+          label: '运营与市场',
+          icon: '📈',
+          jobs: [
+            '运营专员', '内容运营', '用户运营', '活动运营',
+            '新媒体运营', '电商运营', '社群运营', '游戏运营',
+            '市场策划', '市场营销', '商务拓展', '销售代表',
+            '客户经理', '渠道运营', '增长运营'
+          ]
+        },
+        {
+          name: 'admin',
+          label: '职能类',
+          icon: '📋',
+          jobs: [
+            '会计/财务', '人力资源', '行政管理', '法务/合规',
+            '采购/供应链', '质量管理', '项目协调', '总裁助理',
+            '投资关系', '公关媒介', '党建专员', '行政前台'
+          ]
+        }
+      ],
 
       difficultyOptions: [
         { label: '🟢 初级', value: 'easy', desc: '校招/入门级' },
@@ -445,17 +569,10 @@ export default {
         { label: '🔴 高级', value: 'hard', desc: '资深/专家级' }
       ],
 
-      experienceOptions: [
-        { label: '应届生', value: 'fresh' },
-        { label: '1-3年', value: '1-3' },
-        { label: '3-5年', value: '3-5' },
-        { label: '5年以上', value: '5+' }
-      ],
-
       roundOptions: [
-        { label: '一面（基础）', value: 'round1' },
-        { label: '二面（技术深度）', value: 'round2' },
-        { label: '三面（综合/HR）', value: 'round3' }
+        { label: '一面', value: 'round1', desc: '基础能力考察' },
+        { label: '二面', value: 'round2', desc: '技术深度考察' },
+        { label: '三面', value: 'round3', desc: '综合能力/HR面' }
       ],
 
       interviewTypeOptions: [
@@ -491,18 +608,38 @@ export default {
       return this.jobTypeOptions.find(opt => opt.value === this.config.jobType) || null
     },
 
+    // 当前选中分类的岗位列表
+    currentCategoryJobs() {
+      const cat = this.jobCategories.find(c => c.name === this.selectedCategory)
+      return cat ? cat.jobs : []
+    },
+
+    // 过滤后的搜索结果
+    filteredJobResults() {
+      if (!this.jobSearchQuery) return []
+      const query = this.jobSearchQuery.toLowerCase()
+      const allJobs = this.jobCategories.flatMap(c => c.jobs)
+      return [...new Set(allJobs.filter(job => job.toLowerCase().includes(query)))]
+    },
+
+    // 工作经验标签显示
+    experienceLabel() {
+      const map = {
+        fresh: '应届生',
+        '1-3': '1-3年经验',
+        '3-5': '3-5年经验',
+        '5+': '5年以上'
+      }
+      return map[this.profileExperience] || this.profileExperience || '未设置'
+    },
+
     isFormValid() {
       return (
         !!this.config.jobTitle &&
         !!this.config.difficulty &&
-        !!this.config.experience &&
+        !!this.profileExperience && // 现在依赖个人中心设置
         !!this.config.round
       )
-    },
-
-    // 工作经验是否来自用户资料
-    experienceFromProfile() {
-      return !!this.profileExperience && this.config.experience === this.profileExperience
     }
   },
 
@@ -513,11 +650,37 @@ export default {
 
   methods: {
     onJobTypeChange(value) {
-      // 求职类型变更时，可以自动调整难度和经验选项的默认值
-      // 例如：实习自动设置为初级难度
       if (value === 'intern' && !this.config.difficulty) {
         this.config.difficulty = 'easy'
       }
+    },
+
+    // 选择大类
+    selectCategory(name) {
+      this.selectedCategory = name
+      this.jobSearchQuery = ''
+      this.customJobInput = ''
+    },
+
+    // 选择岗位
+    selectJob(job) {
+      this.config.jobTitle = job
+      this.isCustomJob = false
+      this.jobSearchQuery = ''
+    },
+
+    // 应用自定义岗位
+    applyCustomJob() {
+      if (this.customJobInput.trim()) {
+        this.config.jobTitle = this.customJobInput.trim()
+        this.isCustomJob = true
+        this.customJobInput = ''
+      }
+    },
+
+    // 搜索岗位
+    onJobSearch() {
+      // 搜索时会自动显示搜索结果
     },
 
     toggleFocus(opt) {
@@ -534,7 +697,6 @@ export default {
       if (idx === -1) {
         this.config.interviewTypes.push(type)
       } else if (this.config.interviewTypes.length > 1) {
-        // 至少保留一个
         this.config.interviewTypes.splice(idx, 1)
       }
     },
@@ -562,18 +724,15 @@ export default {
       this.config.companyId = item.id || ''
     },
 
-    // 加载用户简历列表（按需触发）
     async loadUserResumes() {
-      if (this.userResumes.length > 0) return  // 已加载过则跳过
+      if (this.userResumes.length > 0) return
       this.resumeLoading = true
       try {
         const { getResumeList } = await import('@/api/resume')
         const res = await getResumeList()
         const list = res.data || res || []
-        // 只展示分析完成的简历
         this.userResumes = list.filter(r => r.analysisStatus === 'done')
       } catch (e) {
-        // 简历服务不可用时静默忽略
         this.userResumes = []
       } finally {
         this.resumeLoading = false
@@ -585,7 +744,6 @@ export default {
     },
 
     async handleStart() {
-      // 如果必填项未完成，显示提示并阻止
       if (!this.isFormValid) {
         this.showHint = true
         return
@@ -599,14 +757,13 @@ export default {
         const payload = {
           jobTitle: this.config.jobTitle,
           difficulty: this.config.difficulty,
-          experience: this.config.experience,
+          experience: this.profileExperience, // 使用个人中心设置的Experience
           round: this.config.round,
           focusAreas: [...this.config.focusAreas],
           remark: this.config.remark || '',
           mode: this.config.mode || 'text'
         }
 
-        // 添加新字段
         if (this.config.companyId) {
           payload.companyId = this.config.companyId
           payload.companyName = this.config.company
@@ -614,7 +771,6 @@ export default {
         if (this.config.interviewTypes.length) {
           payload.interviewTypes = this.config.interviewTypes
         }
-        // 求职类型
         if (this.config.jobType) {
           payload.jobType = this.config.jobType
         }
@@ -623,14 +779,12 @@ export default {
           payload.virtualBackground = this.config.virtualBackground
           payload.bgStyle = this.config.bgStyle
         }
-        // 简历关联出题
         if (this.config.resumeId) {
           payload.resumeId = this.config.resumeId
         }
 
         const res = await createInterview(payload)
 
-        // 兼容不同后端响应结构
         const data = res.data || res
         const interviewId = data.id || data.interviewId || data.data?.id || data.data?.interviewId
 
@@ -638,7 +792,6 @@ export default {
           throw new Error('未获取到面试 ID，请重试')
         }
 
-        // 存储面试信息到 Vuex store
         this.$store.commit('interview/SET_CURRENT_ID', interviewId)
         if (data.interview) {
           this.$store.commit('interview/SET_INTERVIEW', data.interview)
@@ -666,20 +819,16 @@ export default {
       }
     },
 
-    // 从用户资料加载默认工作经验
     async loadUserExperience() {
       try {
         const res = await getProfile()
         const d = res.data || res
-        // 如果用户已设置工作经验，自动填入
         if (d.experience) {
           this.profileExperience = d.experience
-          if (!this.config.experience) {
-            this.config.experience = d.experience
-          }
+          this.config.experience = d.experience
         }
       } catch (e) {
-        // 静默失败，使用默认值
+        // 静默失败
       }
     }
   }
@@ -687,7 +836,6 @@ export default {
 </script>
 
 <style scoped>
-/* 整体布局继承 App.vue 中的 layout flex 容器 */
 .layout {
   display: flex;
   min-height: calc(100vh - 90px);
@@ -823,21 +971,278 @@ export default {
   margin-left: 4px;
 }
 
-.profile-hint {
-  font-size: 12px;
-  font-weight: normal;
-  color: #67c23a;
-  margin-left: 6px;
+/* ===== 岗位选择器 - 新布局 ===== */
+.job-selector-new {
+  display: flex;
+  border: 1px solid #dcdfe6;
+  border-radius: 8px;
+  overflow: hidden;
+  min-height: 200px;
 }
 
-/* 岗位选择器 */
-.job-select {
-  width: 100%;
+/* 左侧大类列表 */
+.job-category-list {
+  width: 120px;
+  background: #f5f7fa;
+  border-right: 1px solid #e4e7ed;
+  flex-shrink: 0;
 }
 
-::v-deep .el-select-group__title {
+.job-category-item {
+  padding: 12px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+  border-bottom: 1px solid #e4e7ed;
+  font-size: 13px;
+  color: #606266;
+}
+
+.job-category-item:hover {
+  background: #ecf5ff;
+  color: #409eff;
+}
+
+.job-category-item.active {
+  background: #fff;
+  color: #ff9900;
   font-weight: bold;
+  border-left: 3px solid #ff9900;
+}
+
+.job-category-item.custom-category {
+  color: #909399;
+  border-top: 1px dashed #dcdfe6;
+  margin-top: 8px;
+}
+
+.job-category-item.custom-category.active {
+  color: #ff9900;
+}
+
+.category-icon {
+  font-size: 16px;
+}
+
+.category-label {
+  white-space: nowrap;
+}
+
+/* 右侧岗位列表 */
+.job-list-panel {
+  flex: 1;
+  padding: 12px;
+  overflow-y: auto;
+  max-height: 220px;
+}
+
+.job-search-box {
+  margin-bottom: 10px;
+}
+
+.category-jobs,
+.job-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.job-item {
+  padding: 6px 14px;
+  background: #f4f4f5;
+  border-radius: 16px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+  color: #606266;
+}
+
+.job-item:hover {
+  background: #fdf6ec;
+  color: #ff9900;
+  border-color: #ff9900;
+}
+
+.job-item.selected {
+  background: #ff9900;
+  color: #111;
+  font-weight: bold;
+}
+
+.job-empty {
+  text-align: center;
+  padding: 20px;
+  color: #909399;
+}
+
+.custom-input-area {
+  text-align: center;
+  padding: 10px;
+}
+
+.custom-tip {
+  font-size: 12px;
+  color: #909399;
+  margin-bottom: 10px;
+}
+
+/* 已选岗位提示 */
+.selected-job-hint {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #67c23a;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.custom-badge {
+  background: #e6a23c;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+}
+
+/* ===== 工作经验显示 ===== */
+.experience-display {
+  background: #f0f9eb;
+  border: 1px solid #c2e7b0;
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.experience-value {
+  font-size: 15px;
+  font-weight: bold;
+  color: #67c23a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.experience-tip {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #909399;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.experience-empty {
+  background: #fdf6ec;
+  border: 1px dashed #f5dab1;
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+}
+
+.experience-empty-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.experience-empty p {
+  margin: 0 0 10px 0;
+  font-size: 13px;
+  color: #e6a23c;
+}
+
+/* 面试轮次 */
+.round-select {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.round-tag {
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 8px;
+}
+
+.round-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.round-label {
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.round-desc {
+  font-size: 11px;
+  color: #999;
+  margin-top: 2px;
+}
+
+.round-tag.selected .round-desc {
   color: #333;
+}
+
+/* ===== 通用标签样式 ===== */
+.tag-select {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag {
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid #ddd;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  color: #555;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.tag:hover {
+  border-color: #ff9900;
+  color: #ff9900;
+}
+
+.tag.selected {
+  background: #ff9900;
+  border-color: #ff9900;
+  color: #111;
+  font-weight: bold;
+}
+
+.tag .tag-label {
+  font-weight: bold;
+}
+
+.tag .tag-desc {
+  font-size: 11px;
+  color: #999;
+  margin-left: 4px;
+}
+
+.tag.selected .tag-desc {
+  color: #333;
+}
+
+/* 求职类型 */
+.job-type-select .type-tag {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.jobtype-hint {
+  margin-top: 10px;
 }
 
 /* 公司输入 */
@@ -846,26 +1251,7 @@ export default {
   max-width: 400px;
 }
 
-.company-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.company-name {
-  font-size: 14px;
-}
-
-.company-tag {
-  font-size: 12px;
-  color: #ff9900;
-  background: #fff7e6;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
-/* 简历关联选择 */
+/* 简历关联 */
 .resume-select-row {
   display: flex;
   gap: 10px;
@@ -900,78 +1286,16 @@ export default {
   gap: 6px;
 }
 
-/* 标签选择区域 */
-.tag-select {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.tag {
-  padding: 8px 16px;
-  border-radius: 20px;
-  border: 1px solid #ddd;
-  background: #fff;
-  cursor: pointer;
-  font-size: 13px;
-  color: #555;
-  transition: all 0.2s;
-  user-select: none;
-}
-
-.tag:hover {
-  border-color: #ff9900;
-  color: #ff9900;
-}
-
-.tag.selected {
-  background: #ff9900;
-  border-color: #ff9900;
-  color: #111;
-  font-weight: bold;
-}
-
-/* 难度标签带描述 */
-.tag .tag-label {
-  font-weight: bold;
-}
-
-.tag .tag-desc {
-  font-size: 11px;
-  color: #999;
-  margin-left: 4px;
-}
-
-.tag.selected .tag-desc {
-  color: #333;
-}
-
-/* 面试形式标签 */
-.interview-type .type-tag {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 18px;
-}
-
-.type-icon {
-  font-size: 16px;
-}
-
-.type-desc {
-  margin-top: 10px;
-}
-
-.type-desc .el-alert {
-  border-radius: 6px;
-}
-
 /* 视频面试选项 */
 .video-options {
   background: #f9f9f9;
   border-radius: 8px;
   padding: 16px;
   margin-top: -8px;
+}
+
+.think-time-explain {
+  margin-bottom: 16px;
 }
 
 .option-row {
@@ -1086,6 +1410,26 @@ export default {
   gap: 6px;
 }
 
+/* 面试形式 */
+.interview-type .type-tag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+}
+
+.type-icon {
+  font-size: 16px;
+}
+
+.type-desc {
+  margin-top: 10px;
+}
+
+.type-desc .el-alert {
+  border-radius: 6px;
+}
+
 @media (max-width: 768px) {
   .config-grid {
     grid-template-columns: 1fr;
@@ -1103,6 +1447,29 @@ export default {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
+  }
+
+  .job-selector-new {
+    flex-direction: column;
+  }
+
+  .job-category-list {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    border-right: none;
+    border-bottom: 1px solid #e4e7ed;
+  }
+
+  .job-category-item {
+    border-bottom: none;
+    border-right: 1px solid #e4e7ed;
+    padding: 8px 12px;
+  }
+
+  .job-category-item.active {
+    border-left: none;
+    border-bottom: 2px solid #ff9900;
   }
 }
 </style>

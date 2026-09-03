@@ -74,7 +74,11 @@
           <div slot="header" class="card-title">求职状态设置</div>
           <div class="job-status-tip">
             <i class="el-icon-info"></i>
-            设置你的求职状态后，每次发起面试时系统会自动应用这些配置，无需重复选择
+            <strong>设置你的求职状态后，每次发起面试时系统会自动应用这些配置，无需重复选择。</strong>
+          </div>
+          <div class="job-status-reminder" v-if="!jobStatusForm.experience">
+            <i class="el-icon-warning"></i>
+            您还未设置工作经验，设置后发起面试时将自动应用
           </div>
 
           <el-form :model="jobStatusForm" label-width="100px" v-loading="jobStatusLoading">
@@ -97,23 +101,35 @@
               </div>
             </el-form-item>
 
-            <!-- 工作经验 -->
+            <!-- 工作经验 - 重要提示 -->
             <el-form-item label="工作经验">
-              <div class="experience-options">
-                <div
-                  v-for="opt in experienceOptions"
-                  :key="opt.value"
-                  class="experience-item"
-                  :class="{ selected: jobStatusForm.experience === opt.value }"
-                  @click="jobStatusForm.experience = opt.value"
-                >
-                  {{ opt.label }}
+              <div class="experience-section">
+                <div class="experience-options">
+                  <div
+                    v-for="opt in experienceOptions"
+                    :key="opt.value"
+                    class="experience-item"
+                    :class="{ selected: jobStatusForm.experience === opt.value }"
+                    @click="jobStatusForm.experience = opt.value"
+                  >
+                    {{ opt.label }}
+                    <span class="exp-desc">{{ opt.desc }}</span>
+                  </div>
+                </div>
+                <div class="experience-hint">
+                  <i class="el-icon-info"></i>
+                  这是你的长期标签，短期内无需更改。每次面试时会自动使用此设置。
                 </div>
               </div>
             </el-form-item>
 
             <el-form-item>
-              <el-button type="primary" :loading="savingJobStatus" @click="saveJobStatus">保存求职状态</el-button>
+              <el-button type="primary" :loading="savingJobStatus" @click="saveJobStatus">
+                💾 保存求职状态
+              </el-button>
+              <span class="save-hint" v-if="jobStatusForm.experience">
+                <i class="el-icon-check"></i> 已设置完成，可以发起面试了
+              </span>
             </el-form-item>
           </el-form>
         </el-card>
@@ -276,10 +292,10 @@ export default {
         { value: 'pause', icon: '⏸️', label: '暂时不找', desc: '需要休息或其他安排' }
       ],
       experienceOptions: [
-        { value: 'fresh', label: '应届生' },
-        { value: '1-3', label: '1-3年' },
-        { value: '3-5', label: '3-5年' },
-        { value: '5+', label: '5年以上' }
+        { value: 'fresh', label: '应届生', desc: '即将/已经毕业' },
+        { value: '1-3', label: '1-3年', desc: '初入职场' },
+        { value: '3-5', label: '3-5年', desc: '有一定积累' },
+        { value: '5+', label: '5年以上', desc: '资深专业人士' }
       ]
     }
   },
@@ -542,4 +558,154 @@ export default {
 .collect-title { font-size: 14px; font-weight: bold; color: #0066c0; flex: 1; line-height: 1.5; }
 .collect-meta { display: flex; align-items: center; gap: 6px; flex-shrink: 0; flex-wrap: wrap; }
 .collect-time { font-size: 12px; color: #bbb; }
+
+/* ===== 求职状态样式 ===== */
+.job-status-tip {
+  background: #f0f9eb;
+  border: 1px solid #c2e7b0;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #67c23a;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.job-status-tip i {
+  font-size: 16px;
+}
+
+.job-status-reminder {
+  background: #fef0f0;
+  border: 1px solid #fde2e2;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #f56c6c;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 求职状态选项 */
+.job-status-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.job-status-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border: 2px solid #e4e7ed;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 180px;
+}
+
+.job-status-item:hover {
+  border-color: #ff9900;
+  background: #fffaf0;
+}
+
+.job-status-item.selected {
+  border-color: #ff9900;
+  background: linear-gradient(135deg, #fff9f0, #fff);
+}
+
+.job-status-icon {
+  font-size: 28px;
+}
+
+.job-status-content {
+  flex: 1;
+}
+
+.job-status-label {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+}
+
+.job-status-desc {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 2px;
+}
+
+/* 工作经验选项 */
+.experience-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.experience-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.experience-item {
+  padding: 12px 24px;
+  border: 2px solid #e4e7ed;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+  font-weight: bold;
+  color: #606266;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.experience-item:hover {
+  border-color: #ff9900;
+  color: #ff9900;
+  background: #fffaf0;
+}
+
+.experience-item.selected {
+  border-color: #ff9900;
+  background: #ff9900;
+  color: #111;
+}
+
+.exp-desc {
+  font-size: 11px;
+  font-weight: normal;
+  color: #909399;
+}
+
+.experience-item.selected .exp-desc {
+  color: #333;
+}
+
+.experience-hint {
+  font-size: 12px;
+  color: #909399;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f5f7fa;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+.save-hint {
+  margin-left: 16px;
+  font-size: 13px;
+  color: #67c23a;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
 </style>

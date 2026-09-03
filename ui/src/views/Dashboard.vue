@@ -55,46 +55,26 @@
     </div>
 
     <!-- ③ 核心数据（仅在有数据时显示） -->
-    <div class="stats-section" v-if="hasStats">
-      <h2 class="section-title">我的数据</h2>
-      <el-row :gutter="16">
-        <el-col :span="6">
-          <div class="mini-stat">
-            <div class="mini-stat-icon">🎯</div>
-            <div class="mini-stat-info">
-              <div class="mini-stat-num">{{ stats.totalInterviews || 0 }}</div>
-              <div class="mini-stat-label">累计面试</div>
-            </div>
-          </div>
-        </el-col>
-        <el-col :span="6">
-          <div class="mini-stat">
-            <div class="mini-stat-icon">📊</div>
-            <div class="mini-stat-info">
-              <div class="mini-stat-num">{{ (stats.avgScore || 0).toFixed(1) }}</div>
-              <div class="mini-stat-label">平均得分</div>
-            </div>
-          </div>
-        </el-col>
-        <el-col :span="6">
-          <div class="mini-stat">
-            <div class="mini-stat-icon">🏆</div>
-            <div class="mini-stat-info">
-              <div class="mini-stat-num">{{ stats.highestScore || 0 }}</div>
-              <div class="mini-stat-label">最高得分</div>
-            </div>
-          </div>
-        </el-col>
-        <el-col :span="6">
-          <div class="mini-stat">
-            <div class="mini-stat-icon">💼</div>
-            <div class="mini-stat-info">
-              <div class="mini-stat-num">{{ stats.topPosition || '—' }}</div>
-              <div class="mini-stat-label">常练岗位</div>
-            </div>
-          </div>
-        </el-col>
-      </el-row>
+    <div class="stats-section" v-if="hasStats && stats.totalInterviews > 0">
+      <h2 class="section-title">📈 我的成长</h2>
+      <div class="stats-row">
+        <div class="stat-item">
+          <span class="stat-num">{{ stats.totalInterviews || 0 }}</span>
+          <span class="stat-label">次面试</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num">{{ (stats.avgScore || 0).toFixed(1) }}</span>
+          <span class="stat-label">平均分</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num">{{ stats.highestScore || 0 }}</span>
+          <span class="stat-label">最高分</span>
+        </div>
+        <div class="stat-item" v-if="stats.topPosition">
+          <span class="stat-num stat-position">{{ stats.topPosition }}</span>
+          <span class="stat-label">常练岗位</span>
+        </div>
+      </div>
     </div>
 
     <!-- ④ 近期面试记录（精简版） -->
@@ -511,10 +491,46 @@ export default {
   border-color: #f3a847;
 }
 
+/* 统计区域 - 简化版 */
+.stats-section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  border: 1px solid #eee;
+}
+.stats-row {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+.stat-item {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.stat-num {
+  font-size: 24px;
+  font-weight: 600;
+  color: #ff9900;
+}
+.stat-position {
+  font-size: 18px;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.stat-label {
+  font-size: 13px;
+  color: #888;
+}
+
 /* 响应式 */
 @media (max-width: 768px) {
   .access-grid { grid-template-columns: repeat(2, 1fr); }
   .welcome-content { flex-direction: column; align-items: flex-start; }
   .welcome-title { font-size: 22px; }
+  .stats-row { gap: 20px; }
 }
 </style>

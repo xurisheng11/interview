@@ -91,9 +91,17 @@ func UpdateJobStatus(userId, jobStatus, experience string) error {
 
 // GetStats 获取用户面试统计数据
 func GetStats(userId string) (map[string]interface{}, error) {
-	ids, err := repository.ZRevRange("user:interviews:"+userId, 0, -1)
+	// 获取面试 ID 列表（使用 repository 函数以确保一致性）
+	ids, err := repository.GetUserInterviewIDs(userId)
 	if err != nil {
-		return nil, err
+		// 如果 ZRevRange 失败（WRONGTYPE 等），返回空统计
+		// 而不是崩溃
+		return map[string]interface{}{
+			"totalCount":  0,
+			"avgScore":    0.0,
+			"maxScore":    0,
+			"topJobTitle": "",
+		}, nil
 	}
 
 	totalCount := 0
@@ -165,9 +173,11 @@ func GetStats(userId string) (map[string]interface{}, error) {
 
 // GetScoreTrend 获取最近30次面试得分趋势
 func GetScoreTrend(userId string) ([]map[string]interface{}, error) {
-	ids, err := repository.ZRevRange("user:interviews:"+userId, 0, 29)
+	// 获取面试 ID 列表（使用 repository 函数以确保一致性）
+	ids, err := repository.GetUserInterviewIDs(userId)
 	if err != nil {
-		return nil, err
+		// 如果 ZRevRange 失败（WRONGTYPE 等），返回空列表
+		return []map[string]interface{}{}, nil
 	}
 
 	var trend []map[string]interface{}

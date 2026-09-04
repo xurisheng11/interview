@@ -195,8 +195,8 @@
         <p class="credit-tip">当前积分：<strong>{{ newCredits }}</strong></p>
       </div>
       <span slot="footer">
-        <el-button type="primary" @click="successVisible = false">继续添加</el-button>
-        <el-button @click="$router.push('/questions/contributions')">查看全部题库</el-button>
+        <el-button type="primary" @click="$router.push('/questions/my-contributions')">查看我的贡献</el-button>
+        <el-button @click="$router.push('/questions/contributions')">浏览公司题库</el-button>
       </span>
     </el-dialog>
   </div>
@@ -272,8 +272,8 @@ export default {
           getUserContributions(),
           getUserCredits()
         ])
-        this.myContributions = contribRes?.contributions || []
-        this.credits = creditRes?.credits || 0
+        this.myContributions = contribRes?.data?.contributions || contribRes?.contributions || []
+        this.credits = creditRes?.data?.credits || creditRes?.credits || 0
       } catch (e) {
         // ignore
       } finally {

@@ -15,6 +15,11 @@ export function getUserCredits() {
   return request.get('/contributions/credits')
 }
 
+// 扣除用户积分（查看已验证题目时）
+export function deductCredits(amount = 1) {
+  return request.post('/contributions/deduct', { amount })
+}
+
 // 获取公司贡献的题目
 export function getCompanyContributedQuestions(company, jobTitle) {
   return request.get(`/contributions/company/${encodeURIComponent(company)}/questions`, {

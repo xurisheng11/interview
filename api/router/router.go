@@ -63,6 +63,7 @@ func Setup() *gin.Engine {
 			contributions.POST("/questions", handler.SubmitContributedQuestion)
 			contributions.GET("/me", handler.GetUserContributions)
 			contributions.GET("/credits", handler.GetUserCredits)
+			contributions.POST("/deduct", handler.DeductCredits)
 			contributions.GET("/company/:company/questions", handler.GetCompanyContributedQuestions)
 			contributions.GET("/questions/:id", handler.GetContributedQuestion)
 			contributions.POST("/questions/:id/vote", handler.VoteContributedQuestion)

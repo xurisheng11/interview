@@ -127,8 +127,8 @@ export default {
           getUserContributions(),
           getUserCredits()
         ])
-        this.contributions = contribRes?.contributions || []
-        this.credits = creditRes?.credits || 0
+        this.contributions = contribRes?.data?.contributions || contribRes?.contributions || []
+        this.credits = creditRes?.data?.credits ?? creditRes?.credits ?? 0
       } catch (e) {
         this.$message.error('加载失败')
       } finally {

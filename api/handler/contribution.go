@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"interview-sim/pkg/response"
+	"interview-sim/repository"
 	"interview-sim/service"
 )
 
@@ -192,8 +193,40 @@ func ListContributedQuestionsForReview(c *gin.Context) {
 		return
 	}
 
+	// 转换为带用户名的格式
+	result := make([]map[string]interface{}, 0, len(list))
+	for _, q := range list {
+		item := map[string]interface{}{
+			"id":             q.ID,
+			"company":        q.Company,
+			"jobTitle":       q.JobTitle,
+			"content":        q.Content,
+			"questionType":   q.QuestionType,
+			"difficulty":     q.Difficulty,
+			"tags":           q.Tags,
+			"year":           q.Year,
+			"round":          q.Round,
+			"contributorId":  q.ContributorID,
+			"status":         q.Status,
+			"helpfulCount":   q.HelpfulCount,
+			"createdAt":      q.CreatedAt,
+		}
+		// 获取贡献者用户名
+		if q.ContributorID != "" {
+			user, _ := repository.GetUserByID(q.ContributorID)
+			if user != nil {
+				item["contributor"] = user.Username
+			} else {
+				item["contributor"] = "-"
+			}
+		} else {
+			item["contributor"] = "-"
+		}
+		result = append(result, item)
+	}
+
 	response.Success(c, gin.H{
-		"list":  list,
+		"list":  result,
 		"total": total,
 		"page":  page,
 	})
@@ -238,6 +271,30 @@ func GetUserCredits(c *gin.Context) {
 		return
 	}
 	response.Success(c, gin.H{"credits": credits})
+}
+
+// DeductCredits POST /api/v1/contributions/deduct
+func DeductCredits(c *gin.Context) {
+	userID := c.GetString("userId")
+
+	var body struct {
+		Amount int `json:"amount"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		response.BadRequest(c, "参数错误")
+		return
+	}
+	if body.Amount <= 0 {
+		body.Amount = 1
+	}
+
+	if err := service.DeductCredit(userID, body.Amount); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	credits, _ := service.GetUserCredits(userID)
+	response.Success(c, gin.H{"message": "积分已扣除", "credits": credits})
 }
 
 // SearchQuestionsFallback GET /api/v1/contributions/search

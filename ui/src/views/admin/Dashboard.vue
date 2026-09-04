@@ -174,11 +174,95 @@
         <el-button type="primary" :loading="resetDialog.loading" @click="confirmReset">确认重置</el-button>
       </div>
     </el-dialog>
+
+    <!-- 贡献审核区域 -->
+    <div class="admin-table-card contribution-review">
+      <div class="table-header">
+        <h3 class="table-title">📝 贡献题库审核</h3>
+        <div style="display:flex;gap:10px;align-items:center">
+          <el-tabs v-model="contribTabs" size="small" style="margin-right:12px">
+            <el-tab-pane label="待审核" name="pending">
+              <span slot="label">
+                待审核
+                <el-badge :value="pendingCount" :hidden="pendingCount === 0" type="warning" style="margin-left:4px"/>
+              </span>
+            </el-tab-pane>
+            <el-tab-pane label="全部" name="all" />
+          </el-tabs>
+          <el-button size="small" icon="el-icon-refresh" :loading="contribLoading" @click="loadContributions">刷新</el-button>
+        </div>
+      </div>
+
+      <el-table
+        :data="filteredContributions"
+        v-loading="contribLoading"
+        stripe
+        style="width: 100%"
+        :header-cell-style="{ background: '#f5f7fa', color: '#606266', fontWeight: '600' }"
+      >
+        <el-table-column label="贡献者" min-width="100">
+          <template v-slot="{ row }">
+            <span>{{ row.contributor || '-' }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="公司" prop="company" width="120" show-overflow-tooltip />
+        <el-table-column label="岗位" prop="jobTitle" width="120" show-overflow-tooltip />
+        <el-table-column label="题目内容" min-width="200">
+          <template v-slot="{ row }">
+            <div style="font-size:13px;line-height:1.5;max-height:60px;overflow:hidden">{{ row.content }}</div>
+          </template>
+        </el-table-column>
+        <el-table-column label="类型" width="80">
+          <template v-slot="{ row }">
+            <el-tag size="mini" type="info">{{ questionTypeText(row.questionType) }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="难度" width="70">
+          <template v-slot="{ row }">
+            <el-tag size="mini" :type="difficultyType(row.difficulty)">{{ difficultyText(row.difficulty) }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="状态" width="80">
+          <template v-slot="{ row }">
+            <el-tag :type="statusType(row.status)" size="mini">{{ statusText(row.status) }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="提交时间" width="140">
+          <template v-slot="{ row }">
+            <span style="font-size:12px">{{ formatTime(row.createdAt) }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="160" align="center" fixed="right">
+          <template v-slot="{ row }">
+            <template v-if="row.status === 'pending'">
+              <el-button type="text" size="small" style="color:#67c23a" @click="handleApprove(row)">通过</el-button>
+              <el-button type="text" size="small" style="color:#f56c6c" @click="handleReject(row)">驳回</el-button>
+            </template>
+            <span v-else style="color:#999;font-size:12px">{{ row.status === 'approved' ? '已通过' : row.status === 'rejected' ? '已驳回' : '-' }}</span>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <div v-if="contributions.length === 0 && !contribLoading" style="text-align:center;padding:40px 0;color:#999">
+        暂无{{ contribTabs === 'pending' ? '待审核' : '' }}贡献记录
+      </div>
+
+      <!-- 分页 -->
+      <el-pagination
+        v-if="contributions.length > 0"
+        style="margin-top:16px;text-align:right"
+        :current-page="contribPage"
+        :page-size="20"
+        :total="contribTotal"
+        layout="total, prev, pager, next"
+        @current-change="handleContribPageChange"
+      />
+    </div>
   </div>
 </template>
 
 <script>
-import { listUsers, resetUserPassword, setUserRole, deleteUser, migrateUsers } from '@/api/admin'
+import { listUsers, resetUserPassword, setUserRole, deleteUser, migrateUsers, listContributions, approveContribution, rejectContribution } from '@/api/admin'
 
 export default {
   name: 'AdminDashboard',
@@ -211,7 +295,13 @@ export default {
           { required: true, message: '请再次输入密码', trigger: 'blur' },
           { validator: validateConfirm, trigger: 'blur' }
         ]
-      }
+      },
+      // 贡献审核相关
+      contribTabs: 'pending',
+      contribLoading: false,
+      contributions: [],
+      contribPage: 1,
+      contribTotal: 0
     }
   },
   computed: {
@@ -231,10 +321,18 @@ export default {
     todayLoginCount() {
       const today = new Date().toISOString().slice(0, 10)
       return this.userList.filter(u => u.lastLoginAt && u.lastLoginAt.startsWith(today)).length
+    },
+    filteredContributions() {
+      if (this.contribTabs === 'all') return this.contributions
+      return this.contributions.filter(c => c.status === 'pending')
+    },
+    pendingCount() {
+      return this.contributions.filter(c => c.status === 'pending').length
     }
   },
   created() {
     this.loadUsers()
+    this.loadContributions()
   },
   methods: {
     async loadUsers() {
@@ -336,6 +434,66 @@ export default {
       } catch (e) {
         // 拦截器处理
       }
+    },
+
+    // ===== 贡献审核 =====
+    async loadContributions() {
+      this.contribLoading = true
+      try {
+        const res = await listContributions(this.contribTabs === 'all' ? '' : 'pending')
+        this.contributions = res.data.list || []
+        this.contribTotal = res.data.total || 0
+      } catch (e) {
+        // 拦截器处理
+      } finally {
+        this.contribLoading = false
+      }
+    },
+    handleContribPageChange(page) {
+      this.contribPage = page
+      this.loadContributions()
+    },
+    async handleApprove(row) {
+      try {
+        await this.$confirm(`确认通过该题目？通过后题目将进入题库。`, '审核通过', {
+          type: 'success',
+          confirmButtonText: '确认通过'
+        })
+      } catch { return }
+      try {
+        await approveContribution(row.id)
+        this.$message.success('已通过')
+        row.status = 'approved'
+      } catch (e) {}
+    },
+    async handleReject(row) {
+      try {
+        await this.$confirm(`确认驳回该题目？驳回后题目将不会进入题库。`, '审核驳回', {
+          type: 'warning',
+          confirmButtonText: '确认驳回',
+          cancelButtonText: '取消'
+        })
+      } catch { return }
+      try {
+        await rejectContribution(row.id)
+        this.$message.success('已驳回')
+        row.status = 'rejected'
+      } catch (e) {}
+    },
+    questionTypeText(t) {
+      return { technical: '技术', behavioral: '行为', algorithm: '算法', 'system-design': '系统设计' }[t] || t || '-'
+    },
+    difficultyText(d) {
+      return { easy: '简单', medium: '中等', hard: '困难' }[d] || d || '-'
+    },
+    difficultyType(d) {
+      return { easy: 'success', medium: 'warning', hard: 'danger' }[d] || 'info'
+    },
+    statusType(s) {
+      return { pending: 'warning', approved: 'success', verified: 'primary', rejected: 'danger' }[s] || 'info'
+    },
+    statusText(s) {
+      return { pending: '待审核', approved: '已通过', verified: '已验证', rejected: '已驳回' }[s] || s || '-'
     }
   }
 }
@@ -453,5 +611,10 @@ export default {
 .reset-user-info i {
   font-size: 18px;
   color: #409eff;
+}
+
+/* 贡献审核 */
+.contribution-review {
+  margin-top: 20px;
 }
 </style>

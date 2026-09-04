@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
 
@@ -64,6 +65,8 @@ func SubmitContributedQuestion(userID string, req *ContributeQuestionReq) (*mode
 			continue
 		}
 
+		// 加入全局集合（用于管理员审核列表）
+		_ = repository.SAdd("contributed:all:ids", cq.ID)
 		// 写入公司索引
 		_ = repository.ZAdd(companyContributionsKey(req.Company), float64(cq.CreatedAt), cq.ID)
 		// 写入用户贡献记录
@@ -115,14 +118,68 @@ type ContributeQuestionItem struct {
 // ---------- 获取公司贡献的题目（供面试使用）----------
 
 // GetCompanyContributedQuestions 获取公司贡献的题目（审核通过的）
+// 支持模糊匹配：如果精确匹配不到，会搜索包含该关键词的公司
 func GetCompanyContributedQuestions(company, jobTitle string) ([]model.ContributedQuestion, error) {
+	// 1. 先尝试精确匹配
 	ids, err := repository.ZRevRange(companyContributionsKey(company), 0, -1)
-	if err != nil {
-		return nil, err
+	if err == nil && len(ids) > 0 {
+		result := filterContributedQuestions(ids, jobTitle)
+		if len(result) > 0 {
+			return result, nil
+		}
 	}
 
+	// 2. 精确匹配为空，尝试模糊匹配：搜索所有公司，查找名称包含搜索词的公司
+	return fuzzySearchContributedQuestions(company, jobTitle)
+}
+
+// fuzzySearchContributedQuestions 模糊搜索公司题目
+func fuzzySearchContributedQuestions(keyword, jobTitle string) ([]model.ContributedQuestion, error) {
+	// 扫描 contributed:byCompany:* 所有 key
+	var cursor uint64
+	var matchedIds []string
+	keywordLower := strings.ToLower(keyword)
+
+	for {
+		keys, nextCursor, err := repository.Scan("contributed:byCompany:*", 100, &cursor)
+		if err != nil {
+			break
+		}
+		for _, key := range keys {
+			// 提取公司名称（去掉前缀）
+			companyName := strings.TrimPrefix(key, "contributed:byCompany:")
+			// 解码 URL 编码的公司名
+			companyName, _ = url.QueryUnescape(companyName)
+			companyNameLower := strings.ToLower(companyName)
+
+			// 模糊匹配：搜索词是公司名的子串，或者公司名是搜索词的子串
+			if strings.Contains(companyNameLower, keywordLower) ||
+				strings.Contains(keywordLower, companyNameLower) {
+				// 获取该公司下的所有题目 ID
+				ids, _ := repository.ZRevRange(key, 0, -1)
+				matchedIds = append(matchedIds, ids...)
+			}
+		}
+		cursor = nextCursor
+		if cursor == 0 {
+			break
+		}
+	}
+
+	return filterContributedQuestions(matchedIds, jobTitle), nil
+}
+
+// filterContributedQuestions 过滤题目列表，支持岗位过滤
+func filterContributedQuestions(ids []string, jobTitle string) []model.ContributedQuestion {
+	seen := make(map[string]bool)
 	var result []model.ContributedQuestion
+
 	for _, id := range ids {
+		if seen[id] {
+			continue
+		}
+		seen[id] = true
+
 		m, err := repository.HGetAll(contributedQKey(id))
 		if err != nil || len(m) == 0 {
 			continue
@@ -146,7 +203,7 @@ func GetCompanyContributedQuestions(company, jobTitle string) ([]model.Contribut
 	if result == nil {
 		result = []model.ContributedQuestion{}
 	}
-	return result, nil
+	return result
 }
 
 // ---------- 投票验证 ----------
@@ -321,23 +378,49 @@ const (
 // AwardCredit 奖励用户积分
 func AwardCredit(userID string, amount int) error {
 	key := userCreditsKey(userID)
+
 	// 检查是否已有积分记录
-	exists, _ := repository.Exists(key)
-	if !exists {
-		// 首次，初始化为初始积分
-		_ = repository.Set(key, fmt.Sprintf("%d", CreditInitial), 0)
+	exists, err := repository.Exists(key)
+	if err != nil {
+		return fmt.Errorf("检查积分记录失败: %w", err)
 	}
-	_, err := repository.HIncrBy(key, "balance", int64(amount))
+
+	if !exists {
+		// 新用户首次：初始化为初始积分（不含本次奖励）
+		// 奖励会在后面通过 HIncrBy 追加，确保记录存在
+		_ = repository.HSet(key, "balance", CreditInitial)
+		_ = repository.Persist(key)
+	}
+
+	// 增加积分（包含本次奖励）
+	_, err = repository.HIncrBy(key, "balance", int64(amount))
 	return err
 }
 
 // GetUserCredits 获取用户积分
 func GetUserCredits(userID string) (int, error) {
 	key := userCreditsKey(userID)
-	v, err := repository.Get(key)
-	if err != nil || v == "" {
-		return CreditInitial, nil // 新用户默认积分
+
+	// 检查 key 是否存在
+	exists, err := repository.Exists(key)
+	if err != nil {
+		return 0, err
 	}
+	if !exists {
+		// 用户从未有过积分，返回初始积分
+		return CreditInitial, nil
+	}
+
+	// 获取积分余额
+	v, err := repository.HGet(key, "balance")
+	if err != nil {
+		return 0, fmt.Errorf("获取积分失败: %w", err)
+	}
+	if v == "" {
+		// 异常情况：key 存在但 balance 字段为空，返回 0
+		return 0, nil
+	}
+
 	var balance int
 	fmt.Sscanf(v, "%d", &balance)
 	return balance, nil
@@ -353,6 +436,16 @@ func DeductCredit(userID string, amount int) error {
 		return fmt.Errorf("积分不足，当前剩余 %d，需要 %d", balance, amount)
 	}
 	key := userCreditsKey(userID)
+
+	// 确保 key 存在
+	exists, _ := repository.Exists(key)
+	if !exists {
+		// 如果 key 不存在，先初始化
+		_ = repository.HSet(key, "balance", CreditInitial-amount)
+		_ = repository.Persist(key)
+		return nil
+	}
+
 	// 用 HIncrBy 扣减
 	_, err = repository.HIncrBy(key, "balance", int64(-amount))
 	return err

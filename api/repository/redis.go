@@ -152,3 +152,8 @@ func LRange(key string, start, stop int64) ([]string, error) {
 func ZIncrBy(key string, increment float64, member string) error {
 	return RDB.ZIncrBy(Ctx, key, increment, member).Err()
 }
+
+// Scan 扫描匹配 pattern 的 key（用于模糊搜索）
+func Scan(pattern string, count int64, cursor *uint64) ([]string, uint64, error) {
+	return RDB.Scan(Ctx, *cursor, pattern, count).Result()
+}

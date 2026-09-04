@@ -35,3 +35,20 @@ export function deleteUser(userId) {
 export function migrateUsers() {
   return adminRequest.post('/admin/migrate-users')
 }
+
+// ============ 贡献审核 ============
+
+// 获取待审核的贡献列表
+export function listContributions(status) {
+  return adminRequest.get('/admin/contributions', { params: { status } })
+}
+
+// 审核通过题目
+export function approveContribution(questionId) {
+  return adminRequest.put(`/admin/contributions/${questionId}/approve`)
+}
+
+// 驳回题目
+export function rejectContribution(questionId) {
+  return adminRequest.put(`/admin/contributions/${questionId}/reject`)
+}

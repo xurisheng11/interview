@@ -53,6 +53,11 @@
 
     <!-- 结果 -->
     <div v-if="!fallback || results.length">
+      <!-- 提示：当前搜索的公司 -->
+      <div class="search-tip" v-if="searchCompany">
+        正在浏览 <strong>{{ searchCompany }}</strong> 的题目
+      </div>
+
       <!-- 切换 tabs -->
       <el-tabs v-model="activeTab" class="result-tabs">
         <el-tab-pane label="已验证真题" name="verified">
@@ -70,7 +75,8 @@
       <!-- 积分提示条 -->
       <div class="credits-bar" v-if="activeTab === 'verified'">
         <span>💎 当前积分：<strong>{{ credits }}</strong></span>
-        <span class="credits-tip" v-if="credits < 3">积分不足？<el-link type="primary" @click="handleContribute">贡献题目赚积分</el-link></span>
+        <span class="credits-cost">每次搜索已验证题库 <strong>-1</strong> 积分</span>
+        <span class="credits-tip" v-if="credits < 1">积分不足？<el-link type="primary" @click="handleContribute">贡献题目赚积分</el-link></span>
       </div>
 
       <!-- 已验证列表 -->
@@ -104,7 +110,9 @@
       <div v-if="activeTab === 'pending'" class="questions-grid">
         <div v-if="pendingList.length === 0" class="empty-state">
           <div class="empty-icon">✅</div>
-          <div class="empty-title">全部题目已验证完毕</div>
+          <div class="empty-title">暂无待验证题目</div>
+          <div class="empty-sub" v-if="searchCompany">当前公司「{{ searchCompany }}」暂无待验证题目。<br>可能是所有题目已验证完毕，或你贡献的题目尚未审核通过。</div>
+          <div class="empty-sub" v-else>请先在上方搜索公司名称</div>
         </div>
         <div
           v-for="q in pendingList"
@@ -166,7 +174,8 @@ import {
   voteContributedQuestion,
   reportContributedQuestion,
   getUserCredits,
-  searchQuestionsFallback
+  searchQuestionsFallback,
+  deductCredits
 } from '@/api/contribution'
 
 export default {
@@ -177,7 +186,9 @@ export default {
       searchCompany: '',
       credits: 0,
       activeTab: 'verified',
-      results: [],
+      results: [],          // 合并结果，用于统计
+      verifiedResults: [],  // 已验证题目（verified 状态）
+      pendingResults: [],   // 待验证题目（approved/pending 状态）
       fallback: null,
       votedMap: {},
       reportVisible: false,
@@ -188,10 +199,12 @@ export default {
 
   computed: {
     verifiedList() {
-      return this.results.filter(q => q.status === 'verified' || q.status === 'approved')
+      // 直接使用后端返回的 verified 题目
+      return this.verifiedResults
     },
     pendingList() {
-      return this.results.filter(q => q.status === 'pending')
+      // 使用后端返回的 approved 数组（包含 pending/approved/rejected 等非 verified 状态）
+      return this.pendingResults
     }
   },
 
@@ -209,7 +222,7 @@ export default {
     async loadCredits() {
       try {
         const res = await getUserCredits()
-        this.credits = res?.credits || 0
+        this.credits = res?.data?.credits ?? res?.credits ?? 0
       } catch (e) {}
     },
 
@@ -224,13 +237,31 @@ export default {
 
     async loadQuestions(company) {
       try {
+        // 扣积分后刷新（每次搜索已验证题库扣1积分）
+        let newCredits = this.credits
+        try {
+          const dr = await deductCredits(1)
+          // 后端返回格式：{code: 200, message: "success", data: {credits: ...}}
+          newCredits = dr?.data?.credits ?? dr?.credits ?? (this.credits - 1)
+        } catch (_) {
+          newCredits = this.credits - 1
+        }
+        this.credits = newCredits
+
         const res = await getCompanyContributedQuestions(company, '')
-        const all = [...(res?.verified || []), ...(res?.approved || [])]
-        this.results = all
-        this.credits = res?.credits || this.credits
+
+        // 分离已验证（verified）和待验证（approved/pending）题目
+        // 后端返回格式：{code: 200, message: "success", data: {verified: [], approved: [], credits: ...}}
+        const data = res?.data || res
+        this.verifiedResults = data.verified || []
+        this.pendingResults = data.approved || []
+
+        // 兼容旧逻辑：把所有题目放到 results 中用于统计
+        this.results = [...this.verifiedResults, ...this.pendingResults]
+        this.credits = data.credits ?? res?.credits ?? newCredits
         this.fallback = null
 
-        if (all.length === 0) {
+        if (this.results.length === 0) {
           // 搜不到，调用降级接口
           await this.loadFallback(company)
         }
@@ -242,7 +273,8 @@ export default {
     async loadFallback(company) {
       try {
         const res = await searchQuestionsFallback(company, '')
-        this.fallback = res
+        // 后端返回格式：{code: 200, message: "success", data: {...}}
+        this.fallback = res?.data || res
       } catch (e) {
         this.fallback = {
           message: `未找到【${company}】的专属题库`,
@@ -330,6 +362,17 @@ export default {
 .search-input { flex: 1; max-width: 400px; }
 .search-btn { background: #ff9900 !important; border-color: #ff9900 !important; color: #111 !important; }
 
+/* Search tip */
+.search-tip {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+.search-tip strong { color: #ff9900; }
+
 /* Fallback tip */
 .fallback-tip {
   display: flex;
@@ -361,6 +404,8 @@ export default {
   color: #555;
 }
 .credits-tip { margin-left: auto; }
+.credits-cost { color: #999; font-size: 12px; }
+.credits-cost strong { color: #ff9900; }
 
 /* Tabs */
 .result-tabs { margin-bottom: 16px; }

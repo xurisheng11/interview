@@ -3,6 +3,15 @@
     <Sidebar :items="sidebarItems" />
 
     <div class="main-content">
+      <!-- 冲刺计划入口横幅 -->
+      <div class="sprint-banner" @click="$router.push('/learn/plan')">
+        <div class="sprint-banner-text">
+          <strong>🏃 定制专属冲刺计划</strong>
+          <span>设定目标岗位和冲刺天数（30/60/90天），AI 教练为你生成分阶段、可打卡的备考计划</span>
+        </div>
+        <el-button size="small" class="sprint-banner-btn">去定制 →</el-button>
+      </div>
+
       <!-- 顶部阶段导航 -->
       <div class="stage-nav">
         <div
@@ -382,6 +391,7 @@ export default {
           title: '学习中心',
           children: [
             { icon: '📚', label: '学习路径', path: '/learn' },
+            { icon: '🏃', label: '冲刺计划', path: '/learn/plan' },
             { icon: '📝', label: '题库练习', path: '/questions' },
             { icon: '🚀', label: '发起面试', path: '/interview/config' }
           ]
@@ -579,6 +589,31 @@ export default {
   background: #fafafa;
   overflow: auto;
   min-width: 0;
+}
+
+/* ===== 冲刺计划横幅 ===== */
+.sprint-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: linear-gradient(135deg, #131921 0%, #232f3e 60%, #3a4a5c 100%);
+  border-radius: 8px;
+  padding: 14px 20px;
+  margin-bottom: 16px;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+}
+.sprint-banner:hover { box-shadow: 0 4px 14px rgba(19, 25, 33, 0.35); }
+.sprint-banner-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.sprint-banner-text strong { font-size: 15px; color: #ff9900; }
+.sprint-banner-text span { font-size: 12px; color: #aab7c4; }
+.sprint-banner-btn {
+  background: #ff9900 !important;
+  border-color: #ff9900 !important;
+  color: #111 !important;
+  font-weight: bold !important;
+  flex-shrink: 0;
 }
 
 /* ===== 阶段导航 ===== */

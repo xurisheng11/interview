@@ -1,9 +1,10 @@
 package router
 
 import (
-	"github.com/gin-gonic/gin"
 	"interview-sim/handler"
 	"interview-sim/middleware"
+
+	"github.com/gin-gonic/gin"
 )
 
 // handlerPlaceholder 临时占位，后续由具体 handler 替换
@@ -104,6 +105,15 @@ func Setup() *gin.Engine {
 		// 公司面试情报
 		protected.GET("/company/intel", handler.GetCompanyIntel)
 		protected.GET("/company/question-answer", handler.GetCompanyQuestionAnswer)
+
+		// 学习中心：冲刺计划
+		learn := protected.Group("/learn")
+		{
+			learn.POST("/plan", handler.GenerateSprintPlan)
+			learn.GET("/plan", handler.GetSprintPlan)
+			learn.PUT("/plan/task", handler.UpdateSprintTask)
+			learn.DELETE("/plan", handler.DeleteSprintPlan)
+		}
 
 		// 简历管理
 		resumes := protected.Group("/resumes")

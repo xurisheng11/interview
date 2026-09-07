@@ -31,11 +31,11 @@
             size="small"
             style="width:200px"
             clearable
-            @keyup.enter.native="loadQuestions"
+            @keyup.enter.native="onSearch"
           />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" size="small" @click="loadQuestions">搜索</el-button>
+          <el-button type="primary" size="small" @click="onSearch">搜索</el-button>
           <el-button size="small" @click="resetFilters">重置</el-button>
         </el-form-item>
       </el-form>
@@ -128,10 +128,42 @@ export default {
     }
   },
   created() {
+    // 从地址栏恢复筛选条件，答题后返回可保留搜索结果
+    const q = this.$route.query
+    this.filters.jobTitle = q.jobTitle || ''
+    this.filters.difficulty = q.difficulty || ''
+    this.filters.type = q.type || ''
+    this.filters.keyword = q.keyword || ''
+    this.page = parseInt(q.page, 10) || 1
     this.loadQuestions()
   },
+  beforeRouteLeave(to, from, next) {
+    // 记住当前搜索条件，答题页“返回题库”时原样恢复
+    sessionStorage.setItem('question_list_route', from.fullPath)
+    next()
+  },
   methods: {
+    // 点击搜索/回车：回到第一页
+    onSearch() {
+      this.page = 1
+      this.loadQuestions()
+    },
+    // 将筛选条件同步到地址栏（replace 不产生历史记录）
+    syncQueryToRoute() {
+      const query = {}
+      Object.keys(this.filters).forEach(k => {
+        if (this.filters[k]) query[k] = this.filters[k]
+      })
+      if (this.page > 1) query.page = String(this.page)
+      const cur = this.$route.query
+      const keys = new Set([...Object.keys(query), ...Object.keys(cur)])
+      const changed = [...keys].some(k => String(query[k] || '') !== String(cur[k] || ''))
+      if (changed) {
+        this.$router.replace({ query }).catch(() => {})
+      }
+    },
     async loadQuestions() {
+      this.syncQueryToRoute()
       this.loading = true
       try {
         const params = {

@@ -54,6 +54,12 @@ const routes = [
     meta: { requiresAuth: true, title: '学习路径' }
   },
   {
+    path: '/learn/plan',
+    name: 'SprintPlan',
+    component: () => import('@/views/learn/SprintPlan.vue'),
+    meta: { requiresAuth: true, title: '冲刺计划' }
+  },
+  {
     path: '/interview',
     component: { render: h => h('router-view') },
     meta: { requiresAuth: true },

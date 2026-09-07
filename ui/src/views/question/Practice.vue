@@ -38,7 +38,7 @@
             :disabled="!answer.trim()"
             @click="submitAnswer"
           >提交答案获取 AI 点评</el-button>
-          <el-button @click="$router.push('/questions')">返回题库</el-button>
+          <el-button @click="goBackToList">返回题库</el-button>
         </div>
       </el-card>
 
@@ -92,14 +92,14 @@
 
           <div class="bottom-actions">
             <el-button type="primary" @click="resetAnswer">再练一次</el-button>
-            <el-button @click="$router.push('/questions')">返回题库</el-button>
+            <el-button @click="goBackToList">返回题库</el-button>
           </div>
         </el-card>
       </div>
     </div>
 
     <el-empty v-if="!pageLoading && !question" description="题目加载失败">
-      <el-button @click="$router.push('/questions')">返回题库</el-button>
+      <el-button @click="goBackToList">返回题库</el-button>
     </el-empty>
   </div>
 </template>
@@ -126,6 +126,11 @@ export default {
     this.loadQuestion()
   },
   methods: {
+    // 返回题库：恢复离开时的搜索条件和页码
+    goBackToList() {
+      const saved = sessionStorage.getItem('question_list_route')
+      this.$router.push(saved || '/questions')
+    },
     async loadQuestion() {
       const id = this.$route.params.id
       try {

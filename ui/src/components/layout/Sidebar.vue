@@ -26,9 +26,25 @@ export default {
       default: () => []
     }
   },
+  computed: {
+    // 当前路由命中的最长菜单路径，避免 /learn 与 /learn/plan 同时高亮
+    bestMatchPath() {
+      const cur = this.$route.path
+      let best = ''
+      this.items.forEach(group => {
+        (group.children || []).forEach(item => {
+          const p = item.path
+          if ((cur === p || cur.startsWith(p + '/')) && p.length > best.length) {
+            best = p
+          }
+        })
+      })
+      return best
+    }
+  },
   methods: {
     isActive(path) {
-      return this.$route.path === path || this.$route.path.startsWith(path + '/')
+      return path === this.bestMatchPath
     },
     navigate(path) {
       if (this.$route.path !== path) {

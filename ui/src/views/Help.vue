@@ -72,14 +72,27 @@
           </template>
           <div class="collapse-content">
             <ul>
-              <li><strong>发起面试</strong>：配置公司、岗位、轮次后，AI 生成个性化面试</li>
-              <li><strong>视频面试准备</strong>：模拟真实视频面试环境，提前适应</li>
+              <li><strong>发起面试</strong>：配置岗位、难度、轮次后，AI 生成个性化面试，支持文字与视频两种模式</li>
+              <li><strong>视频面试模式</strong>：摄像头预览、语音回答自动转文字，模拟真实视频面试环境</li>
               <li><strong>面试历史</strong>：回顾过往面试表现，追踪成长轨迹</li>
-              <li><strong>报告分享</strong>：生成面试报告链接，方便分享给他人</li>
+              <li><strong>面试报告</strong>：综合评分、雷达图与 AI 改进建议，并可生成分享链接</li>
             </ul>
           </div>
         </el-collapse-item>
         
+        <el-collapse-item title="学习中心" name="learn">
+          <template slot="title">
+            <span class="collapse-title">📚 学习中心</span>
+          </template>
+          <div class="collapse-content">
+            <ul>
+              <li><strong>学习路径</strong>：按“了解题型→单点突破→串联练习→综合模拟”四阶段循序渐进备考</li>
+              <li><strong>冲刺计划</strong>：设定目标岗位、冲刺天数（30/60/90天可自定义）和每日投入时间，AI 教练生成分阶段计划，支持任务打卡和里程碑检验</li>
+              <li><strong>分类专项练习</strong>：针对五大题型逐类突破，自动追踪每类掌握进度</li>
+            </ul>
+          </div>
+        </el-collapse-item>
+
         <el-collapse-item title="简历管理" name="resume">
           <template slot="title">
             <span class="collapse-title">📄 简历管理</span>
@@ -87,8 +100,8 @@
           <div class="collapse-content">
             <ul>
               <li><strong>上传简历</strong>：支持 PDF、图片等多种格式</li>
-              <li><strong>智能解析</strong>：自动提取关键信息，生成个性化问题</li>
-              <li><strong>简历对比</strong>：分析简历与目标岗位的匹配度</li>
+              <li><strong>AI 简历分析</strong>：自动解析简历内容，生成分析报告与内容摘要，解析失败可重新分析</li>
+              <li><strong>基于简历面试</strong>：在简历详情页一键发起面试，AI 根据简历生成个性化问题</li>
             </ul>
           </div>
         </el-collapse-item>
@@ -101,8 +114,9 @@
             <ul>
               <li><strong>分类浏览</strong>：按公司、岗位、难度筛选题目</li>
               <li><strong>单题练习</strong>：针对特定题目进行强化训练</li>
+              <li><strong>题目收藏</strong>：收藏重点题目，在个人中心随时回顾</li>
               <li><strong>贡献题目</strong>：分享您遇到的真实面试题，丰富题库</li>
-              <li><strong>我的贡献</strong>：查看您贡献的题目及其采用情况</li>
+              <li><strong>他人贡献 / 我的贡献</strong>：浏览其他用户贡献的面经题目，查看自己的贡献及审核情况</li>
             </ul>
           </div>
         </el-collapse-item>
@@ -126,9 +140,10 @@
           </template>
           <div class="collapse-content">
             <ul>
-              <li><strong>经验分享</strong>：阅读和发布求职经验文章</li>
-              <li><strong>互动交流</strong>：与其他求职者讨论面试技巧</li>
-              <li><strong>信息获取</strong>：获取最新的招聘信息和行业动态</li>
+              <li><strong>经验分享</strong>：阅读求职经验与面试技巧文章</li>
+              <li><strong>AI 生成文章</strong>：输入主题，AI 自动生成高质量的经验分享文章</li>
+              <li><strong>互动交流</strong>：点赞、评论，与其他求职者讨论面试技巧</li>
+              <li><strong>文章收藏</strong>：收藏感兴趣的文章，在个人中心统一查看</li>
             </ul>
           </div>
         </el-collapse-item>
@@ -139,9 +154,11 @@
           </template>
           <div class="collapse-content">
             <ul>
-              <li><strong>账户管理</strong>：修改个人信息、密码等</li>
-              <li><strong>成长统计</strong>：查看面试次数、得分趋势等数据</li>
-              <li><strong>设置偏好</strong>：自定义面试提醒、主题设置等</li>
+              <li><strong>个人信息</strong>：修改头像、昵称、个人简介和登录密码</li>
+              <li><strong>求职状态</strong>：设置求职状态和工作经验，发起面试时自动应用，无需重复选择</li>
+              <li><strong>面试历史</strong>：查看历次面试的岗位、轮次、得分，并可打开对应报告</li>
+              <li><strong>成长轨迹</strong>：近30次面试得分趋势图，直观追踪进步情况</li>
+              <li><strong>我的收藏</strong>：集中管理收藏的题目和社区文章，随时回顾练习</li>
             </ul>
           </div>
         </el-collapse-item>
@@ -195,6 +212,10 @@ export default {
         {
           q: '如何获得更准确的评估？',
           a: '建议上传完整的简历、选择匹配的岗位、认真回答每一个问题。多次练习后，系统会给出更准确的评估。'
+        },
+        {
+          q: '视频面试对设备和浏览器有什么要求？',
+          a: '视频面试需要摄像头和麦克风权限，语音转文字功能建议使用较新版本的 Chrome 或 Edge 浏览器。进入视频面试前会有设备检测环节，确保一切就绪后再开始。'
         },
         {
           q: '面试报告可以分享吗？',

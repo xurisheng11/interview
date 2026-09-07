@@ -69,6 +69,14 @@
         </div>
       </div>
 
+      <!-- 思考超时温和提醒 -->
+      <transition name="el-fade-in">
+        <div v-if="thinkTimeoutAlert" class="think-timeout-alert">
+          <i class="el-icon-alarm-clock"></i>
+          <span>思考时间已较长，建议开始作答</span>
+        </div>
+      </transition>
+
       <!-- 题目卡片 -->
       <div class="question-card" v-if="currentQuestion">
         <div class="question-header">
@@ -99,6 +107,7 @@
           class="answer-input"
           placeholder="开启麦克风后，语音将自动转为文字..."
           :disabled="submitting"
+          @input="handleManualInput"
         ></textarea>
         
         <!-- 临时识别结果 -->
@@ -168,6 +177,9 @@
           </span>
           <span class="metric-item">
             用时：{{ currentAnswerState.nonVerbalMetrics.duration }} 秒
+          </span>
+          <span v-if="currentAnswerState.nonVerbalMetrics.thinkDuration > 0" class="metric-item">
+            思考：{{ currentAnswerState.nonVerbalMetrics.thinkDuration }} 秒
           </span>
         </div>
 
@@ -244,7 +256,11 @@ export default {
       currentTicCount: {},
       ticAlertVisible: false,
       latestTicAlert: { tic: '', count: 0 },
-      ticAlertTimer: null
+      ticAlertTimer: null,
+      // 思考时间追踪
+      questionDisplayedAt: null,   // 当前题目展示时间戳
+      thinkTimeoutAlert: false,   // 思考超时提醒标志
+      thinkTimeoutTimer: null     // 思考超时检测定时器
     }
   },
 
@@ -260,6 +276,16 @@ export default {
     },
     enableRecording() {
       return this.$store.state.interview.enableRecording
+    },
+    // 从 Vuex 获取面试配置中的 thinkTime（最长思考上限）
+    thinkTimeLimit() {
+      const interview = this.$store.state.interview.currentInterview
+      if (!interview) return 120
+      // 兼容多种数据结构：interview.thinkTime 或 interview.config.thinkTime
+      const raw = interview.thinkTime != null ? interview.thinkTime : (interview.config && interview.config.thinkTime)
+      const val = raw != null ? raw : 120
+      // M2 修复：对小于 60 的值按 120 处理（视为旧语义数据，旧版 thinkTime=15 表示固定等待秒数而非思考上限）
+      return val > 0 && val < 60 ? 120 : val
     },
     total() {
       return this.questions.length
@@ -299,6 +325,8 @@ export default {
     this.speechLang = sessionStorage.getItem('speechLang') || 'zh-CN'
     this.answers = Array(this.total).fill(null).map(() => ({}))
     this.startTimer()
+    // 记录第一题展示时间
+    this.questionDisplayedAt = Date.now()
   },
 
   mounted() {
@@ -309,10 +337,13 @@ export default {
       this.startRecording(this.mediaStream)
     }
     window.addEventListener('beforeunload', this.handleBeforeUnload)
+    // 启动思考超时检测
+    this.startThinkTimeoutCheck()
   },
 
   beforeDestroy() {
     this.clearTimer()
+    this.clearThinkTimeoutTimer()
     window.removeEventListener('beforeunload', this.handleBeforeUnload)
   },
 
@@ -371,6 +402,34 @@ export default {
       }
     },
 
+    // 思考超时检测：每秒检查一次
+    startThinkTimeoutCheck() {
+      this.clearThinkTimeoutTimer()
+      // thinkTime 为 0 表示不限时，不提醒
+      if (!this.thinkTimeLimit || this.thinkTimeLimit <= 0) return
+      this.thinkTimeoutTimer = setInterval(() => {
+        // 已提交/已跳过则不提醒
+        const state = this.currentAnswerState
+        if (state.submitted || state.skipped) return
+        // 已经开口或已手动输入则不提醒
+        if (this.speechMetrics.firstSpeechTime || this.userAnswer.trim()) return
+        // 超过设定的思考上限则提醒（仅提醒一次）
+        if (this.questionDisplayedAt) {
+          const elapsed = Math.round((Date.now() - this.questionDisplayedAt) / 1000)
+          if (elapsed >= this.thinkTimeLimit && !this.thinkTimeoutAlert) {
+            this.thinkTimeoutAlert = true
+          }
+        }
+      }, 1000)
+    },
+
+    clearThinkTimeoutTimer() {
+      if (this.thinkTimeoutTimer) {
+        clearInterval(this.thinkTimeoutTimer)
+        this.thinkTimeoutTimer = null
+      }
+    },
+
     scoreColor(score) {
       if (!score && score !== 0) return '#909399'
       if (score >= 80) return '#67c23a'
@@ -378,18 +437,26 @@ export default {
       return '#f56c6c'
     },
 
+    // 手动输入兜底：首次输入时记录时间戳（作为 firstSpeechTime 的等价机制）
+    handleManualInput() {
+      if (!this.speechMetrics.firstSpeechTime && this.userAnswer) {
+        this.speechMetrics.firstSpeechTime = Date.now()
+      }
+    },
+
     async handleSubmit() {
       if (!this.userAnswer.trim()) return
       this.submitting = true
 
       this.stopSpeech()
-      const metrics = this.getNonVerbalMetrics()
+      // M1 修复：提交前快照指标，失败重试时使用快照数据而非重新计算
+      const metricsSnapshot = this.getNonVerbalMetrics()
 
       try {
         const res = await submitAnswer(this.interviewId, {
           questionIndex: this.currentIdx,
           answer: this.userAnswer.trim(),
-          nonVerbalMetrics: metrics
+          nonVerbalMetrics: metricsSnapshot
         })
         const d = res?.data?.data || res?.data || res
         this.$set(this.answers, this.currentIdx, {
@@ -402,13 +469,19 @@ export default {
           referenceAnswer: d.referenceAnswer || '',
           expressionScore: d.expressionScore || 0,
           expressionFeedback: d.expressionFeedback || '',
-          nonVerbalMetrics: metrics
+          nonVerbalMetrics: metricsSnapshot
         })
         this.clearTimer()
+        // L3 修复：提交成功后隐藏思考超时提醒
+        this.thinkTimeoutAlert = false
       } catch (err) {
         const msg = err?.response?.data?.message || err?.message || '提交失败，请重试'
         this.$message.error(msg)
-        this.startSpeech()
+        // M1 修复：失败仅重启语音识别，不重置指标（使用快照保留原始数据）
+        if (this.recognition) {
+          this.isSpeechActive = true
+          try { this.recognition.start() } catch (e) { }
+        }
       } finally {
         this.submitting = false
       }
@@ -426,6 +499,8 @@ export default {
         userAnswer: ''
       })
       this.clearTimer()
+      // L3 修复：跳过后隐藏思考超时提醒
+      this.thinkTimeoutAlert = false
     },
 
     handleNext() {
@@ -434,11 +509,18 @@ export default {
       } else {
         this.currentIdx++
         this.userAnswer = ''
+        // 重置思考时间追踪
+        this.questionDisplayedAt = Date.now()
+        this.thinkTimeoutAlert = false
         this.resetTimer()
         this.resetTicState()
+        // H3(1) 修复：无条件重置 firstSpeechTime，确保语音识别不可用时手动输入兜底能重新写入
+        this.speechMetrics.firstSpeechTime = null
         if (this.isSpeechSupported) {
-          this.startSpeech()
+          this.startSpeech()  // startSpeech 内部也会重置 firstSpeechTime
         }
+        // 重启思考超时检测
+        this.startThinkTimeoutCheck()
       }
     },
 
@@ -479,6 +561,7 @@ export default {
     _cleanup() {
       this.stopSpeech()
       this.clearTimer()
+      this.clearThinkTimeoutTimer()
       this.$store.commit('interview/RELEASE_MEDIA_STREAM')
     },
 
@@ -632,6 +715,22 @@ export default {
   margin-bottom: 8px;
 }
 .tic-alert-close { font-size: 12px; }
+
+/* 思考超时温和提醒 */
+.think-timeout-alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: #fdf6ec;
+  border: 1px solid #f5dab1;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #e6a23c;
+}
+.think-timeout-alert i {
+  font-size: 18px;
+}
 
 .main-panel {
   flex: 1;

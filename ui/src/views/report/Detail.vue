@@ -95,11 +95,11 @@
           <span class="card-title">🎤 表达能力分析</span>
         </div>
         <el-row :gutter="24">
-          <el-col :span="8" class="expr-col">
+          <el-col :span="6" class="expr-col">
             <score-circle :score="report.avgExpressionScore || 0" :size="100" />
             <div class="expr-label">平均表达得分</div>
           </el-col>
-          <el-col :span="8" class="expr-col">
+          <el-col :span="6" class="expr-col">
             <div class="expr-value" :class="speechRateClass">
               {{ report.avgSpeechRate ? report.avgSpeechRate.toFixed(0) : '—' }}
               <small> 字/分钟</small>
@@ -107,9 +107,15 @@
             <div class="expr-label">平均语速</div>
             <div class="expr-hint" :class="speechRateClass">{{ speechRateHint }}</div>
           </el-col>
-          <el-col :span="8" class="expr-col">
+          <el-col :span="6" class="expr-col">
             <div class="expr-value">{{ totalPauses }}</div>
             <div class="expr-label">总停顿次数</div>
+          </el-col>
+          <el-col :span="6" class="expr-col">
+            <div class="expr-value">
+              {{ avgThinkDuration > 0 ? avgThinkDuration + 's' : '—' }}
+            </div>
+            <div class="expr-label">平均思考时间</div>
           </el-col>
         </el-row>
         <div v-if="report.expressionSummary" class="expr-summary">
@@ -198,7 +204,7 @@
                       <li v-for="(c, ci) in q.cons" :key="ci">{{ c }}</li>
                     </ul>
                   </div>
-                  <!-- 视频模式：表达得分与反馈 -->
+                  <!-- 视频模式：表达得分和反馈 -->
                   <div v-if="report.mode === 'video'" class="review-block">
                     <div class="expr-detail-row">
                       <span class="review-label" style="color:#409eff">🎤 表达得分</span>
@@ -209,7 +215,14 @@
                     <div v-if="q.nonVerbalMetrics" class="nonverbal-stats">
                       <span>语速：{{ q.nonVerbalMetrics.speechRate }} 字/分钟</span>
                       <span>停顿：{{ q.nonVerbalMetrics.pauseCount }} 次</span>
-                      <span>用时：{{ q.nonVerbalMetrics.duration }} 秒</span>
+                      <span v-if="q.nonVerbalMetrics.thinkDuration > 0">用时：思考 {{ q.nonVerbalMetrics.thinkDuration }} 秒 + 作答 {{ answerDuration(q.nonVerbalMetrics) }} 秒</span>
+                      <span v-else>用时：{{ q.nonVerbalMetrics.duration }} 秒</span>
+                    </div>
+                  </div>
+                  <!-- 文字模式：思考时间展示 -->
+                  <div v-if="report.mode !== 'video' && q.nonVerbalMetrics && q.nonVerbalMetrics.thinkDuration > 0" class="review-block">
+                    <div class="nonverbal-stats">
+                      <span>思考：{{ q.nonVerbalMetrics.thinkDuration }} 秒</span>
                     </div>
                   </div>
                 </div>
@@ -358,6 +371,24 @@ export default {
         return sum + (q.nonVerbalMetrics ? q.nonVerbalMetrics.pauseCount : 0)
       }, 0)
     },
+    // 平均思考时间（前端兜底计算：从各题 nonVerbalMetrics.thinkDuration 取平均）
+    avgThinkDuration() {
+      if (!this.report || !this.report.questions) return 0
+      // 优先使用后端返回的字段
+      if (this.report.avgThinkDuration != null && this.report.avgThinkDuration > 0) {
+        return this.report.avgThinkDuration
+      }
+      // 前端兜底：自行计算
+      let total = 0
+      let count = 0
+      this.report.questions.forEach(q => {
+        if (!q.skipped && q.nonVerbalMetrics && q.nonVerbalMetrics.thinkDuration > 0) {
+          total += q.nonVerbalMetrics.thinkDuration
+          count++
+        }
+      })
+      return count > 0 ? Math.round(total / count) : 0
+    },
     recordedVideo() {
       return this.$store && this.$store.state.interview && this.$store.state.interview.recordedVideo
     }
@@ -414,7 +445,7 @@ export default {
     },
 
     roundLabel(round) {
-      const map = { round1: '一面', round2: '二面', round3: '三面' }
+      const map = { round1: '一面', round2: '二面', round3: '三面', comprehensive: '综合面试' }
       return map[round] || round || '—'
     },
 
@@ -431,6 +462,12 @@ export default {
     diffLabel(d) {
       const map = { easy: '简单', medium: '中等', hard: '困难' }
       return map[d] || d || '未知'
+    },
+
+    // L5: 计算作答时间（总用时减去思考时间，Math.max 防负数）
+    answerDuration(metrics) {
+      if (!metrics) return 0
+      return Math.max(0, (metrics.duration || 0) - (metrics.thinkDuration || 0))
     },
 
     formatDuration(secs) {

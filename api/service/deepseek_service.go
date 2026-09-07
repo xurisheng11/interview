@@ -293,6 +293,7 @@ func GenerateReportSummary(jobTitle, round string, totalScore int, scoresSummary
 func GenerateVideoExpressionSummary(jobTitle string, answers []*model.AnswerRecord) (string, error) {
 	avgRate := calcAvgSpeechRateFromAnswers(answers)
 	avgScore := calcAvgExpressionScoreFromAnswers(answers)
+	avgThinkDuration := calcAvgThinkDurationFromAnswers(answers)
 	ticReport := model.CalcVerbalTicReportFromAnswers(answers)
 
 	ticInfo := ""
@@ -300,16 +301,22 @@ func GenerateVideoExpressionSummary(jobTitle string, answers []*model.AnswerReco
 		ticInfo = fmt.Sprintf("\n口头禅检测：检测到 %d 次口头禅，包括：%s", ticReport.TicFrequency, strings.Join(ticReport.DetectedTics, "、"))
 	}
 
+	// 拼接平均思考时间信息
+	thinkInfo := ""
+	if avgThinkDuration > 0 {
+		thinkInfo = fmt.Sprintf("\n平均思考时间：%d秒（从看到题目到开始作答的平均间隔）", avgThinkDuration)
+	}
+
 	prompt := fmt.Sprintf(`你是一位资深面试顾问，请根据以下视频面试数据给出整体口头表达能力评价。
 
 岗位：%s
 完成题数：%d
 平均语速：%.0f字/分钟（推荐120-150）
-平均表达得分：%d分%s
+平均表达得分：%d分%s%s
 
 请严格按照以下 JSON 格式返回，不要包含任何其他文字：
 {"summary":"整体口头表达能力评价（100字以内）","suggestions":["改进建议1","改进建议2","改进建议3"]}`,
-		jobTitle, len(answers), avgRate, avgScore, ticInfo,
+		jobTitle, len(answers), avgRate, avgScore, ticInfo, thinkInfo,
 	)
 
 	raw, err := Chat(prompt)
@@ -361,18 +368,33 @@ func calcAvgExpressionScoreFromAnswers(answers []*model.AnswerRecord) int {
 	return total / count
 }
 
+// calcAvgThinkDurationFromAnswers 从 AnswerRecord 列表计算平均思考时长（秒）
+func calcAvgThinkDurationFromAnswers(answers []*model.AnswerRecord) int {
+	total, count := 0, 0
+	for _, a := range answers {
+		if a != nil && !a.Skipped && a.NonVerbalMetrics != nil && a.NonVerbalMetrics.ThinkDuration > 0 {
+			total += a.NonVerbalMetrics.ThinkDuration
+			count++
+		}
+	}
+	if count == 0 {
+		return 0
+	}
+	return total / count
+}
+
 // ---- AI 知识文章生成 ----
 
 // GenerateArticle 调用 DeepSeek 生成知识文章，返回填充好的 model.Article（articleId 留空，由调用方生成）
 // jobCategoryCNMap 将英文分类映射为中文岗位描述
 var jobCategoryCNMap = map[string]string{
-	"backend":   "后端开发",
-	"frontend":  "前端开发",
-	"bigdata":   "大数据开发",
-	"ai":        "AI/算法工程师",
-	"accounting":"会计/财务",
-	"general":   "通用",
-	"all":       "通用技术",
+	"backend":    "后端开发",
+	"frontend":   "前端开发",
+	"bigdata":    "大数据开发",
+	"ai":         "AI/算法工程师",
+	"accounting": "会计/财务",
+	"general":    "通用",
+	"all":        "通用技术",
 }
 
 func getJobCategoryCN(jobCategory string) string {
@@ -390,7 +412,7 @@ func GenerateArticle(topic, jobCategory string) (*model.Article, error) {
 1. 内容必须紧密围绕用户输入的【%s】这个知识点展开，不要偏离
 2. 文章结构必须包含以下部分：
    - 核心概念定义（用简洁的话解释清楚）
-   - 常见面试考点（高频问题清单，每个问题给出参考答案要点）
+   - 常见面试考点（高频问题，每个问题给出参考答案要点）
    - 深度追问方向（面试官可能追问的延伸问题）
    - 易错点/误区提醒
    - 实战代码示例或图解说明（如适用）
@@ -441,6 +463,8 @@ func getRoundName(round string) string {
 		return "二面（技术深度）"
 	case "round3":
 		return "三面（综合/HR）"
+	case "comprehensive":
+		return "综合面试"
 	default:
 		return round
 	}
@@ -454,6 +478,8 @@ func getRoundRequirement(round string) string {
 		return "二面：技术深度题(50%) + 系统设计题(30%) + 项目经验追问(20%)"
 	case "round3":
 		return "三面：综合能力题(40%) + 职业规划(30%) + HR类问题(30%)"
+	case "comprehensive":
+		return "综合面试：必含自我介绍(1题) + 基础知识题(25%) + 技术深度题(25%) + 项目经验题(25%) + 综合/HR题(25%)"
 	default:
 		return "均衡分配各类题目"
 	}

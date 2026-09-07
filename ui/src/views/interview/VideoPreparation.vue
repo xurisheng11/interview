@@ -203,6 +203,7 @@
 import { checkMediaSupport } from '@/utils/mediaCompatibility'
 import VideoPreview from '@/components/interview/VideoPreview.vue'
 import SpeechIndicator from '@/components/interview/SpeechIndicator.vue'
+import { getInterview } from '@/api/interview'
 
 export default {
   name: 'VideoPreparation',
@@ -342,13 +343,25 @@ export default {
       }
     },
 
-    startInterview() {
+    async startInterview() {
       this.showPrivacyDialog = false
       this.started = true
       this.$store.commit('interview/SET_INTERVIEW_MODE', 'video')
       this.$store.commit('interview/SET_ENABLE_RECORDING', this.enableRecording)
       // 将语言存入 sessionStorage 供答题页使用
       sessionStorage.setItem('speechLang', this.speechLang)
+      // H1 修复（方案A）：获取完整面试会话数据并提交到 store，
+      // 确保 VideoDoing 页能读取 thinkTime 等配置字段
+      try {
+        const res = await getInterview(this.interviewId)
+        const session = res?.data?.data || res?.data || res
+        if (session) {
+          this.$store.commit('interview/SET_INTERVIEW', session)
+        }
+      } catch (err) {
+        // 接口失败不阻塞进入，VideoDoing 有兜底默认值
+        console.warn('获取面试会话信息失败，将使用默认配置', err)
+      }
       this.$router.push(`/interview/${this.interviewId}/video-doing`)
     }
   }

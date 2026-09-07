@@ -6,9 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"interview-sim/model"
 	"interview-sim/repository"
+
+	"github.com/google/uuid"
 )
 
 const reportKeyPrefix = "report:"
@@ -19,7 +20,7 @@ func reportKey(userID, interviewID string) string {
 }
 func shareKey(token string) string { return shareKeyPrefix + token }
 
-// GenerateReport 生成并保存完整面试报告
+// GenerateReport 生成并保存报告
 func GenerateReport(userID, interviewID string) (*model.InterviewReport, error) {
 	session, err := repository.GetSession(interviewID)
 	if err != nil || session == nil {
@@ -57,6 +58,10 @@ func GenerateReport(userID, interviewID string) (*model.InterviewReport, error) 
 			rq.Cons = ans.Cons
 			rq.ReferenceAnswer = ans.ReferenceAnswer
 			rq.Skipped = ans.Skipped
+			// C2 修复：复制视频面试专有字段（思考时长、语速/表达得分等）
+			rq.ExpressionScore = ans.ExpressionScore
+			rq.ExpressionFeedback = ans.ExpressionFeedback
+			rq.NonVerbalMetrics = ans.NonVerbalMetrics
 			if ans.Skipped {
 				skippedCount++
 			} else {
@@ -143,10 +148,14 @@ func GenerateReport(userID, interviewID string) (*model.InterviewReport, error) 
 		}
 		report.AvgExpressionScore = model.CalcAvgExpressionScore(questions)
 		report.AvgSpeechRate = model.CalcAvgSpeechRate(questions)
+		report.AvgThinkDuration = model.CalcAvgThinkDuration(questions)
 		// 调 DeepSeek 生成口头表达综合评价
 		if summary, err := GenerateVideoExpressionSummary(session.Config.JobTitle, answerRecords); err == nil {
 			report.ExpressionSummary = summary
 		}
+	} else {
+		// C2 修复：文字模式也填充平均思考时长（有 thinkDuration 数据就统计）
+		report.AvgThinkDuration = model.CalcAvgThinkDuration(questions)
 	}
 
 	// 永久保存报告

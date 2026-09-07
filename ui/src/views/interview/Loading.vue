@@ -90,7 +90,8 @@ const TIMEOUT_MS   = 30000  // 30 秒超时
 const ROUND_LABELS = {
   round1: '一面（基础）',
   round2: '二面（技术深度）',
-  round3: '三面（综合/HR）'
+  round3: '三面（综合/HR）',
+  comprehensive: '综合面试'
 }
 
 const STATUS_TEXTS = [
@@ -130,9 +131,16 @@ export default {
     interviewInfo() {
       // 优先取 store 里已有的 interview 对象
       const stored = this.$store.state.interview.currentInterview
-      if (stored) return stored
-      // 没有则返回 null，摘要区域不显示
-      return null
+      if (!stored) return null
+      // M4 修复：字段可能在 config 内层（session.config.round），兼容两种结构
+      const cfg = stored.config || {}
+      return {
+        jobTitle: stored.jobTitle || cfg.jobTitle,
+        difficulty: stored.difficulty || cfg.difficulty,
+        experience: stored.experience || cfg.experience,
+        round: stored.round || cfg.round,
+        focusAreas: stored.focusAreas || cfg.focusAreas
+      }
     },
 
     roundLabel() {

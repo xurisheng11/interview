@@ -312,6 +312,18 @@
                   </div>
                 </div>
               </div>
+              <!-- 选中轮次后的引导提示：覆盖范围 + 适合人群 + 风险提示 -->
+              <el-alert
+                v-if="selectedRoundOption"
+                :type="config.round === 'round3' ? 'warning' : 'info'"
+                :closable="false"
+                show-icon
+                class="round-guide-alert"
+              >
+                <strong>覆盖范围：</strong>{{ selectedRoundOption.coverage }}<br>
+                <strong>适合人群：</strong>{{ selectedRoundOption.audience }}<br>
+                <strong>{{ config.round === 'round3' ? '⚠️ 风险提示' : '注意' }}：</strong>{{ selectedRoundOption.risk }}
+              </el-alert>
             </div>
           </div>
         </div>
@@ -390,21 +402,18 @@
           <label>📹 视频面试选项</label>
           <div class="option-row">
             <div class="option-item">
-              <span class="option-label">思考时间</span>
-              <el-slider
-                v-model="config.thinkTime"
-                :min="0"
-                :max="60"
-                :step="5"
-                :marks="thinkTimeMarks"
-                class="option-slider"
-              ></el-slider>
-              <span class="option-value">{{ config.thinkTime }}秒</span>
+              <span class="option-label">最长思考上限</span>
+              <el-select v-model="config.thinkTime" size="small" class="option-select">
+                <el-option label="60秒（快节奏练习）" :value="60" />
+                <el-option label="2分钟（推荐，接近真实面试）" :value="120" />
+                <el-option label="3分钟（充分思考）" :value="180" />
+                <el-option label="不限制" :value="0" />
+              </el-select>
             </div>
           </div>
           <div class="think-time-explain">
             <el-alert type="warning" :closable="false" show-icon>
-              <strong>思考时间说明：</strong>显示题目后，系统会等待 {{ config.thinkTime }} 秒再开始录制你的回答。这段时间你可以先在脑中组织答案。
+              <strong>思考时间说明：</strong>系统会自动记录你每道题的思考时间（从题目展示到首次开口/输入）。超过设定时长会温和提醒你开始作答，不会强制中断。
             </el-alert>
           </div>
           <div class="option-row">
@@ -483,7 +492,7 @@ export default {
         focusAreas: [],
         remark: '',
         mode: 'text',
-        thinkTime: 15, // 思考时间(秒)
+        thinkTime: 120, // 最长思考上限（秒），0 表示不限制
         virtualBackground: false,
         bgStyle: 'blur',
         resumeId: ''  // 关联简历ID
@@ -570,9 +579,38 @@ export default {
       ],
 
       roundOptions: [
-        { label: '一面', value: 'round1', desc: '基础能力考察' },
-        { label: '二面', value: 'round2', desc: '技术深度考察' },
-        { label: '三面', value: 'round3', desc: '综合能力/HR面' }
+        {
+          label: '一面',
+          value: 'round1',
+          desc: '基础能力考察',
+          coverage: '自我介绍 + 基础知识 + 简单算法 + 项目概述',
+          audience: '正在准备第一轮面试，或想夯实基础',
+          risk: '不含深度技术题和系统设计'
+        },
+        {
+          label: '二面',
+          value: 'round2',
+          desc: '技术深度考察',
+          coverage: '技术深挖 + 系统设计 + 项目追问',
+          audience: '已通过一面，准备技术深面',
+          risk: '不含基础题和HR类问题'
+        },
+        {
+          label: '三面',
+          value: 'round3',
+          desc: '综合能力/HR面',
+          coverage: '综合素质 + 职业规划 + HR问答',
+          audience: '准备终面/HR面',
+          risk: '不含基础和技术深度题。如果目标面试只有一轮，建议选择「综合面试」'
+        },
+        {
+          label: '综合面试',
+          value: 'comprehensive',
+          desc: '全链路覆盖，一轮打尽',
+          coverage: '自我介绍 + 基础 + 技术深度 + 项目经验 + 综合/HR 均衡分布',
+          audience: '目标单位只有一轮面试，或想全面练习',
+          risk: '题量有限，各方向覆盖不如单轮深入'
+        }
       ],
 
       interviewTypeOptions: [
@@ -590,19 +628,18 @@ export default {
         { value: 'behavior', label: '行为面试' }
       ],
 
-      thinkTimeMarks: {
-        0: '0秒',
-        15: '15秒',
-        30: '30秒',
-        60: '60秒'
-      },
-
       // 缓存搜索结果
       companyCache: []
     }
   },
 
   computed: {
+    // 当前选中的轮次选项（用于展示引导提示）
+    selectedRoundOption() {
+      if (!this.config.round) return null
+      return this.roundOptions.find(opt => opt.value === this.config.round) || null
+    },
+
     currentJobTypeInfo() {
       if (!this.config.jobType) return null
       return this.jobTypeOptions.find(opt => opt.value === this.config.jobType) || null
@@ -1321,15 +1358,14 @@ export default {
   white-space: nowrap;
 }
 
-.option-slider {
-  width: 200px;
+.option-select {
+  width: 220px;
 }
 
-.option-value {
-  font-size: 14px;
-  font-weight: bold;
-  color: #ff9900;
-  min-width: 45px;
+.round-guide-alert {
+  margin-top: 8px;
+  width: 100%;
+  line-height: 1.7;
 }
 
 .remark-input {

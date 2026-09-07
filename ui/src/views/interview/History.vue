@@ -75,7 +75,7 @@
 import Sidebar from '@/components/layout/Sidebar.vue'
 import { getInterviewList, getInterview } from '@/api/interview'
 
-const ROUND_MAP = { round1: '一面', round2: '二面', round3: '三面' }
+const ROUND_MAP = { round1: '一面', round2: '二面', round3: '三面', comprehensive: '综合面试' }
 
 export default {
   name: 'InterviewHistory',

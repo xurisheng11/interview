@@ -56,6 +56,14 @@
         </div>
       </div>
 
+      <!-- 思考超时温和提醒 -->
+      <transition name="el-fade-in">
+        <div v-if="thinkTimeoutAlert" class="think-timeout-alert">
+          <i class="el-icon-alarm-clock"></i>
+          <span>思考时间已较长，建议开始作答</span>
+        </div>
+      </transition>
+
       <!-- 题目卡片 -->
       <div class="question-card" v-if="currentQuestion">
         <div class="question-header">
@@ -84,6 +92,7 @@
           class="answer-input"
           placeholder="请输入你的答案..."
           :disabled="submitting"
+          @input="handleFirstInput"
         ></textarea>
         <div class="action-row">
           <el-button
@@ -170,7 +179,12 @@ export default {
       // answers[idx] = { submitted, skipped, score, pros, cons, referenceAnswer, userAnswer }
       answers: [],
       timerSeconds: 0,
-      timerHandle: null
+      timerHandle: null,
+      // 思考时间追踪
+      questionDisplayedAt: null,  // 当前题目展示时间戳
+      firstInputAt: null,         // 首次输入时间戳
+      thinkTimeoutAlert: false,   // 思考超时提醒标志
+      thinkTimeoutTimer: null     // 思考超时检测定时器
     }
   },
 
@@ -181,6 +195,15 @@ export default {
     },
     questions() {
       return this.$store.state.interview.currentQuestions || []
+    },
+    // 从 Vuex 获取面试配置中的 thinkTime（最长思考上限）
+    thinkTimeLimit() {
+      const interview = this.$store.state.interview.currentInterview
+      if (!interview) return 120
+      const raw = interview.thinkTime != null ? interview.thinkTime : (interview.config && interview.config.thinkTime)
+      const val = raw != null ? raw : 120
+      // M2 修复：对小于 60 的值按 120 处理（视为旧语义数据，旧版 thinkTime=15 表示固定等待秒数而非思考上限）
+      return val > 0 && val < 60 ? 120 : val
     },
     total() {
       return this.questions.length
@@ -217,6 +240,7 @@ export default {
 
   beforeDestroy() {
     this.clearTimer()
+    this.clearThinkTimeoutTimer()
   },
 
   methods: {
@@ -226,6 +250,9 @@ export default {
         this.loading = false
         this.answers = Array(this.total).fill(null).map(() => ({}))
         this.startTimer()
+        // 记录第一题展示时间
+        this.questionDisplayedAt = Date.now()
+        this.startThinkTimeoutCheck()
         return
       }
       // 否则从 API 加载（简历面试跳转）
@@ -241,6 +268,9 @@ export default {
         this.$store.commit('interview/SET_QUESTIONS', session.questions || [])
         this.answers = Array(session.questions?.length || 0).fill(null).map(() => ({}))
         this.startTimer()
+        // 记录第一题展示时间
+        this.questionDisplayedAt = Date.now()
+        this.startThinkTimeoutCheck()
       } catch (e) {
         this.$message.error('未找到面试信息，请重新配置')
         this.$router.replace('/interview/config')
@@ -297,6 +327,32 @@ export default {
       }
     },
 
+    // 思考超时检测：每秒检查一次
+    startThinkTimeoutCheck() {
+      this.clearThinkTimeoutTimer()
+      // thinkTime 为 0 表示不限时，不提醒
+      if (!this.thinkTimeLimit || this.thinkTimeLimit <= 0) return
+      this.thinkTimeoutTimer = setInterval(() => {
+        const state = this.currentAnswerState
+        if (state.submitted || state.skipped) return
+        // 已有输入则不提醒
+        if (this.firstInputAt || this.currentAnswer.trim()) return
+        if (this.questionDisplayedAt) {
+          const elapsed = Math.round((Date.now() - this.questionDisplayedAt) / 1000)
+          if (elapsed >= this.thinkTimeLimit && !this.thinkTimeoutAlert) {
+            this.thinkTimeoutAlert = true
+          }
+        }
+      }, 1000)
+    },
+
+    clearThinkTimeoutTimer() {
+      if (this.thinkTimeoutTimer) {
+        clearInterval(this.thinkTimeoutTimer)
+        this.thinkTimeoutTimer = null
+      }
+    },
+
     scoreColor(score) {
       if (!score && score !== 0) return '#909399'
       if (score >= 80) return '#67c23a'
@@ -304,13 +360,25 @@ export default {
       return '#f56c6c'
     },
 
+    // 首次输入时记录时间戳（仅首次，与 v-model 共存）
+    handleFirstInput() {
+      if (!this.firstInputAt && this.currentAnswer) {
+        this.firstInputAt = Date.now()
+      }
+    },
+
     async handleSubmit() {
       if (!this.currentAnswer.trim()) return
       this.submitting = true
+      // 计算思考时长
+      const thinkDuration = (this.firstInputAt && this.questionDisplayedAt)
+        ? Math.round((this.firstInputAt - this.questionDisplayedAt) / 1000)
+        : 0
       try {
         const res = await submitAnswer(this.interviewId, {
           questionIndex: this.currentIdx,
-          answer: this.currentAnswer.trim()
+          answer: this.currentAnswer.trim(),
+          thinkDuration  // 新增：传递思考时长
         })
         const d = res?.data?.data || res?.data || res
         this.$set(this.answers, this.currentIdx, {
@@ -323,6 +391,8 @@ export default {
           referenceAnswer: d.referenceAnswer || d.reference_answer || ''
         })
         this.clearTimer()
+        // L3 修复：提交成功后隐藏思考超时提醒
+        this.thinkTimeoutAlert = false
       } catch (err) {
         const msg = err?.response?.data?.message || err?.message || '提交失败，请重试'
         this.$message.error(msg)
@@ -342,6 +412,8 @@ export default {
         userAnswer: ''
       })
       this.clearTimer()
+      // L3 修复：跳过后隐藏思考超时提醒
+      this.thinkTimeoutAlert = false
     },
 
     handleNext() {
@@ -350,7 +422,13 @@ export default {
       } else {
         this.currentIdx++
         this.currentAnswer = ''
+        // 重置思考时间追踪
+        this.questionDisplayedAt = Date.now()
+        this.firstInputAt = null
+        this.thinkTimeoutAlert = false
         this.resetTimer()
+        // 重启思考超时检测
+        this.startThinkTimeoutCheck()
       }
     },
 
@@ -512,6 +590,22 @@ export default {
 }
 
 .timer.warning { color: #f56c6c; border-color: #f56c6c; background: #fff6f6; }
+
+/* 思考超时温和提醒 */
+.think-timeout-alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: #fdf6ec;
+  border: 1px solid #f5dab1;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #e6a23c;
+}
+.think-timeout-alert i {
+  font-size: 18px;
+}
 
 /* 题目卡片 */
 .question-card {

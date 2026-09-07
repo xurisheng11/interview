@@ -483,7 +483,7 @@ export default {
       return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
     },
     roundLabel(r) {
-      const map = { round1: '一面', round2: '二面', round3: '三面' }
+      const map = { round1: '一面', round2: '二面', round3: '三面', comprehensive: '综合面试' }
       return map[r] || r || '—'
     },
     scoreColor(s) {

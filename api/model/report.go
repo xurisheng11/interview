@@ -22,7 +22,7 @@ type ReportQuestion struct {
 	// 视频面试专有字段
 	ExpressionScore    int               `json:"expressionScore,omitempty"`
 	ExpressionFeedback string            `json:"expressionFeedback,omitempty"`
-	NonVerbalMetrics  *NonVerbalMetrics `json:"nonVerbalMetrics,omitempty"`
+	NonVerbalMetrics   *NonVerbalMetrics `json:"nonVerbalMetrics,omitempty"`
 }
 
 // ModuleScore 知识点模块得分
@@ -50,7 +50,7 @@ type AISummaryReport struct {
 // VerbalTicReport 口头禅分析报告
 type VerbalTicReport struct {
 	DetectedTics []string `json:"detectedTics"` // 检测到的口头禅列表
-	TicFrequency int      `json:"ticFrequency"`  // 口头禅总出现次数
+	TicFrequency int      `json:"ticFrequency"` // 口头禅总出现次数
 	Suggestions  []string `json:"suggestions"`  // 改进建议
 }
 
@@ -82,10 +82,11 @@ type InterviewReport struct {
 	ExpressionSummary  string           `json:"expressionSummary,omitempty"`
 	AvgExpressionScore int              `json:"avgExpressionScore,omitempty"`
 	AvgSpeechRate      float64          `json:"avgSpeechRate,omitempty"`
-	VerbalTicReport    *VerbalTicReport `json:"verbalTicReport,omitempty"` // 口头禅分析
+	AvgThinkDuration   int              `json:"avgThinkDuration,omitempty"` // 平均思考时长（秒）
+	VerbalTicReport    *VerbalTicReport `json:"verbalTicReport,omitempty"`  // 口头禅分析
 
 	// 新增字段
-	CompanyName    string `json:"companyName,omitempty"`    // 目标公司
+	CompanyName    string   `json:"companyName,omitempty"`    // 目标公司
 	InterviewTypes []string `json:"interviewTypes,omitempty"` // 面试形式
 }
 
@@ -118,6 +119,21 @@ func CalcAvgSpeechRate(questions []ReportQuestion) float64 {
 		return 0
 	}
 	return total / float64(count)
+}
+
+// CalcAvgThinkDuration 计算平均思考时长（整秒，仅统计有有效思考时长的非跳过题目）
+func CalcAvgThinkDuration(questions []ReportQuestion) int {
+	total, count := 0, 0
+	for _, q := range questions {
+		if !q.Skipped && q.NonVerbalMetrics != nil && q.NonVerbalMetrics.ThinkDuration > 0 {
+			total += q.NonVerbalMetrics.ThinkDuration
+			count++
+		}
+	}
+	if count == 0 {
+		return 0
+	}
+	return total / count
 }
 
 // CalcVerbalTicReport 汇总口头禅

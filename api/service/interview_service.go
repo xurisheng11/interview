@@ -6,38 +6,39 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"interview-sim/model"
 	"interview-sim/repository"
+
+	"github.com/google/uuid"
 )
 
 type CreateInterviewReq struct {
-	JobTitle        string   `json:"jobTitle" binding:"required"`
-	Difficulty      string   `json:"difficulty" binding:"required"` // easy/medium/hard
-	Experience      string   `json:"experience"`                    // fresh/1-3/3-5/5+ （可选，未传则从用户profile读取）
-	Round           string   `json:"round" binding:"required"`      // round1/round2/round3
-	FocusAreas     []string `json:"focusAreas"`
-	Remark         string   `json:"remark"`
-	Mode           string   `json:"mode"` // "text" | "video"，默认 "text"
+	JobTitle   string   `json:"jobTitle" binding:"required"`
+	Difficulty string   `json:"difficulty" binding:"required"` // easy/medium/hard
+	Experience string   `json:"experience"`                    // fresh/1-3/3-5/5+ （可选，未传则从用户profile读取）
+	Round      string   `json:"round" binding:"required"`      // round1/round2/round3/comprehensive
+	FocusAreas []string `json:"focusAreas"`
+	Remark     string   `json:"remark"`
+	Mode       string   `json:"mode"` // "text" | "video"，默认 "text"
 
 	// 新增字段
-	CompanyID       string   `json:"companyId"`
-	CompanyName     string   `json:"companyName"`
-	InterviewTypes  []string `json:"interviewTypes"`  // ["structured", "semi-structured", "random"]
-	ThinkTime       int      `json:"thinkTime"`       // 思考时间(秒)
-	VirtualBackground bool  `json:"virtualBackground"` // 虚拟背景
-	BgStyle         string   `json:"bgStyle"`        // 背景样式: office, blue, gray, blur
+	CompanyID         string   `json:"companyId"`
+	CompanyName       string   `json:"companyName"`
+	InterviewTypes    []string `json:"interviewTypes"`    // ["structured", "semi-structured", "random"]
+	ThinkTime         *int     `json:"thinkTime"`         // 最长思考上限秒数（超时仅提醒不强制中断），nil 表示未传（默认120），显式 0 表示不限制
+	VirtualBackground bool     `json:"virtualBackground"` // 虚拟背景
+	BgStyle           string   `json:"bgStyle"`           // 背景样式: office, blue, gray, blur
 
 	// 简历关联（可选，传了则生成题目时注入简历上下文）
-	ResumeID        string   `json:"resumeId"`
+	ResumeID string `json:"resumeId"`
 }
 
 type SubmitAnswerReq struct {
-	QuestionIndex    int                    `json:"questionIndex" binding:"min=0"`
-	Answer           string                 `json:"answer" binding:"required"`
+	QuestionIndex    int                     `json:"questionIndex" binding:"min=0"`
+	Answer           string                  `json:"answer" binding:"required"`
 	NonVerbalMetrics *model.NonVerbalMetrics `json:"nonVerbalMetrics,omitempty"` // 视频模式附加
-	ThinkDuration    int                    `json:"thinkDuration,omitempty"` // 思考时长(秒)
-	VerbalTics      []string               `json:"verbalTics,omitempty"`    // 识别到的口头禅
+	ThinkDuration    int                     `json:"thinkDuration,omitempty"`    // 思考时长(秒)
+	VerbalTics       []string                `json:"verbalTics,omitempty"`       // 识别到的口头禅
 }
 
 // formatResumeContext 将简历结构化内容格式化为 AI prompt 上下文
@@ -100,8 +101,10 @@ func CreateInterview(userID string, req *CreateInterviewReq) (*model.InterviewSe
 	if cfg.Mode == "" {
 		cfg.Mode = "text"
 	}
-	if req.ThinkTime <= 0 {
-		req.ThinkTime = 15 // 默认15秒思考时间
+	// H2 修复：ThinkTime 为 *int，nil 表示未传（默认120），显式 0 保留为 0（不限制）
+	thinkTime := 120
+	if req.ThinkTime != nil {
+		thinkTime = *req.ThinkTime
 	}
 	if req.BgStyle == "" {
 		req.BgStyle = "blur"
@@ -119,12 +122,12 @@ func CreateInterview(userID string, req *CreateInterviewReq) (*model.InterviewSe
 		StartTime:    time.Now(),
 
 		// 新增字段
-		CompanyID:      req.CompanyID,
-		CompanyName:    req.CompanyName,
-		InterviewTypes: req.InterviewTypes,
-		ThinkTime:      req.ThinkTime,
+		CompanyID:         req.CompanyID,
+		CompanyName:       req.CompanyName,
+		InterviewTypes:    req.InterviewTypes,
+		ThinkTime:         thinkTime,
 		VirtualBackground: req.VirtualBackground,
-		BgStyle:        req.BgStyle,
+		BgStyle:           req.BgStyle,
 	}
 
 	// 1. 如果传了简历 ID，读取简历内容注入到题目生成
@@ -193,6 +196,14 @@ func SubmitAnswer(userID, interviewID string, req *SubmitAnswerReq) (*ReviewResu
 		if req.ThinkDuration > 0 {
 			extendedMetrics.ThinkDuration = req.ThinkDuration
 		}
+	} else if req.ThinkDuration > 0 {
+		// C1 修复：文字模式无语音指标，但思考时长仍需持久化
+		extendedMetrics = &model.NonVerbalMetrics{ThinkDuration: req.ThinkDuration}
+	}
+
+	// H3(3) 修复：sanitize 负数思考时长
+	if extendedMetrics != nil && extendedMetrics.ThinkDuration < 0 {
+		extendedMetrics.ThinkDuration = 0
 	}
 
 	// 保存答案记录

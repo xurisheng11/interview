@@ -24,7 +24,8 @@ export const speechMixin = {
         totalWords: 0,
         pauseThreshold: 2000,
         pauseCount: 0,
-        lastResultTime: null
+        lastResultTime: null,
+        firstSpeechTime: null  // 首次检测到语音的时间戳
       },
       verbalTicCount: {},
       ticAlertShown: {}
@@ -79,6 +80,12 @@ export const speechMixin = {
             interim += text
           }
         }
+
+        // 首次检测到非空语音结果时记录时间戳（仅首次，不覆盖）
+        if (!this.speechMetrics.firstSpeechTime && (final || interim)) {
+          this.speechMetrics.firstSpeechTime = now
+        }
+
         if (final) this.finalTranscript += final
         this.interimTranscript = interim
         if (typeof this.userAnswer !== 'undefined') {
@@ -136,6 +143,7 @@ export const speechMixin = {
       this.speechMetrics.totalWords = 0
       this.speechMetrics.pauseCount = 0
       this.speechMetrics.lastResultTime = null
+      this.speechMetrics.firstSpeechTime = null  // 重置首次语音时间
       this.verbalTicCount = {}
       this.ticAlertShown = {}
       this.isSpeechActive = true
@@ -179,10 +187,16 @@ export const speechMixin = {
       const verbalTics = Object.keys(this.verbalTicCount).filter(
         k => this.verbalTicCount[k] > 0
       )
+      // 计算思考时长：从题目展示到首次开口（通过 mixin 访问组件的 questionDisplayedAt）
+      // H3(2) 修复：加 Math.max(0, ...) 防御，防止出现负数
+      const thinkDuration = (this.speechMetrics.firstSpeechTime && this.questionDisplayedAt)
+        ? Math.max(0, Math.round((this.speechMetrics.firstSpeechTime - this.questionDisplayedAt) / 1000))
+        : 0
       return {
         speechRate: this.calcSpeechRate(),
         pauseCount: this.speechMetrics.pauseCount,
         duration,
+        thinkDuration,  // 新增：思考时长（秒）
         verbalTics
       }
     }

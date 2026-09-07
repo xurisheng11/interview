@@ -23,6 +23,13 @@ type Config struct {
 	InterviewQuestionCount int
 	AdminUsername          string
 	AdminPassword          string
+	MySQLHost              string
+	MySQLPort              string
+	MySQLUser              string
+	MySQLPassword          string
+	MySQLDB                string
+	MySQLSyncHour          int
+	MySQLEnabled           bool
 }
 
 var Cfg *Config
@@ -36,6 +43,8 @@ func Init() {
 	redisDB, _ := strconv.Atoi(getEnv("REDIS_DB", "1"))
 	aiDailyLimit, _ := strconv.Atoi(getEnv("AI_DAILY_LIMIT", "10"))
 	questionCount, _ := strconv.Atoi(getEnv("INTERVIEW_QUESTION_COUNT", "10"))
+	mysqlSyncHour, _ := strconv.Atoi(getEnv("MYSQL_SYNC_HOUR", "2"))
+	mysqlEnabled, _ := strconv.ParseBool(getEnv("MYSQL_ENABLED", "true"))
 
 	Cfg = &Config{
 		ServerPort:             getEnv("SERVER_PORT", "8080"),
@@ -52,6 +61,13 @@ func Init() {
 		InterviewQuestionCount: questionCount,
 		AdminUsername:          getEnv("ADMIN_USERNAME", "admin"),
 		AdminPassword:          getEnv("ADMIN_PASSWORD", "admin123456"),
+		MySQLHost:              getEnv("MYSQL_HOST", "127.0.0.1"),
+		MySQLPort:              getEnv("MYSQL_PORT", "3306"),
+		MySQLUser:              getEnv("MYSQL_USER", "root"),
+		MySQLPassword:          getEnv("MYSQL_PASSWORD", "admin"),
+		MySQLDB:                getEnv("MYSQL_DB", "interview_sim"),
+		MySQLSyncHour:          mysqlSyncHour,
+		MySQLEnabled:           mysqlEnabled,
 	}
 }
 

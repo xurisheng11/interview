@@ -9,6 +9,8 @@ import (
 
 	"interview-sim/model"
 	"interview-sim/repository"
+
+	"github.com/go-redis/redis/v8"
 )
 
 var ErrPlanNotFound = errors.New("冲刺计划不存在")
@@ -75,11 +77,25 @@ func GenerateSprintPlan(userId string, cfg *model.SprintPlanConfig) (*model.Spri
 	return &plan, nil
 }
 
-// GetSprintPlan 获取用户当前冲刺计划
+// GetSprintPlan 获取用户当前冲刺计划（Redis 未命中时回源 MySQL 并回填）
 func GetSprintPlan(userId string) (*model.SprintPlan, error) {
 	raw, err := repository.Get(sprintPlanKey(userId))
-	if err != nil || raw == "" {
-		return nil, ErrPlanNotFound
+	if err != nil && err != redis.Nil {
+		// 真实 Redis 错误原样上抛，避免故障时误用 MySQL 旧数据覆盖 Redis 新数据
+		return nil, err
+	}
+	if err == redis.Nil || raw == "" {
+		// Redis 未命中，尝试 MySQL 回源；回源失败保持原有 not found 语义
+		if repository.MySQLAvailable() {
+			if data, derr := repository.QuerySprintPlanData(userId); derr == nil && data != "" {
+				// 回填 Redis（计划永久保存）
+				_ = repository.SetPermanent(sprintPlanKey(userId), data)
+				raw = data
+			}
+		}
+		if raw == "" {
+			return nil, ErrPlanNotFound
+		}
 	}
 	var plan model.SprintPlan
 	if err := json.Unmarshal([]byte(raw), &plan); err != nil {

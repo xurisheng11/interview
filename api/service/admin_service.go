@@ -3,14 +3,16 @@ package service
 import (
 	"errors"
 
-	"golang.org/x/crypto/bcrypt"
 	"interview-sim/model"
 	"interview-sim/repository"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 var (
 	ErrUserNotFound    = errors.New("用户不存在")
 	ErrCannotEditAdmin = errors.New("不能修改管理员账号")
+	ErrMySQLUnavail    = errors.New("MySQL 不可用，无法执行同步")
 )
 
 type UserListResult struct {
@@ -107,4 +109,12 @@ func AdminDeleteUser(operatorID, targetUserID string) error {
 // AdminMigrateUsers 一次性把老用户补录进 users:all
 func AdminMigrateUsers() (int, error) {
 	return repository.MigrateUsersToList()
+}
+
+// AdminSyncMySQL 手动触发 Redis -> MySQL 全量同步，返回各表同步统计
+func AdminSyncMySQL() (map[string]*repository.SyncStat, error) {
+	if !repository.MySQLAvailable() {
+		return nil, ErrMySQLUnavail
+	}
+	return repository.SyncAllToMySQL(), nil
 }

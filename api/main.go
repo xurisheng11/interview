@@ -6,13 +6,14 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-	"golang.org/x/crypto/bcrypt"
 	"interview-sim/config"
 	"interview-sim/model"
 	"interview-sim/repository"
 	"interview-sim/router"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func main() {
@@ -28,6 +29,24 @@ func main() {
 	}
 	log.Println("Redis 连接成功")
 
+	// 初始化 MySQL 持久层（失败仅告警不退出，系统退化为纯 Redis 模式）
+	if err := repository.InitMySQL(); err != nil {
+		log.Printf("MySQL 初始化失败，系统退化为纯 Redis 模式（同步与回源将跳过）: %v", err)
+	} else {
+		log.Println("MySQL 连接成功，建库建表完成")
+		// 启动时异步执行一次全量同步（覆盖存量数据迁移需求）
+		go func() {
+			defer func() {
+				if r := recover(); r != nil {
+					log.Printf("启动全量同步 panic 已恢复: %v", r)
+				}
+			}()
+			repository.SyncAllToMySQL()
+		}()
+		// 启动每晚定时全量同步
+		repository.StartNightlySync()
+	}
+
 	// 初始化默认管理员账号
 	if err := initDefaultAdmin(); err != nil {
 		log.Printf("初始化管理员账号失败: %v", err)
@@ -41,7 +60,7 @@ func main() {
 	srv := &http.Server{
 		Addr:         addr,
 		Handler:      r,
-		ReadTimeout:  5 * time.Minute,  // 大文件上传可能很慢
+		ReadTimeout:  5 * time.Minute, // 大文件上传可能很慢
 		WriteTimeout: 5 * time.Minute,
 		IdleTimeout:  120 * time.Second,
 	}

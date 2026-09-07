@@ -281,7 +281,7 @@
                 <div class="experience-tip">
                   <i class="el-icon-info"></i>
                   如需修改，请前往
-                  <el-button type="text" size="mini" @click="$router.push('/profile')">
+                  <el-button type="text" size="mini" @click="$router.push({ path: '/profile', query: { tab: 'jobStatus' } })">
                     个人中心 - 求职状态
                   </el-button>
                 </div>

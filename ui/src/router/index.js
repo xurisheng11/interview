@@ -73,16 +73,16 @@ const routes = [
     ]
   },
   {
-    path: '/report/:interviewId',
-    name: 'ReportDetail',
-    component: ReportDetail,
-    meta: { requiresAuth: true, title: '面试报告' }
-  },
-  {
     path: '/report/share/:token',
     name: 'ReportShare',
     component: ReportShare,
     meta: { requiresAuth: false, title: '分享报告' }
+  },
+  {
+    path: '/report/:interviewId',
+    name: 'ReportDetail',
+    component: ReportDetail,
+    meta: { requiresAuth: true, title: '面试报告' }
   },
   {
     path: '/resume',

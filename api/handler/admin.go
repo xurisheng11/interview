@@ -1,9 +1,10 @@
 package handler
 
 import (
-	"github.com/gin-gonic/gin"
 	"interview-sim/pkg/response"
 	"interview-sim/service"
+
+	"github.com/gin-gonic/gin"
 )
 
 // AdminListUsers GET /api/v1/admin/users
@@ -95,4 +96,15 @@ func AdminMigrateUsers(c *gin.Context) {
 		return
 	}
 	response.SuccessMsg(c, "迁移完成", gin.H{"migratedCount": count})
+}
+
+// AdminSyncDB POST /api/v1/admin/db/sync
+// 手动触发 Redis -> MySQL 全量同步（同步执行），返回各表同步统计
+func AdminSyncDB(c *gin.Context) {
+	stats, err := service.AdminSyncMySQL()
+	if err != nil {
+		response.InternalError(c, "同步失败: "+err.Error())
+		return
+	}
+	response.SuccessMsg(c, "同步完成", stats)
 }

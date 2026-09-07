@@ -9,6 +9,7 @@ import (
 	"interview-sim/model"
 	"interview-sim/repository"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
 )
 
@@ -165,11 +166,27 @@ func GenerateReport(userID, interviewID string) (*model.InterviewReport, error) 
 	return report, nil
 }
 
-// GetReport 获取报告
+// GetReport 获取报告（Redis 未命中时回源 MySQL 并回填）
 func GetReport(userID, interviewID string) (*model.InterviewReport, error) {
 	raw, err := repository.Get(reportKey(userID, interviewID))
-	if err != nil {
-		return nil, fmt.Errorf("报告不存在")
+	if err != nil && err != redis.Nil {
+		// 真实 Redis 错误原样上抛，避免故障时误走回源覆盖 Redis 数据
+		return nil, err
+	}
+	if err == redis.Nil {
+		// Redis 未命中，尝试 MySQL 回源；回源失败保持原有错误语义
+		data := ""
+		if repository.MySQLAvailable() {
+			if d, derr := repository.QueryReportData(userID, interviewID); derr == nil {
+				data = d
+			}
+		}
+		if data == "" {
+			return nil, fmt.Errorf("报告不存在")
+		}
+		// 回填 Redis（报告永久保存）
+		_ = repository.SetPermanent(reportKey(userID, interviewID), data)
+		raw = data
 	}
 	var report model.InterviewReport
 	if err := json.Unmarshal([]byte(raw), &report); err != nil {

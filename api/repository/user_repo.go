@@ -1,11 +1,14 @@
 package repository
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"time"
 
-	"github.com/go-redis/redis/v8"
 	"interview-sim/model"
+
+	"github.com/go-redis/redis/v8"
 )
 
 const userKeyPrefix = "user:"
@@ -31,22 +34,34 @@ func SaveAccountIndex(account, userID string) error {
 	return SetPermanent(accountKey(account), userID)
 }
 
-// GetUserByID 通过 userId 获取用户
+// GetUserByID 通过 userId 获取用户（Redis 未命中时回源 MySQL 并回填）
 func GetUserByID(userID string) (*model.User, error) {
 	hash, err := HGetAll(userKey(userID))
 	if err != nil {
 		return nil, err
 	}
 	if len(hash) == 0 {
+		// Redis 未命中，尝试 MySQL 回源；失败不影响原有 not found 语义
+		if MySQLAvailable() {
+			if user := backfillUserFromMySQL(QueryUserDataByID(userID)); user != nil {
+				return user, nil
+			}
+		}
 		return nil, nil
 	}
 	return model.UserFromRedisHash(hash), nil
 }
 
-// GetUserByAccount 通过 account (手机/邮箱/用户名) 获取用户
+// GetUserByAccount 通过 account (手机/邮箱/用户名) 获取用户（索引未命中时回源 MySQL）
 func GetUserByAccount(account string) (*model.User, error) {
 	userID, err := Get(accountKey(account))
 	if err == redis.Nil {
+		// Redis 索引未命中，按 phone→email→username 优先级精确查 MySQL 并回填
+		if MySQLAvailable() {
+			if user := backfillUserFromMySQL(QueryUserDataByAccount(account)); user != nil {
+				return user, nil
+			}
+		}
 		return nil, nil
 	}
 	if err != nil {
@@ -55,9 +70,59 @@ func GetUserByAccount(account string) (*model.User, error) {
 	return GetUserByID(userID)
 }
 
-// AccountExists 检查 account 是否已被注册
+// backfillUserFromMySQL 根据 MySQL 查询结果回填 Redis（用户 hash + 账号索引 + users:all）
+// 未命中或任何失败返回 nil，保持调用方原有 not found 语义
+func backfillUserFromMySQL(data string, qerr error) *model.User {
+	if qerr != nil {
+		log.Printf("backfillUserFromMySQL 查询失败: %v", qerr)
+		return nil
+	}
+	if data == "" {
+		return nil
+	}
+	var user model.User
+	if err := json.Unmarshal([]byte(data), &user); err != nil || user.UserID == "" {
+		log.Printf("backfillUserFromMySQL 解析失败: %v", err)
+		return nil
+	}
+	// 回填用户主数据（复用 SaveUser 逻辑）
+	if err := SaveUser(&user); err != nil {
+		log.Printf("backfillUserFromMySQL 回填用户失败: %v", err)
+	}
+	// 重建账号索引
+	for _, acc := range []string{user.Username, user.Phone, user.Email} {
+		if acc != "" {
+			if err := SaveAccountIndex(acc, user.UserID); err != nil {
+				log.Printf("backfillUserFromMySQL 重建账号索引 %s 失败: %v", acc, err)
+			}
+		}
+	}
+	// 重建 users:all 全局列表
+	if err := AddUserToList(user.UserID, float64(user.CreatedAt.Unix())); err != nil {
+		log.Printf("backfillUserFromMySQL 回填 users:all 失败: %v", err)
+	}
+	log.Printf("MySQL 回源用户成功: %s", user.UserID)
+	return &user
+}
+
+// AccountExists 检查 account 是否已被注册（Redis 索引缺失时兜底查 MySQL，防重复注册破坏唯一性）
 func AccountExists(account string) (bool, error) {
-	return Exists(accountKey(account))
+	exists, err := Exists(accountKey(account))
+	if err != nil || exists {
+		return exists, err
+	}
+	if MySQLAvailable() {
+		data, derr := QueryUserDataByAccount(account)
+		if derr != nil {
+			// MySQL 故障时保持原有语义（仅依赖 Redis 判断），不阻断注册
+			log.Printf("AccountExists MySQL 兜底查询失败: %v", derr)
+			return false, nil
+		}
+		if data != "" {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 // UpdateUserField 更新用户单个字段
@@ -127,6 +192,7 @@ func MigrateUsersToList() (int, error) {
 	}
 	return count, nil
 }
+
 // 需要传入完整用户对象以清理所有账号索引
 func DeleteUser(user *model.User) error {
 	// 1. 删除用户数据 + 所有账号索引（用户名、手机、邮箱）

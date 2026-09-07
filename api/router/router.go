@@ -136,6 +136,8 @@ func Setup() *gin.Engine {
 			admin.PUT("/users/:id/role", handler.AdminSetRole)
 			admin.DELETE("/users/:id", handler.AdminDeleteUser)
 			admin.POST("/migrate-users", handler.AdminMigrateUsers)
+			// 手动触发 Redis -> MySQL 全量同步（运维/验证用）
+			admin.POST("/db/sync", handler.AdminSyncDB)
 		}
 	}
 	api.GET("/reports/share/:token", handler.GetSharedReport)

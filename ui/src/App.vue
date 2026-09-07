@@ -2,7 +2,8 @@
   <div id="app">
     <!-- 管理后台路由不显示主应用导航栏 -->
     <template v-if="!isAdminRoute">
-      <template v-if="isLoggedIn">
+      <!-- 报告分享页为独立页面：即使已登录也不渲染主导航，仅保留访客顶栏（含登录入口） -->
+      <template v-if="isLoggedIn && !isShareRoute">
         <Navbar />
         <Subnav />
       </template>
@@ -47,8 +48,12 @@ export default {
     isAdminRoute() {
       return this.$route.path.startsWith('/admin')
     },
+    isShareRoute() {
+      return this.$route.name === 'ReportShare' || this.$route.path.startsWith('/report/share/')
+    },
     contentClass() {
       if (this.isAdminRoute) return 'app-content-admin'
+      if (this.isShareRoute) return 'app-content-guest'
       return this.isLoggedIn ? 'app-content' : 'app-content-guest'
     }
   }

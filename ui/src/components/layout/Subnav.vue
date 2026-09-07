@@ -4,7 +4,7 @@
     <router-link to="/interview/config" class="subnav-item" active-class="active" exact>开始面试</router-link>
     <router-link to="/interview/history" class="subnav-item" active-class="active">面试历史</router-link>
     <router-link to="/learn" class="subnav-item" active-class="active">📚 学习中心</router-link>
-    <router-link to="/resume" class="subnav-item" active-class="active" exact>📄 简历</router-link>
+    <router-link to="/resume" class="subnav-item" :class="{ active: $route.path.startsWith('/resume') }">📄 简历</router-link>
     <router-link to="/questions" class="subnav-item" :class="{ active: $route.path === '/questions' }">题库</router-link>
     <router-link to="/questions/contributions" class="subnav-item" active-class="active" exact>🏢 他人贡献</router-link>
     <router-link to="/questions/my-contributions" class="subnav-item" active-class="active" exact>🏆 我的贡献</router-link>

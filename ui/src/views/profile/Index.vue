@@ -307,6 +307,10 @@ export default {
   created() {
     this.loadProfile()
     this.loadHistory()
+    // 根据 URL query 参数自动切换 tab
+    if (this.$route.query.tab) {
+      this.activeTab = this.$route.query.tab
+    }
   },
   watch: {
     activeTab(val) {

@@ -1,20 +1,22 @@
 /* 面试详情页面样式 */
 .container {
   padding: 24rpx;
+  padding-bottom: 48rpx;
 }
 
-.loading, .empty-state {
+.loading,
+.empty-state {
   text-align: center;
   padding: 100rpx 0;
-  color: #999;
+  color: var(--text-hint);
 }
 
 .card {
   background: #fff;
-  border-radius: 16rpx;
-  padding: 30rpx;
+  border-radius: 24rpx;
+  padding: 32rpx;
   margin-bottom: 24rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+  box-shadow: 0 6rpx 24rpx rgba(20, 45, 90, 0.06);
 }
 
 .card-header {
@@ -25,32 +27,45 @@
 }
 
 .title {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #1a1a1a;
+  font-size: 34rpx;
+  font-weight: 700;
+  color: var(--text-main);
   flex: 1;
   margin-right: 16rpx;
+  line-height: 1.4;
 }
 
 .status-badge {
-  padding: 6rpx 16rpx;
-  border-radius: 8rpx;
+  display: inline-flex;
+  align-items: center;
+  padding: 6rpx 18rpx;
+  border-radius: 999rpx;
   font-size: 24rpx;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.status-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  margin-right: 10rpx;
+  background: currentColor;
 }
 
 .status-badge.pending {
-  background: #fff7e6;
-  color: #fa8c16;
+  background: #fff7e0;
+  color: #ef9400;
 }
 
 .status-badge.in_progress {
-  background: #e6f7ff;
-  color: #1890ff;
+  background: var(--brand-bg);
+  color: var(--brand);
 }
 
 .status-badge.completed {
-  background: #f6ffed;
-  color: #52c41a;
+  background: #f0fbe4;
+  color: var(--success);
 }
 
 .info-grid {
@@ -62,59 +77,79 @@
 .info-item {
   display: flex;
   flex-direction: column;
+  background: #f8fafd;
+  border-radius: 16rpx;
+  padding: 20rpx 24rpx;
 }
 
 .info-label {
   font-size: 24rpx;
-  color: #999;
+  color: var(--text-hint);
   margin-bottom: 8rpx;
 }
 
 .info-value {
   font-size: 28rpx;
-  color: #333;
+  font-weight: 500;
+  color: var(--text-main);
 }
 
-/* 评分区块 */
+/* ============ 评分区块 ============ */
 .section-title {
-  display: block;
+  display: flex;
+  align-items: center;
   font-size: 32rpx;
-  font-weight: 600;
-  color: #1a1a1a;
+  font-weight: 700;
+  color: var(--text-main);
   margin-bottom: 24rpx;
+}
+
+.section-title::before {
+  content: '';
+  display: inline-block;
+  width: 8rpx;
+  height: 30rpx;
+  border-radius: 4rpx;
+  background: linear-gradient(180deg, #52a9ff, #0958d9);
+  margin-right: 16rpx;
 }
 
 .score-overview {
   display: flex;
   align-items: center;
+  gap: 32rpx;
 }
 
 .main-score {
   display: flex;
   align-items: baseline;
-  margin-right: 48rpx;
+  flex-shrink: 0;
+  padding: 20rpx 32rpx;
+  background: #f8fafd;
+  border-radius: 24rpx;
 }
 
 .score-num {
-  font-size: 72rpx;
-  font-weight: 600;
+  font-size: 80rpx;
+  font-weight: 800;
+  line-height: 1.1;
 }
 
 .score-num.excellent {
-  color: #52c41a;
+  color: var(--success);
 }
 
 .score-num.good {
-  color: #1890ff;
+  color: var(--brand);
 }
 
 .score-num.warning {
-  color: #fa8c16;
+  color: #ef9400;
 }
 
 .score-unit {
-  font-size: 28rpx;
-  color: #999;
+  font-size: 26rpx;
+  color: var(--text-hint);
   margin-left: 8rpx;
 }
 
@@ -123,95 +158,203 @@
 }
 
 .score-row {
+  margin-bottom: 18rpx;
+}
+
+.score-row:last-child {
+  margin-bottom: 0;
+}
+
+.score-row-top {
   display: flex;
   justify-content: space-between;
-  padding: 8rpx 0;
+  margin-bottom: 8rpx;
   font-size: 26rpx;
-  color: #666;
+  color: var(--text-sub);
+}
+
+.score-item-label {
+  font-weight: 500;
 }
 
 .score-item-value {
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .score-item-value.excellent {
-  color: #52c41a;
+  color: var(--success);
 }
 
 .score-item-value.good {
-  color: #1890ff;
+  color: var(--brand);
 }
 
 .score-item-value.warning {
-  color: #fa8c16;
+  color: #ef9400;
 }
 
-/* 回答详情 */
+/* 评分进度条 */
+.score-bar {
+  height: 14rpx;
+  background: #eef1f6;
+  border-radius: 999rpx;
+  overflow: hidden;
+}
+
+.score-bar-fill {
+  height: 100%;
+  border-radius: 999rpx;
+  transition: width 0.6s ease;
+}
+
+.score-bar-fill.excellent {
+  background: linear-gradient(90deg, #95de64, #389e0d);
+}
+
+.score-bar-fill.good {
+  background: linear-gradient(90deg, #52a9ff, #0958d9);
+}
+
+.score-bar-fill.warning {
+  background: linear-gradient(90deg, #ffc53d, #d48806);
+}
+
+/* ============ 回答详情 ============ */
 .answer-item {
-  padding: 24rpx 0;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 28rpx 0;
+  border-bottom: 1rpx solid #f2f4f7;
 }
 
 .answer-item:last-child {
   border-bottom: none;
 }
 
-.question, .answer {
+.question,
+.answer {
   margin-bottom: 16rpx;
 }
 
-.q-label, .a-label {
-  display: inline-block;
-  width: 56rpx;
-  height: 56rpx;
-  line-height: 56rpx;
-  text-align: center;
-  background: #e6f7ff;
-  color: #1890ff;
-  border-radius: 8rpx;
-  font-size: 24rpx;
-  font-weight: 600;
+.q-label,
+.a-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 56rpx;
+  height: 40rpx;
+  padding: 0 14rpx;
+  background: var(--brand-bg);
+  color: var(--brand);
+  border-radius: 12rpx;
+  font-size: 22rpx;
+  font-weight: 700;
   margin-right: 12rpx;
+  vertical-align: middle;
 }
 
 .a-label {
-  background: #f6ffed;
-  color: #52c41a;
+  background: #f0fbe4;
+  color: var(--success);
 }
 
-.q-text, .a-text {
+.q-text,
+.a-text {
   font-size: 28rpx;
-  color: #333;
-  line-height: 1.6;
+  color: var(--text-main);
+  line-height: 1.7;
+}
+
+.a-text {
+  color: var(--text-sub);
 }
 
 .answer-score {
-  text-align: right;
-  font-size: 24rpx;
-  color: #fa8c16;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8rpx;
 }
 
-/* AI 点评 */
+.answer-score text {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #ef9400;
+  background: #fff7e0;
+  padding: 6rpx 18rpx;
+  border-radius: 999rpx;
+}
+
+/* ============ AI 点评 ============ */
+.feedback-card {
+  background: linear-gradient(180deg, #f5f9ff 0%, #fff 30%);
+  border: 1rpx solid #dcebff;
+}
+
+.feedback-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.feedback-icon {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 16rpx;
+  background: linear-gradient(135deg, #b37feb 0%, #531dab 100%);
+  font-size: 24rpx;
+  box-shadow: 0 6rpx 16rpx rgba(114, 46, 209, 0.25);
+  position: relative;
+}
+
+.feedback-icon::after {
+  content: '';
+  position: absolute;
+  top: 5rpx;
+  left: 9rpx;
+  width: 20rpx;
+  height: 10rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.32);
+  transform: rotate(-20deg);
+}
+
+.feedback-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-left: 20rpx;
+}
+
 .feedback-content {
   font-size: 28rpx;
-  color: #333;
+  color: var(--text-sub);
   line-height: 1.8;
   white-space: pre-wrap;
 }
 
-/* 操作按钮 */
+/* ============ 操作按钮 ============ */
 .action-bar {
   margin-top: 24rpx;
 }
 
 .btn-continue {
   width: 100%;
-  height: 88rpx;
-  background: linear-gradient(135deg, #1890ff, #096dd9);
+  height: 92rpx;
+  background: linear-gradient(135deg, #52a9ff 0%, #1677ff 48%, #0958d9 100%);
   color: #fff;
   font-size: 32rpx;
-  border-radius: 44rpx;
+  font-weight: 600;
+  letter-spacing: 2rpx;
+  border-radius: 46rpx;
   border: none;
+  box-shadow: 0 8rpx 24rpx rgba(22, 119, 255, 0.32);
+}
+
+.btn-continue::after {
+  border: none;
+}
+
+.btn-continue:active {
+  transform: scale(0.97);
+  opacity: 0.92;
 }
 
 .completed-actions {
@@ -221,35 +364,63 @@
 
 .btn-action {
   flex: 1;
-  height: 88rpx;
-  border-radius: 44rpx;
+  height: 92rpx;
+  border-radius: 46rpx;
   font-size: 28rpx;
+  font-weight: 500;
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
+  transition: all 0.15s ease;
+}
+
+.btn-action::after {
+  border: none;
 }
 
 .btn-action.primary {
-  background: linear-gradient(135deg, #1890ff, #096dd9);
+  background: linear-gradient(135deg, #52a9ff 0%, #1677ff 48%, #0958d9 100%);
   color: #fff;
+  box-shadow: 0 8rpx 24rpx rgba(22, 119, 255, 0.32);
 }
 
 .btn-action.secondary {
-  background: #f5f5f5;
-  color: #666;
+  background: #fff;
+  color: var(--text-sub);
+  box-shadow: var(--shadow-card);
+}
+
+.btn-brand-pressed {
+  transform: scale(0.96);
+  opacity: 0.92;
+}
+
+.btn-ghost-pressed {
+  transform: scale(0.96);
+  background: #f4f7fc;
 }
 
 .copy-section {
-  margin-top: 16rpx;
+  margin-top: 20rpx;
 }
 
 .btn-copy {
   width: 100%;
-  height: 80rpx;
+  height: 84rpx;
   background: #fff;
-  color: #666;
+  color: var(--text-sub);
   font-size: 28rpx;
-  border-radius: 40rpx;
-  border: 1px solid #ddd;
+  border-radius: 42rpx;
+  border: none;
+  box-shadow: var(--shadow-card);
+}
+
+.btn-copy::after {
+  border: none;
+}
+
+.btn-copy:active {
+  background: #f4f7fc;
+  transform: scale(0.98);
 }

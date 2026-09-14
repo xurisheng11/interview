@@ -1,7 +1,9 @@
 <view class="container">
   <!-- 未登录状态 -->
   <view wx:if="{{!isLoggedIn}}" class="login-prompt">
-    <view class="user-card unlogin" bindtap="goLogin">
+    <view class="user-card unlogin" hover-class="user-card-pressed" bindtap="goLogin">
+      <view class="deco-circle deco-1"></view>
+      <view class="deco-circle deco-2"></view>
       <view class="avatar-placeholder">
         <text class="avatar-icon">?</text>
       </view>
@@ -9,94 +11,108 @@
         <text class="nickname">点击登录</text>
         <text class="desc">登录后查看更多信息</text>
       </view>
-      <text class="arrow">></text>
+      <view class="arrow-badge">
+        <text class="arrow">›</text>
+      </view>
     </view>
   </view>
 
   <!-- 已登录状态 -->
   <view wx:else>
-    <!-- 用户信息卡片 -->
-    <view class="user-card" bindtap="editProfile">
-      <image class="avatar" src="{{userInfo.avatar || '/assets/default-avatar.png'}}" mode="aspectFill"></image>
-      <view class="info">
-        <text class="nickname">{{userInfo.nickname || userInfo.username}}</text>
-        <text class="desc">{{userInfo.bio || '这个人很懒，什么都没写'}}</text>
+    <!-- 用户信息卡片（品牌渐变） -->
+    <view class="user-card anim-fade-in" hover-class="user-card-pressed" bindtap="editProfile">
+      <view class="deco-circle deco-1"></view>
+      <view class="deco-circle deco-2"></view>
+      <view class="user-row">
+        <view class="avatar-ring">
+          <image class="avatar" src="{{userInfo.avatar || '/assets/default-avatar.png'}}" mode="aspectFill"></image>
+        </view>
+        <view class="info">
+          <text class="nickname">{{userInfo.nickname || userInfo.username}}</text>
+          <text class="desc">{{userInfo.bio || '这个人很懒，什么都没写'}}</text>
+        </view>
+        <view class="arrow-badge">
+          <text class="arrow">›</text>
+          <text class="edit-text">编辑</text>
+        </view>
       </view>
-      <text class="arrow">></text>
     </view>
 
-    <!-- 统计数据 -->
-    <view class="card stats-card">
+    <!-- 统计数据（叠加在渐变卡下沿） -->
+    <view class="card stats-card anim-fade-in">
       <view class="stats-grid">
-        <view class="stat-item" bindtap="viewInterviews">
-          <text class="stat-value">{{stats.interviews || 0}}</text>
+        <view class="stat-item" hover-class="stat-pressed" bindtap="viewInterviews">
+          <text class="stat-value v-blue">{{stats.interviews || 0}}</text>
           <text class="stat-label">面试次数</text>
         </view>
-        <view class="stat-item" bindtap="viewQuestions">
-          <text class="stat-value">{{stats.questions || 0}}</text>
+        <view class="stat-divider"></view>
+        <view class="stat-item" hover-class="stat-pressed" bindtap="viewQuestions">
+          <text class="stat-value v-green">{{stats.questions || 0}}</text>
           <text class="stat-label">答题数</text>
         </view>
-        <view class="stat-item" bindtap="viewCollections">
-          <text class="stat-value">{{stats.collections || 0}}</text>
+        <view class="stat-divider"></view>
+        <view class="stat-item" hover-class="stat-pressed" bindtap="viewCollections">
+          <text class="stat-value v-orange">{{stats.collections || 0}}</text>
           <text class="stat-label">收藏数</text>
         </view>
+        <view class="stat-divider"></view>
         <view class="stat-item">
-          <text class="stat-value">{{stats.credits || 0}}</text>
+          <text class="stat-value v-purple">{{stats.credits || 0}}</text>
           <text class="stat-label">积分</text>
         </view>
       </view>
     </view>
 
     <!-- 功能菜单 -->
-    <view class="card menu-card">
-      <view class="menu-item" bindtap="viewHistory">
+    <view class="card menu-card anim-fade-in">
+      <view class="menu-item" hover-class="menu-pressed" bindtap="viewHistory">
         <view class="menu-left">
-          <text class="menu-icon icon-history">历</text>
+          <view class="menu-icon icon-history icon-cube">历</view>
           <text class="menu-text">面试记录</text>
         </view>
-        <text class="arrow">></text>
+        <text class="arrow">›</text>
       </view>
-      <view class="menu-item" bindtap="viewCollections">
+      <view class="menu-item" hover-class="menu-pressed" bindtap="viewCollections">
         <view class="menu-left">
-          <text class="menu-icon icon-star">收</text>
+          <view class="menu-icon icon-star icon-cube">收</view>
           <text class="menu-text">我的收藏</text>
         </view>
-        <text class="arrow">></text>
+        <text class="arrow">›</text>
       </view>
-      <view class="menu-item" bindtap="viewContributions">
+      <view class="menu-item" hover-class="menu-pressed" bindtap="viewContributions">
         <view class="menu-left">
-          <text class="menu-icon icon-contribute">贡</text>
+          <view class="menu-icon icon-contribute icon-cube">贡</view>
           <text class="menu-text">我的贡献</text>
         </view>
-        <text class="arrow">></text>
+        <text class="arrow">›</text>
       </view>
     </view>
 
-    <view class="card menu-card">
-      <view class="menu-item" bindtap="viewSettings">
+    <view class="card menu-card anim-fade-in">
+      <view class="menu-item" hover-class="menu-pressed" bindtap="viewSettings">
         <view class="menu-left">
-          <text class="menu-icon icon-settings">设</text>
+          <view class="menu-icon icon-settings icon-cube">设</view>
           <text class="menu-text">设置</text>
         </view>
-        <text class="arrow">></text>
+        <text class="arrow">›</text>
       </view>
-      <view class="menu-item" bindtap="viewHelp">
+      <view class="menu-item" hover-class="menu-pressed" bindtap="viewHelp">
         <view class="menu-left">
-          <text class="menu-icon icon-help">帮</text>
+          <view class="menu-icon icon-help icon-cube">帮</view>
           <text class="menu-text">帮助与反馈</text>
         </view>
-        <text class="arrow">></text>
+        <text class="arrow">›</text>
       </view>
-      <view class="menu-item" bindtap="viewAbout">
+      <view class="menu-item" hover-class="menu-pressed" bindtap="viewAbout">
         <view class="menu-left">
-          <text class="menu-icon icon-about">关</text>
+          <view class="menu-icon icon-about icon-cube">关</view>
           <text class="menu-text">关于我们</text>
         </view>
-        <text class="arrow">></text>
+        <text class="arrow">›</text>
       </view>
     </view>
 
     <!-- 退出登录 -->
-    <button class="btn-logout" bindtap="logout">退出登录</button>
+    <button class="btn-logout anim-fade-in" bindtap="logout">退出登录</button>
   </view>
 </view>

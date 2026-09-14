@@ -1,11 +1,24 @@
 <view class="container">
-  <view class="login-header">
-    <image class="logo" src="/assets/logo.png" mode="aspectFit"></image>
-    <text class="app-name">面试模拟系统</text>
-    <text class="app-desc">微信授权后即可使用</text>
+  <!-- 品牌渐变头部 -->
+  <view class="hero">
+    <view class="deco-circle deco-1"></view>
+    <view class="deco-circle deco-2"></view>
+    <view class="hero-inner">
+      <view class="logo-ring">
+        <image class="logo" src="/assets/logo.png" mode="aspectFit"></image>
+      </view>
+      <text class="app-name">面试模拟系统</text>
+      <text class="app-desc">AI 驱动的面试练习平台</text>
+      <view class="hero-feature">
+        <text class="feature-dot"></text>
+        <text class="feature-text">智能出题 · 实时评估 · 深度复盘</text>
+        <text class="feature-dot"></text>
+      </view>
+    </view>
   </view>
 
-  <view class="login-body">
+  <!-- 登录面板 -->
+  <view class="login-body anim-fade-in">
     <!-- 微信登录按钮 -->
     <button class="btn-wx-login" bindtap="handleWxLogin" loading="{{loading}}">
       <image class="wx-icon" src="/assets/icons/wx.png" mode="aspectFit"></image>
@@ -22,11 +35,11 @@
     <view class="account-login">
       <view class="input-group">
         <text class="input-label">账号</text>
-        <input class="input" placeholder="手机号或邮箱" bindinput="onAccountInput" value="{{account}}" />
+        <input class="input" placeholder="手机号或邮箱" bindinput="onAccountInput" value="{{account}}" placeholder-class="input-placeholder" />
       </view>
       <view class="input-group">
         <text class="input-label">密码</text>
-        <input class="input" type="password" placeholder="请输入密码" bindinput="onPasswordInput" value="{{password}}" />
+        <input class="input" type="password" placeholder="请输入密码" bindinput="onPasswordInput" value="{{password}}" placeholder-class="input-placeholder" />
       </view>
       <button class="btn-account-login" bindtap="handleAccountLogin" loading="{{accountLoading}}">
         登录
@@ -39,7 +52,7 @@
     <text class="link" bindtap="viewAgreement">《用户协议》</text>
     <text class="agreement">和</text>
     <text class="link" bindtap="viewPrivacy">《隐私政策》</text>
-    <text class="divider">|</text>
+    <text class="footer-divider">|</text>
     <text class="link" bindtap="goToRegister">注册账号</text>
   </view>
 </view>

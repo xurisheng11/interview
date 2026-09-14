@@ -1,17 +1,18 @@
 <view class="container">
   <!-- 面试列表 -->
   <view class="interview-list" wx:if="{{list.length > 0}}">
-    <view wx:for="{{list}}" wx:key="interviewId" class="interview-card" bindtap="viewDetail" data-id="{{item.interviewId}}">
+    <view wx:for="{{list}}" wx:key="interviewId" class="interview-card anim-fade-in" hover-class="card-pressed" bindtap="viewDetail" data-id="{{item.interviewId}}">
       <view class="card-header">
         <view class="company-info">
           <text class="company">{{item.companyName || '未指定公司'}}</text>
           <text class="position">{{item.jobTitle || '未指定岗位'}}</text>
         </view>
         <view class="status-badge {{item.status}}">
+          <view class="status-dot"></view>
           <text>{{getStatusText(item.status)}}</text>
         </view>
       </view>
-      
+
       <view class="card-body">
         <view class="info-row">
           <text class="label">难度</text>
@@ -33,7 +34,17 @@
           <text class="score-value {{getScoreClass(item.totalScore)}}">{{item.totalScore}}</text>
         </view>
         <view class="action-hint">
-          <text>查看详情 ></text>
+          <text>查看详情 ›</text>
+        </view>
+      </view>
+
+      <view class="card-footer" wx:else>
+        <view class="score-section">
+          <text class="score-label">综合得分</text>
+          <text class="score-value score-none">--</text>
+        </view>
+        <view class="action-hint">
+          <text>查看详情 ›</text>
         </view>
       </view>
     </view>
@@ -41,15 +52,16 @@
 
   <!-- 悬浮开始面试按钮 -->
   <view class="fab-container" wx:if="{{list.length > 0}}">
-    <button class="fab" bindtap="startNewInterview">
+    <button class="fab" hover-class="fab-pressed" bindtap="startNewInterview">
       <text class="fab-icon">+</text>
     </button>
   </view>
 
   <!-- 空状态 -->
   <view class="empty-state" wx:else>
-    <image class="empty-icon" src="/assets/icons/empty.png" mode="aspectFit"></image>
+    <view class="empty-cube icon-cube">面</view>
     <text class="empty-text">暂无面试记录</text>
+    <text class="empty-desc">从一场模拟面试开始你的练习之旅</text>
     <button class="btn-start" bindtap="startNewInterview">开始面试</button>
   </view>
 </view>

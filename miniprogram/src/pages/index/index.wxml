@@ -1,43 +1,59 @@
 <view class="container">
   <!-- 未登录状态 -->
-  <view wx:if="{{!isLoggedIn}}" class="login-prompt">
+  <view wx:if="{{!isLoggedIn}}" class="login-prompt anim-fade-in">
     <view class="hero-section">
+      <view class="hero-badge">
+        <text class="hero-badge-text">AI</text>
+      </view>
       <text class="hero-title">面试模拟系统</text>
       <text class="hero-desc">AI 驱动的面试练习平台</text>
+      <view class="hero-feature">
+        <text class="feature-dot"></text>
+        <text class="feature-text">智能出题 · 实时评估 · 深度复盘</text>
+        <text class="feature-dot"></text>
+      </view>
     </view>
     <button class="btn-login" bindtap="goLogin">微信一键登录</button>
+    <text class="login-tip">登录后可同步练习记录与评分报告</text>
   </view>
 
   <!-- 已登录状态 -->
   <view wx:else>
-    <!-- 用户信息卡片 -->
-    <view class="card user-card">
+    <!-- 用户信息卡片（品牌渐变卡） -->
+    <view class="user-card anim-fade-in">
+      <view class="deco-circle deco-1"></view>
+      <view class="deco-circle deco-2"></view>
       <view class="user-info">
-        <image class="avatar" src="{{userInfo.avatar || '/assets/default-avatar.png'}}" mode="aspectFill"></image>
+        <view class="avatar-ring">
+          <image class="avatar" src="{{userInfo.avatar || '/assets/default-avatar.png'}}" mode="aspectFill"></image>
+        </view>
         <view class="info">
           <text class="nickname">{{userInfo.nickname || userInfo.username}}</text>
-          <text class="role-tag">{{userInfo.role === 'admin' ? '管理员' : '普通用户'}}</text>
+          <view class="role-tag">
+            <view class="role-dot"></view>
+            <text>{{userInfo.role === 'admin' ? '管理员' : '普通用户'}}</text>
+          </view>
         </view>
       </view>
     </view>
 
     <!-- 快捷操作 -->
-    <view class="card">
+    <view class="card anim-fade-in">
       <text class="section-title">快速开始</text>
       <view class="quick-actions">
-        <view class="action-item" bindtap="goToInterview">
+        <view class="action-item" hover-class="action-pressed" bindtap="goToInterview">
           <view class="action-icon bg-blue">
             <text class="icon-text">面</text>
           </view>
           <text class="action-text">开始面试</text>
         </view>
-        <view class="action-item" bindtap="goToPractice">
+        <view class="action-item" hover-class="action-pressed" bindtap="goToPractice">
           <view class="action-icon bg-green">
             <text class="icon-text">练</text>
           </view>
           <text class="action-text">题目练习</text>
         </view>
-        <view class="action-item" bindtap="goToReport">
+        <view class="action-item" hover-class="action-pressed" bindtap="goToReport">
           <view class="action-icon bg-orange">
             <text class="icon-text">报</text>
           </view>
@@ -47,28 +63,29 @@
     </view>
 
     <!-- 统计数据 -->
-    <view class="card" wx:if="{{stats}}">
-      <text class="section-title">我的数据</text>
+    <view class="card stats-card anim-fade-in" wx:if="{{stats}}">
       <view class="stats-grid">
         <view class="stat-item">
-          <text class="stat-value">{{stats.totalInterviews || 0}}</text>
+          <text class="stat-value v-blue">{{stats.totalInterviews || 0}}</text>
           <text class="stat-label">面试次数</text>
         </view>
+        <view class="stat-divider"></view>
         <view class="stat-item">
-          <text class="stat-value">{{stats.avgScore || 0}}</text>
+          <text class="stat-value v-green">{{stats.avgScore || 0}}</text>
           <text class="stat-label">平均分</text>
         </view>
+        <view class="stat-divider"></view>
         <view class="stat-item">
-          <text class="stat-value">{{stats.totalQuestions || 0}}</text>
+          <text class="stat-value v-orange">{{stats.totalQuestions || 0}}</text>
           <text class="stat-label">答题数</text>
         </view>
       </view>
     </view>
 
     <!-- 最近面试 -->
-    <view class="card" wx:if="{{recentInterviews.length > 0}}">
+    <view class="card anim-fade-in" wx:if="{{recentInterviews.length > 0}}">
       <text class="section-title">最近面试</text>
-      <view wx:for="{{recentInterviews}}" wx:key="interviewId" class="interview-item" bindtap="goToInterviewDetail" data-id="{{item.interviewId}}">
+      <view wx:for="{{recentInterviews}}" wx:key="interviewId" class="interview-item" hover-class="item-pressed" bindtap="goToInterviewDetail" data-id="{{item.interviewId}}">
         <view class="interview-info">
           <text class="interview-title">{{item.companyName || '未指定公司'}} - {{item.jobTitle || '未指定岗位'}}</text>
           <text class="interview-time">{{item.startTime}}</text>

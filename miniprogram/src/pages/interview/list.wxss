@@ -1,48 +1,83 @@
 /* 面试列表页面样式 */
 .container {
   padding: 24rpx;
-  padding-bottom: 140rpx;
+  padding-bottom: 180rpx;
 }
 
-/* 悬浮开始按钮 */
+/* ============ 悬浮开始按钮 ============ */
 .fab-container {
   position: fixed;
-  bottom: 160rpx;
+  bottom: calc(180rpx + env(safe-area-inset-bottom));
   right: 40rpx;
   z-index: 100;
 }
 
 .fab {
-  width: 100rpx;
-  height: 100rpx;
+  width: 112rpx;
+  height: 112rpx;
   border-radius: 50%;
-  background: linear-gradient(135deg, #1890ff, #096dd9);
+  background: linear-gradient(135deg, #52a9ff 0%, #1677ff 48%, #0958d9 100%);
   color: #fff;
   border: none;
-  box-shadow: 0 8rpx 24rpx rgba(24, 144, 255, 0.4);
+  box-shadow: 0 12rpx 32rpx rgba(22, 119, 255, 0.42);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
+  position: relative;
+  transition: all 0.15s ease;
 }
 
+/* FAB 顶部光泽 */
 .fab::after {
-  border: none;
+  content: '';
+  position: absolute;
+  top: 14rpx;
+  left: 26rpx;
+  width: 36rpx;
+  height: 18rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.35);
+  transform: rotate(-20deg);
+}
+
+.fab-pressed {
+  transform: scale(0.92);
+  box-shadow: 0 6rpx 20rpx rgba(22, 119, 255, 0.35);
 }
 
 .fab-icon {
-  font-size: 48rpx;
+  font-size: 56rpx;
   font-weight: 300;
   line-height: 1;
 }
 
-/* 面试卡片 - 优化 */
+/* ============ 面试卡片 ============ */
 .interview-card {
+  position: relative;
   background: #fff;
-  border-radius: 20rpx;
-  padding: 32rpx;
+  border-radius: 24rpx;
+  padding: 32rpx 32rpx 32rpx 40rpx;
   margin-bottom: 24rpx;
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
+  box-shadow: 0 6rpx 24rpx rgba(20, 45, 90, 0.06);
+  overflow: hidden;
+  transition: all 0.15s ease;
+}
+
+/* 左侧品牌色条（随状态变色） */
+.interview-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 8rpx;
+  background: linear-gradient(180deg, #52a9ff, #0958d9);
+}
+
+.card-pressed {
+  transform: scale(0.98);
+  box-shadow: 0 4rpx 12rpx rgba(20, 45, 90, 0.08);
 }
 
 .card-header {
@@ -60,46 +95,69 @@
 
 .company {
   font-size: 34rpx;
-  font-weight: 600;
-  color: #1a1a1a;
+  font-weight: 700;
+  color: var(--text-main);
   margin-bottom: 8rpx;
 }
 
 .position {
   font-size: 26rpx;
-  color: #666;
+  color: var(--text-sub);
 }
 
 .status-badge {
+  display: inline-flex;
+  align-items: center;
   padding: 8rpx 20rpx;
-  border-radius: 30rpx;
+  border-radius: 999rpx;
   font-size: 24rpx;
   font-weight: 500;
 }
 
+.status-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  margin-right: 10rpx;
+  background: currentColor;
+}
+
 .status-badge.pending {
-  background: #fff7e6;
-  color: #fa8c16;
+  background: #fff7e0;
+  color: #ef9400;
 }
 
 .status-badge.in_progress {
-  background: #e6f7ff;
-  color: #1890ff;
+  background: var(--brand-bg);
+  color: var(--brand);
 }
 
 .status-badge.completed {
-  background: #f6ffed;
-  color: #52c41a;
+  background: #f0fbe4;
+  color: var(--success);
 }
 
 .status-badge.paused {
-  background: #f5f5f5;
-  color: #999;
+  background: #f2f4f7;
+  color: var(--text-hint);
+}
+
+/* 状态对应左侧色条 */
+.interview-card.completed::before {
+  background: linear-gradient(180deg, #73d13d, #389e0d);
+}
+
+.interview-card.pending::before {
+  background: linear-gradient(180deg, #ffc53d, #d48806);
+}
+
+.interview-card.paused::before {
+  background: linear-gradient(180deg, #c5ccd6, #9aa3af);
 }
 
 .card-body {
   padding-bottom: 24rpx;
-  border-bottom: 1px solid #f5f5f5;
+  border-bottom: 1rpx solid #f2f4f7;
 }
 
 .info-row {
@@ -110,12 +168,13 @@
 
 .label {
   font-size: 26rpx;
-  color: #999;
+  color: var(--text-hint);
 }
 
 .value {
   font-size: 26rpx;
-  color: #333;
+  font-weight: 500;
+  color: var(--text-sub);
 }
 
 .card-footer {
@@ -132,65 +191,102 @@
 
 .score-label {
   font-size: 26rpx;
-  color: #999;
+  color: var(--text-hint);
   margin-right: 12rpx;
 }
 
 .score-value {
-  font-size: 52rpx;
+  font-size: 56rpx;
   font-weight: 700;
+  line-height: 1.1;
 }
 
 .score-value.excellent {
-  color: #52c41a;
+  color: var(--success);
 }
 
 .score-value.good {
-  color: #1890ff;
+  color: var(--brand);
 }
 
 .score-value.warning {
-  color: #fa8c16;
+  color: #ef9400;
+}
+
+.score-value.score-none {
+  color: #c5ccd6;
+  font-size: 44rpx;
 }
 
 .action-hint {
   font-size: 26rpx;
-  color: #1890ff;
+  color: var(--brand);
   font-weight: 500;
 }
 
-/* 空状态 */
+/* ============ 空状态 ============ */
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 120rpx 0;
+  padding: 140rpx 0;
 }
 
-.empty-icon {
-  width: 240rpx;
-  height: 240rpx;
-  margin-bottom: 32rpx;
-  opacity: 0.35;
+.empty-cube {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 48rpx;
+  background: linear-gradient(135deg, #d6e6ff 0%, #b3d1ff 100%);
+  color: var(--brand);
+  font-size: 64rpx;
+  font-weight: 700;
+  margin-bottom: 36rpx;
+  position: relative;
+}
+
+.empty-cube::after {
+  content: '';
+  position: absolute;
+  top: 16rpx;
+  left: 26rpx;
+  width: 44rpx;
+  height: 22rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.45);
+  transform: rotate(-20deg);
 }
 
 .empty-text {
-  font-size: 28rpx;
-  color: #999;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 12rpx;
+}
+
+.empty-desc {
+  font-size: 26rpx;
+  color: var(--text-hint);
   margin-bottom: 40rpx;
 }
 
 .btn-start {
   width: 480rpx;
-  height: 88rpx;
-  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+  height: 92rpx;
+  background: linear-gradient(135deg, #52a9ff 0%, #1677ff 48%, #0958d9 100%);
   color: #fff;
   font-size: 32rpx;
-  border-radius: 44rpx;
+  font-weight: 600;
+  letter-spacing: 2rpx;
+  border-radius: 46rpx;
   border: none;
-  box-shadow: 0 8rpx 24rpx rgba(24, 144, 255, 0.3);
+  box-shadow: 0 8rpx 24rpx rgba(22, 119, 255, 0.32);
 }
 
 .btn-start::after {
   border: none;
+}
+
+.btn-start:active {
+  transform: scale(0.97);
+  opacity: 0.92;
 }

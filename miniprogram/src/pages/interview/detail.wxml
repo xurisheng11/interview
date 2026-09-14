@@ -1,20 +1,21 @@
 <view class="container">
   <view wx:if="{{loading}}" class="loading">加载中...</view>
-  
+
   <view wx:elif="{{!interview}}" class="empty-state">
     <text>面试记录不存在</text>
   </view>
 
   <view wx:else>
     <!-- 基本信息 -->
-    <view class="card">
+    <view class="card anim-fade-in">
       <view class="card-header">
         <text class="title">{{interview.company}} - {{interview.position}}</text>
         <view class="status-badge {{interview.status}}">
+          <view class="status-dot"></view>
           <text>{{getStatusText(interview.status)}}</text>
         </view>
       </view>
-      
+
       <view class="info-grid">
         <view class="info-item">
           <text class="info-label">面试类型</text>
@@ -36,7 +37,7 @@
     </view>
 
     <!-- 得分情况 -->
-    <view class="card" wx:if="{{report}}">
+    <view class="card anim-fade-in" wx:if="{{report}}">
       <text class="section-title">综合评分</text>
       <view class="score-overview">
         <view class="main-score">
@@ -45,23 +46,38 @@
         </view>
         <view class="score-detail">
           <view class="score-row">
-            <text>回答准确度</text>
-            <text class="score-item-value {{getScoreClass(report.accuracy)}}">{{report.accuracy || 0}}</text>
+            <view class="score-row-top">
+              <text class="score-item-label">回答准确度</text>
+              <text class="score-item-value {{getScoreClass(report.accuracy)}}">{{report.accuracy || 0}}</text>
+            </view>
+            <view class="score-bar">
+              <view class="score-bar-fill {{getScoreClass(report.accuracy)}}" style="width: {{report.accuracy || 0}}%"></view>
+            </view>
           </view>
           <view class="score-row">
-            <text>表达流畅度</text>
-            <text class="score-item-value {{getScoreClass(report.fluency)}}">{{report.fluency || 0}}</text>
+            <view class="score-row-top">
+              <text class="score-item-label">表达流畅度</text>
+              <text class="score-item-value {{getScoreClass(report.fluency)}}">{{report.fluency || 0}}</text>
+            </view>
+            <view class="score-bar">
+              <view class="score-bar-fill {{getScoreClass(report.fluency)}}" style="width: {{report.fluency || 0}}%"></view>
+            </view>
           </view>
           <view class="score-row">
-            <text>逻辑清晰度</text>
-            <text class="score-item-value {{getScoreClass(report.logic)}}">{{report.logic || 0}}</text>
+            <view class="score-row-top">
+              <text class="score-item-label">逻辑清晰度</text>
+              <text class="score-item-value {{getScoreClass(report.logic)}}">{{report.logic || 0}}</text>
+            </view>
+            <view class="score-bar">
+              <view class="score-bar-fill {{getScoreClass(report.logic)}}" style="width: {{report.logic || 0}}%"></view>
+            </view>
           </view>
         </view>
       </view>
     </view>
 
     <!-- 回答详情 -->
-    <view class="card" wx:if="{{interview.answers && interview.answers.length > 0}}">
+    <view class="card anim-fade-in" wx:if="{{interview.answers && interview.answers.length > 0}}">
       <text class="section-title">回答详情</text>
       <view wx:for="{{interview.answers}}" wx:key="id" class="answer-item">
         <view class="question">
@@ -79,8 +95,11 @@
     </view>
 
     <!-- AI 评价 -->
-    <view class="card" wx:if="{{report && report.feedback}}">
-      <text class="section-title">AI 点评</text>
+    <view class="card feedback-card anim-fade-in" wx:if="{{report && report.feedback}}">
+      <view class="feedback-header">
+        <view class="feedback-icon icon-cube">AI</view>
+        <text class="feedback-title">AI 点评</text>
+      </view>
       <view class="feedback-content">
         <text>{{report.feedback}}</text>
       </view>
@@ -89,21 +108,21 @@
     <!-- 操作按钮 -->
     <view class="action-bar">
       <!-- 未完成的面试 -->
-      <button 
-        class="btn-continue" 
+      <button
+        class="btn-continue"
         bindtap="continueInterview"
         wx:if="{{interview.status !== 'completed'}}"
       >
         继续面试
       </button>
-      
+
       <!-- 已完成的面试 -->
       <view class="completed-actions" wx:else>
-        <button class="btn-action secondary" bindtap="restartInterview">
-          🔄 重新面试
+        <button class="btn-action secondary" hover-class="btn-ghost-pressed" bindtap="restartInterview">
+          重新面试
         </button>
-        <button class="btn-action primary" bindtap="shareReport">
-          📤 分享报告
+        <button class="btn-action primary" hover-class="btn-brand-pressed" bindtap="shareReport">
+          分享报告
         </button>
       </view>
     </view>
@@ -111,7 +130,7 @@
     <!-- 复制回答 -->
     <view class="copy-section" wx:if="{{interview.answers && interview.answers.length > 0}}">
       <button class="btn-copy" bindtap="copyAnswer">
-        📋 复制全部回答
+        复制全部回答
       </button>
     </view>
   </view>

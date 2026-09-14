@@ -1,0 +1,118 @@
+<view class="container">
+  <view wx:if="{{loading}}" class="loading">加载中...</view>
+  
+  <view wx:elif="{{!interview}}" class="empty-state">
+    <text>面试记录不存在</text>
+  </view>
+
+  <view wx:else>
+    <!-- 基本信息 -->
+    <view class="card">
+      <view class="card-header">
+        <text class="title">{{interview.company}} - {{interview.position}}</text>
+        <view class="status-badge {{interview.status}}">
+          <text>{{getStatusText(interview.status)}}</text>
+        </view>
+      </view>
+      
+      <view class="info-grid">
+        <view class="info-item">
+          <text class="info-label">面试类型</text>
+          <text class="info-value">{{getTypeText(interview.interviewType)}}</text>
+        </view>
+        <view class="info-item">
+          <text class="info-label">时长</text>
+          <text class="info-value">{{interview.duration || '--'}} 分钟</text>
+        </view>
+        <view class="info-item">
+          <text class="info-label">题目数</text>
+          <text class="info-value">{{interview.questionCount || '--'}}</text>
+        </view>
+        <view class="info-item">
+          <text class="info-label">时间</text>
+          <text class="info-value">{{interview.createdAt}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 得分情况 -->
+    <view class="card" wx:if="{{report}}">
+      <text class="section-title">综合评分</text>
+      <view class="score-overview">
+        <view class="main-score">
+          <text class="score-num {{getScoreClass(report.totalScore)}}">{{report.totalScore || 0}}</text>
+          <text class="score-unit">分</text>
+        </view>
+        <view class="score-detail">
+          <view class="score-row">
+            <text>回答准确度</text>
+            <text class="score-item-value {{getScoreClass(report.accuracy)}}">{{report.accuracy || 0}}</text>
+          </view>
+          <view class="score-row">
+            <text>表达流畅度</text>
+            <text class="score-item-value {{getScoreClass(report.fluency)}}">{{report.fluency || 0}}</text>
+          </view>
+          <view class="score-row">
+            <text>逻辑清晰度</text>
+            <text class="score-item-value {{getScoreClass(report.logic)}}">{{report.logic || 0}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 回答详情 -->
+    <view class="card" wx:if="{{interview.answers && interview.answers.length > 0}}">
+      <text class="section-title">回答详情</text>
+      <view wx:for="{{interview.answers}}" wx:key="id" class="answer-item">
+        <view class="question">
+          <text class="q-label">Q{{index + 1}}</text>
+          <text class="q-text">{{item.question}}</text>
+        </view>
+        <view class="answer">
+          <text class="a-label">A</text>
+          <text class="a-text">{{item.answer}}</text>
+        </view>
+        <view class="answer-score" wx:if="{{item.score !== undefined}}">
+          <text>得分：{{item.score}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- AI 评价 -->
+    <view class="card" wx:if="{{report && report.feedback}}">
+      <text class="section-title">AI 点评</text>
+      <view class="feedback-content">
+        <text>{{report.feedback}}</text>
+      </view>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="action-bar">
+      <!-- 未完成的面试 -->
+      <button 
+        class="btn-continue" 
+        bindtap="continueInterview"
+        wx:if="{{interview.status !== 'completed'}}"
+      >
+        继续面试
+      </button>
+      
+      <!-- 已完成的面试 -->
+      <view class="completed-actions" wx:else>
+        <button class="btn-action secondary" bindtap="restartInterview">
+          🔄 重新面试
+        </button>
+        <button class="btn-action primary" bindtap="shareReport">
+          📤 分享报告
+        </button>
+      </view>
+    </view>
+
+    <!-- 复制回答 -->
+    <view class="copy-section" wx:if="{{interview.answers && interview.answers.length > 0}}">
+      <button class="btn-copy" bindtap="copyAnswer">
+        📋 复制全部回答
+      </button>
+    </view>
+  </view>
+</view>

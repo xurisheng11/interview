@@ -1,12 +1,15 @@
 package service
 
 import (
+	"encoding/json"
 	"errors"
+	"net/http"
 	"regexp"
 	"time"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
+	"interview-sim/config"
 	"interview-sim/model"
 	"interview-sim/pkg/jwt"
 	"interview-sim/repository"
@@ -160,4 +163,102 @@ func isEmail(s string) bool {
 func isPhone(s string) bool {
 	re := regexp.MustCompile(`^1[3-9]\d{9}$`)
 	return re.MatchString(s)
+}
+
+// WxLoginReq 微信登录请求
+type WxLoginReq struct {
+	Code string `json:"code" binding:"required"` // 微信授权码
+}
+
+// WxLogin 微信登录/注册
+func WxLogin(req *WxLoginReq) (*AuthResult, error) {
+	// 1. 用 code 向微信服务器换取 openid
+	openID, err := getWechatOpenID(req.Code)
+	if err != nil {
+		return nil, errors.New("微信授权失败: " + err.Error())
+	}
+
+	// 2. 检查是否已存在该 openid 的用户
+	existingUser, err := repository.GetUserByOpenID(openID)
+	if err != nil {
+		return nil, err
+	}
+
+	var user *model.User
+	if existingUser != nil {
+		// 已存在，直接登录
+		user = existingUser
+	} else {
+		// 不存在，自动注册新用户
+		nickname := "用户" + uuid.New().String()[:8]
+		user = &model.User{
+			UserID:   uuid.New().String(),
+			Username: nickname,
+			Avatar:   "",
+			Nickname: nickname,
+			Bio:      "",
+			OpenID:   openID,
+			CreatedAt: time.Now(),
+			Role:     "user",
+		}
+		// 保存到 Redis
+		if err := repository.SaveUser(user); err != nil {
+			return nil, err
+		}
+		// 保存 openid 索引
+		if err := repository.SaveOpenIDIndex(openID, user.UserID); err != nil {
+			return nil, err
+		}
+		// 加入全局用户列表
+		if err := repository.AddUserToList(user.UserID, float64(user.CreatedAt.Unix())); err != nil {
+			return nil, err
+		}
+	}
+
+	// 3. 保存最后登录时间
+	loginTime := time.Now().Format(time.RFC3339)
+	_ = repository.SaveLastLogin(user.UserID, loginTime)
+	user.LastLoginAt = loginTime
+
+	// 4. 生成 JWT
+	token, err := jwt.GenerateToken(user.UserID, user.Role)
+	if err != nil {
+		return nil, err
+	}
+
+	return &AuthResult{
+		Token:     token,
+		ExpiresAt: time.Now().AddDate(0, 0, config.Cfg.JWTExpireDays).Format(time.RFC3339),
+		User:      user.ToDTO(),
+	}, nil
+}
+
+// getWechatOpenID 通过授权码向微信服务器换取 openid
+func getWechatOpenID(code string) (string, error) {
+	appID := config.Cfg.WXAppID
+	secret := config.Cfg.WXSecret
+	url := "https://api.weixin.qq.com/sns/jscode2session?appid=" + appID + "&secret=" + secret + "&js_code=" + code + "&grant_type=authorization_code"
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Get(url)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", err
+	}
+
+	if errMsg, ok := result["errmsg"]; ok {
+		return "", errors.New(errMsg.(string))
+	}
+
+	openid, ok := result["openid"].(string)
+	if !ok || openid == "" {
+		return "", errors.New("未获取到 openid")
+	}
+
+	return openid, nil
 }

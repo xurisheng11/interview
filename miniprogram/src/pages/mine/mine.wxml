@@ -1,0 +1,102 @@
+<view class="container">
+  <!-- 未登录状态 -->
+  <view wx:if="{{!isLoggedIn}}" class="login-prompt">
+    <view class="user-card unlogin" bindtap="goLogin">
+      <view class="avatar-placeholder">
+        <text class="avatar-icon">?</text>
+      </view>
+      <view class="info">
+        <text class="nickname">点击登录</text>
+        <text class="desc">登录后查看更多信息</text>
+      </view>
+      <text class="arrow">></text>
+    </view>
+  </view>
+
+  <!-- 已登录状态 -->
+  <view wx:else>
+    <!-- 用户信息卡片 -->
+    <view class="user-card" bindtap="editProfile">
+      <image class="avatar" src="{{userInfo.avatar || '/assets/default-avatar.png'}}" mode="aspectFill"></image>
+      <view class="info">
+        <text class="nickname">{{userInfo.nickname || userInfo.username}}</text>
+        <text class="desc">{{userInfo.bio || '这个人很懒，什么都没写'}}</text>
+      </view>
+      <text class="arrow">></text>
+    </view>
+
+    <!-- 统计数据 -->
+    <view class="card stats-card">
+      <view class="stats-grid">
+        <view class="stat-item" bindtap="viewInterviews">
+          <text class="stat-value">{{stats.interviews || 0}}</text>
+          <text class="stat-label">面试次数</text>
+        </view>
+        <view class="stat-item" bindtap="viewQuestions">
+          <text class="stat-value">{{stats.questions || 0}}</text>
+          <text class="stat-label">答题数</text>
+        </view>
+        <view class="stat-item" bindtap="viewCollections">
+          <text class="stat-value">{{stats.collections || 0}}</text>
+          <text class="stat-label">收藏数</text>
+        </view>
+        <view class="stat-item">
+          <text class="stat-value">{{stats.credits || 0}}</text>
+          <text class="stat-label">积分</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 功能菜单 -->
+    <view class="card menu-card">
+      <view class="menu-item" bindtap="viewHistory">
+        <view class="menu-left">
+          <text class="menu-icon icon-history">历</text>
+          <text class="menu-text">面试记录</text>
+        </view>
+        <text class="arrow">></text>
+      </view>
+      <view class="menu-item" bindtap="viewCollections">
+        <view class="menu-left">
+          <text class="menu-icon icon-star">收</text>
+          <text class="menu-text">我的收藏</text>
+        </view>
+        <text class="arrow">></text>
+      </view>
+      <view class="menu-item" bindtap="viewContributions">
+        <view class="menu-left">
+          <text class="menu-icon icon-contribute">贡</text>
+          <text class="menu-text">我的贡献</text>
+        </view>
+        <text class="arrow">></text>
+      </view>
+    </view>
+
+    <view class="card menu-card">
+      <view class="menu-item" bindtap="viewSettings">
+        <view class="menu-left">
+          <text class="menu-icon icon-settings">设</text>
+          <text class="menu-text">设置</text>
+        </view>
+        <text class="arrow">></text>
+      </view>
+      <view class="menu-item" bindtap="viewHelp">
+        <view class="menu-left">
+          <text class="menu-icon icon-help">帮</text>
+          <text class="menu-text">帮助与反馈</text>
+        </view>
+        <text class="arrow">></text>
+      </view>
+      <view class="menu-item" bindtap="viewAbout">
+        <view class="menu-left">
+          <text class="menu-icon icon-about">关</text>
+          <text class="menu-text">关于我们</text>
+        </view>
+        <text class="arrow">></text>
+      </view>
+    </view>
+
+    <!-- 退出登录 -->
+    <button class="btn-logout" bindtap="logout">退出登录</button>
+  </view>
+</view>

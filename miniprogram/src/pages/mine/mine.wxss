@@ -1,0 +1,179 @@
+/* 我的页面样式 */
+.container {
+  padding: 24rpx;
+}
+
+/* 用户卡片 */
+.user-card {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.user-card.unlogin {
+  justify-content: flex-start;
+}
+
+.avatar {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 50%;
+  background: #f0f0f0;
+  margin-right: 24rpx;
+}
+
+.avatar-placeholder {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1890ff, #096dd9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 24rpx;
+}
+
+.avatar-icon {
+  font-size: 48rpx;
+  color: #fff;
+  font-weight: 600;
+}
+
+.info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.nickname {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 8rpx;
+}
+
+.desc {
+  font-size: 26rpx;
+  color: #999;
+}
+
+.arrow {
+  font-size: 32rpx;
+  color: #ccc;
+}
+
+/* 统计卡片 */
+.stats-card {
+  padding: 30rpx;
+}
+
+.stats-grid {
+  display: flex;
+  justify-content: space-around;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-value {
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #1890ff;
+  margin-bottom: 8rpx;
+}
+
+.stat-label {
+  font-size: 24rpx;
+  color: #999;
+}
+
+/* 菜单卡片 */
+.menu-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.menu-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 32rpx 30rpx;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.menu-item:last-child {
+  border-bottom: none;
+}
+
+.menu-left {
+  display: flex;
+  align-items: center;
+}
+
+.menu-icon {
+  width: 48rpx;
+  height: 48rpx;
+  line-height: 48rpx;
+  text-align: center;
+  border-radius: 12rpx;
+  font-size: 24rpx;
+  color: #fff;
+  margin-right: 20rpx;
+}
+
+.icon-history {
+  background: linear-gradient(135deg, #1890ff, #096dd9);
+}
+
+.icon-star {
+  background: linear-gradient(135deg, #faad14, #d48806);
+}
+
+.icon-contribute {
+  background: linear-gradient(135deg, #52c41a, #389e0d);
+}
+
+.icon-settings {
+  background: linear-gradient(135deg, #722ed1, #531dab);
+}
+
+.icon-help {
+  background: linear-gradient(135deg, #13c2c2, #08979c);
+}
+
+.icon-about {
+  background: linear-gradient(135deg, #eb2f96, #c41d7f);
+}
+
+.menu-text {
+  font-size: 30rpx;
+  color: #333;
+}
+
+/* 退出登录按钮 */
+.btn-logout {
+  width: 100%;
+  height: 88rpx;
+  background: #fff;
+  color: #ff4d4f;
+  font-size: 32rpx;
+  border-radius: 44rpx;
+  border: 1px solid #ff4d4f;
+  margin-top: 48rpx;
+}
+
+.btn-logout::after {
+  border: none;
+}
+
+/* 登录提示 */
+.login-prompt {
+  margin-bottom: 24rpx;
+}

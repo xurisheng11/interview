@@ -13,9 +13,11 @@ import (
 
 const userKeyPrefix = "user:"
 const userAccountKeyPrefix = "user:account:"
+const userOpenIDKeyPrefix = "user:openid:"
 
 func userKey(userID string) string     { return userKeyPrefix + userID }
 func accountKey(account string) string { return userAccountKeyPrefix + account }
+func openIDKey(openID string) string   { return userOpenIDKeyPrefix + openID }
 
 // SaveUser 永久保存用户信息到 Redis Hash
 func SaveUser(user *model.User) error {
@@ -32,6 +34,23 @@ func SaveUser(user *model.User) error {
 // SaveAccountIndex 保存 account -> userId 索引（永久）
 func SaveAccountIndex(account, userID string) error {
 	return SetPermanent(accountKey(account), userID)
+}
+
+// SaveOpenIDIndex 保存 OpenID -> userId 索引（永久）
+func SaveOpenIDIndex(openID, userID string) error {
+	return SetPermanent(openIDKey(openID), userID)
+}
+
+// GetUserByOpenID 通过 OpenID 获取用户
+func GetUserByOpenID(openID string) (*model.User, error) {
+	userID, err := Get(openIDKey(openID))
+	if err == redis.Nil {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return GetUserByID(userID)
 }
 
 // GetUserByID 通过 userId 获取用户（Redis 未命中时回源 MySQL 并回填）

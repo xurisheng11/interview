@@ -1,0 +1,68 @@
+<view class="container">
+  <!-- 搜索栏 -->
+  <view class="search-bar">
+    <view class="search-input-wrapper">
+      <text class="search-icon">🔍</text>
+      <input 
+        class="search-input"
+        placeholder="搜索题目..."
+        value="{{keyword}}"
+        bindinput="onSearchInput"
+      />
+    </view>
+  </view>
+
+  <!-- 分类标签 -->
+  <view class="category-tabs">
+    <view 
+      wx:for="{{categories}}" 
+      wx:key="value"
+      class="tab-item {{selectedCategory === item.value ? 'active' : ''}}"
+      bindtap="selectCategory"
+      data-value="{{item.value}}"
+    >
+      <text>{{item.name}}</text>
+    </view>
+  </view>
+
+  <!-- 题目列表 -->
+  <view class="question-list" wx:if="{{questions.length > 0}}">
+    <view 
+      wx:for="{{questions}}" 
+      wx:key="questionId"
+      class="question-card"
+      bindtap="viewQuestion"
+      data-id="{{item.questionId}}"
+    >
+      <view class="card-header">
+        <view class="question-type {{item.type}}">
+          <text>{{getTypeName(item.type)}}</text>
+        </view>
+        <view class="question-difficulty {{item.difficulty}}">
+          <text>{{getDifficultyName(item.difficulty)}}</text>
+        </view>
+      </view>
+      
+      <view class="question-content">
+        <text class="question-text">{{item.content}}</text>
+      </view>
+
+      <view class="card-footer">
+        <view class="meta-info">
+          <text class="meta-item">📝 {{item.answerCount || 0}} 次练习</text>
+          <text class="meta-item">⭐ {{item.avgScore || 0}} 分</text>
+        </view>
+        <view class="action-hint">
+          <text>查看详情 ></text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:else>
+    <text class="empty-icon">📚</text>
+    <text class="empty-text">暂无相关题目</text>
+    <text class="empty-desc">试试其他分类或关键词</text>
+  </view>
+</view>

@@ -1,0 +1,196 @@
+/* 面试列表页面样式 */
+.container {
+  padding: 24rpx;
+  padding-bottom: 140rpx;
+}
+
+/* 悬浮开始按钮 */
+.fab-container {
+  position: fixed;
+  bottom: 160rpx;
+  right: 40rpx;
+  z-index: 100;
+}
+
+.fab {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1890ff, #096dd9);
+  color: #fff;
+  border: none;
+  box-shadow: 0 8rpx 24rpx rgba(24, 144, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.fab::after {
+  border: none;
+}
+
+.fab-icon {
+  font-size: 48rpx;
+  font-weight: 300;
+  line-height: 1;
+}
+
+/* 面试卡片 - 优化 */
+.interview-card {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 32rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24rpx;
+}
+
+.company-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.company {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 8rpx;
+}
+
+.position {
+  font-size: 26rpx;
+  color: #666;
+}
+
+.status-badge {
+  padding: 8rpx 20rpx;
+  border-radius: 30rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+}
+
+.status-badge.pending {
+  background: #fff7e6;
+  color: #fa8c16;
+}
+
+.status-badge.in_progress {
+  background: #e6f7ff;
+  color: #1890ff;
+}
+
+.status-badge.completed {
+  background: #f6ffed;
+  color: #52c41a;
+}
+
+.status-badge.paused {
+  background: #f5f5f5;
+  color: #999;
+}
+
+.card-body {
+  padding-bottom: 24rpx;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10rpx 0;
+}
+
+.label {
+  font-size: 26rpx;
+  color: #999;
+}
+
+.value {
+  font-size: 26rpx;
+  color: #333;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 24rpx;
+}
+
+.score-section {
+  display: flex;
+  align-items: baseline;
+}
+
+.score-label {
+  font-size: 26rpx;
+  color: #999;
+  margin-right: 12rpx;
+}
+
+.score-value {
+  font-size: 52rpx;
+  font-weight: 700;
+}
+
+.score-value.excellent {
+  color: #52c41a;
+}
+
+.score-value.good {
+  color: #1890ff;
+}
+
+.score-value.warning {
+  color: #fa8c16;
+}
+
+.action-hint {
+  font-size: 26rpx;
+  color: #1890ff;
+  font-weight: 500;
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx 0;
+}
+
+.empty-icon {
+  width: 240rpx;
+  height: 240rpx;
+  margin-bottom: 32rpx;
+  opacity: 0.35;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #999;
+  margin-bottom: 40rpx;
+}
+
+.btn-start {
+  width: 480rpx;
+  height: 88rpx;
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+  color: #fff;
+  font-size: 32rpx;
+  border-radius: 44rpx;
+  border: none;
+  box-shadow: 0 8rpx 24rpx rgba(24, 144, 255, 0.3);
+}
+
+.btn-start::after {
+  border: none;
+}

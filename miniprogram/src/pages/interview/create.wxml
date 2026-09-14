@@ -1,0 +1,200 @@
+<view class="container">
+  <!-- 顶部进度 -->
+  <view class="progress-bar">
+    <view class="progress-step {{currentStep >= 1 ? 'active' : ''}}" bindtap="setStep" data-step="1">
+      <text class="step-num">1</text>
+      <text class="step-text">基础</text>
+    </view>
+    <view class="progress-line {{currentStep > 1 ? 'active' : ''}}"></view>
+    <view class="progress-step {{currentStep >= 2 ? 'active' : ''}}" bindtap="setStep" data-step="2">
+      <text class="step-num">2</text>
+      <text class="step-text">形式</text>
+    </view>
+    <view class="progress-line {{currentStep > 2 ? 'active' : ''}}"></view>
+    <view class="progress-step {{currentStep >= 3 ? 'active' : ''}}" bindtap="setStep" data-step="3">
+      <text class="step-num">3</text>
+      <text class="step-text">设置</text>
+    </view>
+  </view>
+
+  <!-- 步骤1：基础信息 -->
+  <view class="step-content {{currentStep === 1 ? 'show' : ''}}">
+    <!-- 岗位选择 -->
+    <view class="section">
+      <text class="section-title">选择岗位</text>
+      <text class="section-hint">选择你想要练习的岗位类型</text>
+      <view class="job-grid">
+        <view 
+          wx:for="{{jobTitles}}" 
+          wx:key="value"
+          class="job-item {{selectedJobTitle === item.value ? 'active' : ''}}"
+          bindtap="selectJobTitle"
+          data-value="{{item.value}}"
+        >
+          <text class="job-name">{{item.name}}</text>
+          <text class="job-desc">{{item.desc}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 难度选择 -->
+    <view class="section">
+      <text class="section-title">选择难度</text>
+      <text class="section-hint">根据目标公司难度选择</text>
+      <view class="difficulty-row">
+        <view 
+          wx:for="{{difficulties}}" 
+          wx:key="value"
+          class="difficulty-item {{selectedDifficulty === item.value ? 'active' : ''}} {{item.value}}"
+          bindtap="selectDifficulty"
+          data-value="{{item.value}}"
+        >
+          <text class="diff-name">{{item.name}}</text>
+          <text class="diff-desc">{{item.desc}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 面试轮次 -->
+    <view class="section">
+      <text class="section-title">面试阶段</text>
+      <text class="section-hint">选择想要练习的面试阶段</text>
+      <view class="round-grid">
+        <view 
+          wx:for="{{rounds}}" 
+          wx:key="value"
+          class="round-item {{selectedRound === item.value ? 'active' : ''}}"
+          bindtap="selectRound"
+          data-value="{{item.value}}"
+        >
+          <text class="round-name">{{item.name}}</text>
+          <text class="round-desc">{{item.desc}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 公司名称（可选） -->
+    <view class="section">
+      <text class="section-title">目标公司（选填）</text>
+      <view class="input-wrapper">
+        <input 
+          class="input-field"
+          placeholder="如：字节跳动、腾讯、阿里..."
+          value="{{companyName}}"
+          bindinput="onCompanyInput"
+        />
+      </view>
+    </view>
+  </view>
+
+  <!-- 步骤2：面试形式 -->
+  <view class="step-content {{currentStep === 2 ? 'show' : ''}}">
+    <!-- 面试形式 -->
+    <view class="section">
+      <text class="section-title">面试形式</text>
+      <text class="section-hint">可选择1-2种面试形式</text>
+      <view class="type-grid">
+        <view 
+          wx:for="{{interviewTypeOptions}}" 
+          wx:key="value"
+          class="type-item {{selectedTypes.indexOf(item.value) > -1 ? 'active' : ''}}"
+          bindtap="toggleInterviewType"
+          data-value="{{item.value}}"
+        >
+          <text class="type-icon">{{selectedTypes.indexOf(item.value) > -1 ? '✓' : ''}}</text>
+          <text class="type-name">{{item.name}}</text>
+          <text class="type-desc">{{item.desc}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 重点领域 -->
+    <view class="section">
+      <text class="section-title">重点领域</text>
+      <text class="section-hint">选择1-5个想要重点练习的领域</text>
+      <view class="focus-grid">
+        <view 
+          wx:for="{{focusAreaOptions}}" 
+          wx:key="value"
+          class="focus-item {{selectedFocusAreas.indexOf(item.value) > -1 ? 'active' : ''}}"
+          bindtap="toggleFocusArea"
+          data-value="{{item.value}}"
+        >
+          <text>{{item.name}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 步骤3：时间和设置 -->
+  <view class="step-content {{currentStep === 3 ? 'show' : ''}}">
+    <!-- 面试模式 -->
+    <view class="section">
+      <text class="section-title">答题模式</text>
+      <view class="mode-grid">
+        <view 
+          wx:for="{{modes}}" 
+          wx:key="value"
+          class="mode-item {{selectedMode === item.value ? 'active' : ''}}"
+          bindtap="selectMode"
+          data-value="{{item.value}}"
+        >
+          <text class="mode-name">{{item.name}}</text>
+          <text class="mode-desc">{{item.desc}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 答题时间 -->
+    <view class="section">
+      <text class="section-title">答题时间</text>
+      <text class="section-hint">每道题的答题时长</text>
+      <view class="time-grid">
+        <view 
+          wx:for="{{timeOptions}}" 
+          wx:key="value"
+          class="time-item {{selectedTime === item.value ? 'active' : ''}}"
+          bindtap="selectTime"
+          data-value="{{item.value}}"
+        >
+          <text>{{item.label}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 思考时间 -->
+    <view class="section">
+      <text class="section-title">思考时间</text>
+      <text class="section-hint">看完题目后的准备时间</text>
+      <view class="time-grid">
+        <view 
+          wx:for="{{thinkTimeOptions}}" 
+          wx:key="value"
+          class="time-item {{selectedThinkTime === item.value ? 'active' : ''}}"
+          bindtap="selectThinkTime"
+          data-value="{{item.value}}"
+        >
+          <text>{{item.label}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部操作栏 -->
+  <view class="bottom-bar">
+    <view class="step-btns" wx:if="{{currentStep > 1}}">
+      <button class="btn-prev" bindtap="setStep" data-step="{{currentStep - 1}}">
+        <text>上一步</text>
+      </button>
+    </view>
+    <button 
+      class="btn-next {{currentStep === 3 ? 'btn-start' : ''}}"
+      bindtap="{{currentStep === 3 ? 'startInterview' : 'setStep'}}"
+      data-step="{{currentStep + 1}}"
+      loading="{{loading}}"
+      disabled="{{!canStart && currentStep === 3}}"
+    >
+      <text>{{currentStep === 3 ? '开始面试' : '下一步'}}</text>
+    </button>
+  </view>
+</view>

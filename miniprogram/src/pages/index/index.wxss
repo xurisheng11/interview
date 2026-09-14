@@ -1,0 +1,207 @@
+/* 首页样式 */
+.container {
+  padding: 24rpx;
+}
+
+/* 登录提示 */
+.login-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-top: 200rpx;
+}
+
+.hero-section {
+  text-align: center;
+  margin-bottom: 80rpx;
+}
+
+.hero-title {
+  display: block;
+  font-size: 48rpx;
+  font-weight: 600;
+  color: #1890ff;
+  margin-bottom: 16rpx;
+}
+
+.hero-desc {
+  display: block;
+  font-size: 28rpx;
+  color: #666;
+}
+
+.btn-login {
+  width: 600rpx;
+  height: 96rpx;
+  line-height: 96rpx;
+  background: linear-gradient(135deg, #1890ff, #096dd9);
+  color: #fff;
+  font-size: 32rpx;
+  border-radius: 48rpx;
+  border: none;
+}
+
+/* 用户卡片 */
+.user-card {
+  padding: 30rpx;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+}
+
+.avatar {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 50%;
+  background: #f0f0f0;
+  margin-right: 24rpx;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+}
+
+.nickname {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 8rpx;
+}
+
+.role-tag {
+  display: inline-block;
+  padding: 4rpx 12rpx;
+  background: #e6f7ff;
+  color: #1890ff;
+  font-size: 22rpx;
+  border-radius: 4rpx;
+}
+
+/* 区块标题 */
+.section-title {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 24rpx;
+}
+
+/* 快捷操作 */
+.quick-actions {
+  display: flex;
+  justify-content: space-between;
+}
+
+.action-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 200rpx;
+}
+
+.action-icon {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16rpx;
+}
+
+.bg-blue {
+  background: linear-gradient(135deg, #1890ff, #096dd9);
+}
+
+.bg-green {
+  background: linear-gradient(135deg, #52c41a, #389e0d);
+}
+
+.bg-orange {
+  background: linear-gradient(135deg, #faad14, #d48806);
+}
+
+.icon-text {
+  color: #fff;
+  font-size: 36rpx;
+  font-weight: 600;
+}
+
+.action-text {
+  font-size: 26rpx;
+  color: #666;
+}
+
+/* 统计数据 */
+.stats-grid {
+  display: flex;
+  justify-content: space-around;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-value {
+  font-size: 48rpx;
+  font-weight: 600;
+  color: #1890ff;
+}
+
+.stat-label {
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 8rpx;
+}
+
+/* 面试项 */
+.interview-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.interview-item:last-child {
+  border-bottom: none;
+}
+
+.interview-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.interview-title {
+  font-size: 28rpx;
+  color: #333;
+  margin-bottom: 8rpx;
+}
+
+.interview-time {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.interview-score {
+  display: flex;
+  align-items: baseline;
+}
+
+.score-value {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #1890ff;
+}
+
+.score-label {
+  font-size: 24rpx;
+  color: #999;
+  margin-left: 4rpx;
+}

@@ -35,6 +35,21 @@ func Login(c *gin.Context) {
 	response.Success(c, result)
 }
 
+// WxLogin 微信登录/注册
+func WxLogin(c *gin.Context) {
+	var req service.WxLoginReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "参数错误: "+err.Error())
+		return
+	}
+	result, err := service.WxLogin(&req)
+	if err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+	response.Success(c, result)
+}
+
 func GetMe(c *gin.Context) {
 	userID, _ := c.Get("userId")
 	user, err := repository.GetUserByID(userID.(string))

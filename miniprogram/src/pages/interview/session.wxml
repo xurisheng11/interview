@@ -1,0 +1,126 @@
+<view class="container">
+  <!-- 顶部进度条 -->
+  <view class="progress-bar">
+    <view class="progress-info">
+      <text class="progress-text">第 {{currentIndex + 1}} / {{totalCount}} 题</text>
+      <text class="timer-text">⏱ {{formatTime(remainingTime)}}</text>
+    </view>
+    <view class="progress-track">
+      <view class="progress-fill" style="width: {{progressPercent}}%"></view>
+    </view>
+  </view>
+
+  <!-- 问题卡片 -->
+  <view class="question-card" wx:if="{{currentQuestion}}">
+    <view class="question-header">
+      <view class="question-type-tag">
+        <text>{{getTypeName(currentQuestion.type)}}</text>
+      </view>
+      <view class="question-difficulty {{currentQuestion.difficulty}}">
+        <text>{{getDifficultyName(currentQuestion.difficulty)}}</text>
+      </view>
+    </view>
+    
+    <view class="question-content">
+      <text class="question-text">{{currentQuestion.content}}</text>
+    </view>
+
+    <view class="question-hint" wx:if="{{currentQuestion.hint}}">
+      <text class="hint-icon">💡</text>
+      <text class="hint-text">{{currentQuestion.hint}}</text>
+    </view>
+  </view>
+
+  <!-- 答案输入区 -->
+  <view class="answer-section">
+    <view class="answer-header">
+      <text class="answer-label">你的回答</text>
+      <text class="answer-tips">建议条理清晰、要点完整</text>
+    </view>
+    
+    <textarea 
+      class="answer-input {{isRecording ? 'recording' : ''}}"
+      placeholder="请输入你的回答..."
+      value="{{answer}}"
+      bindinput="onAnswerInput"
+      maxlength="{{maxLength}}"
+      disabled="{{!currentQuestion}}"
+    ></textarea>
+    
+    <view class="answer-footer">
+      <text class="char-count">{{answer.length}} / {{maxLength}}</text>
+    </view>
+  </view>
+
+  <!-- 录音区域 -->
+  <view class="record-section">
+    <view class="record-hint" wx:if="{{!isRecording && !audioPath}}">
+      <text>点击下方按钮开始录音</text>
+    </view>
+    
+    <view class="record-hint recording-hint" wx:if="{{isRecording}}">
+      <text class="record-dot"></text>
+      <text>录音中...</text>
+      <text class="record-time">{{formatTime(recordTime)}}</text>
+    </view>
+
+    <view class="record-actions">
+      <button 
+        class="btn-record {{isRecording ? 'stop' : 'start'}}"
+        bindtap="toggleRecord"
+        disabled="{{!currentQuestion}}"
+      >
+        <text class="record-icon">{{isRecording ? '⏹' : '🎤'}}</text>
+        <text class="record-label">{{isRecording ? '停止' : '录音'}}</text>
+      </button>
+
+      <button 
+        class="btn-play {{audioPath ? '' : 'disabled'}}"
+        bindtap="playAudio"
+        wx:if="{{audioPath && !isPlaying}}"
+      >
+        <text>▶ 播放</text>
+      </button>
+    </view>
+  </view>
+
+  <!-- 底部操作区 -->
+  <view class="bottom-bar">
+    <button 
+      class="btn-prev {{currentIndex === 0 ? 'disabled' : ''}}"
+      bindtap="prevQuestion"
+      disabled="{{currentIndex === 0}}"
+    >
+      <text>上一题</text>
+    </button>
+
+    <view class="btn-center">
+      <button 
+        class="btn-skip"
+        bindtap="skipQuestion"
+      >
+        <text>跳过</text>
+      </button>
+    </view>
+
+    <button 
+      class="btn-next"
+      bindtap="nextQuestion"
+      loading="{{submitting}}"
+    >
+      <text>{{currentIndex === totalCount - 1 ? '提交' : '下一题'}}</text>
+    </button>
+  </view>
+
+  <!-- 完成弹窗 -->
+  <view class="modal-overlay" wx:if="{{showCompleteModal}}" bindtap="closeModal">
+    <view class="modal-content" catchtap="">
+      <view class="modal-icon">✅</view>
+      <text class="modal-title">面试已完成</text>
+      <text class="modal-desc">正在生成面试报告...</text>
+      <view class="modal-progress">
+        <view class="modal-progress-bar"></view>
+      </view>
+    </view>
+  </view>
+</view>

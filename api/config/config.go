@@ -30,6 +30,8 @@ type Config struct {
 	MySQLDB                string
 	MySQLSyncHour          int
 	MySQLEnabled           bool
+	WXAppID                string
+	WXSecret               string
 }
 
 var Cfg *Config
@@ -68,6 +70,8 @@ func Init() {
 		MySQLDB:                getEnv("MYSQL_DB", "interview_sim"),
 		MySQLSyncHour:          mysqlSyncHour,
 		MySQLEnabled:           mysqlEnabled,
+		WXAppID:                getEnv("WX_APP_ID", ""),
+		WXSecret:               getEnv("WX_SECRET", ""),
 	}
 }
 

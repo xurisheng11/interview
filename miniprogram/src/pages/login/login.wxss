@@ -1,0 +1,138 @@
+/* 登录页面样式 */
+.container {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #e8f4ff 0%, #f8f8f8 100%);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+.login-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 120rpx;
+  padding-bottom: 80rpx;
+}
+
+.logo {
+  width: 160rpx;
+  height: 160rpx;
+  margin-bottom: 24rpx;
+}
+
+.app-name {
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #1890ff;
+  margin-bottom: 12rpx;
+}
+
+.app-desc {
+  font-size: 28rpx;
+  color: #999;
+}
+
+.login-body {
+  flex: 1;
+  padding: 0 48rpx;
+}
+
+/* 微信登录按钮 */
+.btn-wx-login {
+  width: 100%;
+  height: 96rpx;
+  background: #07c160;
+  color: #fff;
+  font-size: 32rpx;
+  border-radius: 48rpx;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-wx-login::after {
+  border: none;
+}
+
+.wx-icon {
+  width: 48rpx;
+  height: 48rpx;
+  margin-right: 16rpx;
+}
+
+/* 分割线 */
+.divider-text {
+  display: flex;
+  align-items: center;
+  margin: 48rpx 0;
+}
+
+.divider-line {
+  flex: 1;
+  height: 1px;
+  background: #ddd;
+}
+
+.divider-text-inner {
+  padding: 0 24rpx;
+  font-size: 24rpx;
+  color: #999;
+}
+
+/* 账号登录 */
+.account-login {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 32rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.05);
+}
+
+.input-group {
+  margin-bottom: 32rpx;
+}
+
+.input-label {
+  display: block;
+  font-size: 28rpx;
+  color: #333;
+  margin-bottom: 12rpx;
+}
+
+.input {
+  width: 100%;
+  height: 88rpx;
+  background: #f8f8f8;
+  border-radius: 12rpx;
+  padding: 0 24rpx;
+  font-size: 28rpx;
+  box-sizing: border-box;
+}
+
+.btn-account-login {
+  width: 100%;
+  height: 88rpx;
+  background: #1890ff;
+  color: #fff;
+  font-size: 32rpx;
+  border-radius: 44rpx;
+  border: none;
+  margin-top: 16rpx;
+}
+
+/* 底部协议 */
+.login-footer {
+  text-align: center;
+  padding: 48rpx 0;
+  font-size: 24rpx;
+  color: #999;
+}
+
+.agreement {
+  color: #999;
+}
+
+.link {
+  color: #1890ff;
+}

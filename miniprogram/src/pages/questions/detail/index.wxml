@@ -1,0 +1,51 @@
+<view class="container">
+  <!-- 加载状态 -->
+  <view class="loading-state" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+
+  <!-- 错误状态 -->
+  <view class="error-state" wx:elif="{{error}}">
+    <text>{{error}}</text>
+  </view>
+
+  <!-- 题目内容 -->
+  <view class="question-card" wx:else>
+    <view class="card-header">
+      <view class="question-type {{question.type}}">
+        <text>{{getTypeName(question.type)}}</text>
+      </view>
+      <view class="question-difficulty {{question.difficulty}}">
+        <text>{{getDifficultyName(question.difficulty)}}</text>
+      </view>
+    </view>
+
+    <view class="question-content">
+      <text class="question-text">{{question.content}}</text>
+    </view>
+
+    <view class="question-tags" wx:if="{{question.tags && question.tags.length > 0}}">
+      <text wx:for="{{question.tags}}" wx:key="index" class="tag">{{item}}</text>
+    </view>
+
+    <view class="question-meta">
+      <text class="meta-item">📝 {{question.answerCount || 0}} 次练习</text>
+      <text class="meta-item">⭐ {{question.avgScore || 0}} 分</text>
+    </view>
+  </view>
+
+  <!-- 岗位信息 -->
+  <view class="section" wx:if="{{question.jobTitle}}">
+    <text class="section-title">岗位</text>
+    <view class="info-content">
+      <text>{{question.jobTitle}}</text>
+    </view>
+  </view>
+
+  <!-- 底部操作 -->
+  <view class="bottom-bar" wx:if="{{!loading && !error}}">
+    <button class="btn-practice" bindtap="startPractice">
+      <text>开始练习</text>
+    </button>
+  </view>
+</view>

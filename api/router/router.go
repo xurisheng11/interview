@@ -22,6 +22,7 @@ func Setup() *gin.Engine {
 	{
 		auth.POST("/register", handler.Register)
 		auth.POST("/login", handler.Login)
+		auth.POST("/wxlogin", handler.WxLogin)
 		auth.GET("/me", middleware.AuthRequired(), handler.GetMe)
 	}
 

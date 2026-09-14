@@ -1,0 +1,45 @@
+<view class="container">
+  <view class="login-header">
+    <image class="logo" src="/assets/logo.png" mode="aspectFit"></image>
+    <text class="app-name">面试模拟系统</text>
+    <text class="app-desc">微信授权后即可使用</text>
+  </view>
+
+  <view class="login-body">
+    <!-- 微信登录按钮 -->
+    <button class="btn-wx-login" bindtap="handleWxLogin" loading="{{loading}}">
+      <image class="wx-icon" src="/assets/icons/wx.png" mode="aspectFit"></image>
+      <text>微信一键登录</text>
+    </button>
+
+    <view class="divider-text">
+      <view class="divider-line"></view>
+      <text class="divider-text-inner">其他登录方式</text>
+      <view class="divider-line"></view>
+    </view>
+
+    <!-- 账号密码登录 -->
+    <view class="account-login">
+      <view class="input-group">
+        <text class="input-label">账号</text>
+        <input class="input" placeholder="手机号或邮箱" bindinput="onAccountInput" value="{{account}}" />
+      </view>
+      <view class="input-group">
+        <text class="input-label">密码</text>
+        <input class="input" type="password" placeholder="请输入密码" bindinput="onPasswordInput" value="{{password}}" />
+      </view>
+      <button class="btn-account-login" bindtap="handleAccountLogin" loading="{{accountLoading}}">
+        登录
+      </button>
+    </view>
+  </view>
+
+  <view class="login-footer">
+    <text class="agreement">登录即表示同意</text>
+    <text class="link" bindtap="viewAgreement">《用户协议》</text>
+    <text class="agreement">和</text>
+    <text class="link" bindtap="viewPrivacy">《隐私政策》</text>
+    <text class="divider">|</text>
+    <text class="link" bindtap="goToRegister">注册账号</text>
+  </view>
+</view>

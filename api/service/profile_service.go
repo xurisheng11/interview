@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"time"
 
-	"golang.org/x/crypto/bcrypt"
 	"interview-sim/model"
 	"interview-sim/repository"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 var ErrOldPasswordWrong = errors.New("原密码错误")
@@ -97,14 +98,18 @@ func GetStats(userId string) (map[string]interface{}, error) {
 		// 如果 ZRevRange 失败（WRONGTYPE 等），返回空统计
 		// 而不是崩溃
 		return map[string]interface{}{
-			"totalCount":  0,
-			"avgScore":    0.0,
-			"maxScore":    0,
-			"topJobTitle": "",
+			"totalCount":      0,
+			"avgScore":        0.0,
+			"maxScore":        0,
+			"topJobTitle":     "",
+			"totalInterviews": 0,
+			"totalQuestions":  0,
+			"collections":     0,
 		}, nil
 	}
 
 	totalCount := 0
+	answeredSum := 0
 	var scores []int
 	maxScore := 0
 	jobTitleFreq := map[string]int{}
@@ -135,6 +140,7 @@ func GetStats(userId string) (map[string]interface{}, error) {
 		totalCount++
 		score := report.TotalScore
 		scores = append(scores, score)
+		answeredSum += report.AnsweredCount
 		if score > maxScore {
 			maxScore = score
 		}
@@ -163,11 +169,19 @@ func GetStats(userId string) (map[string]interface{}, error) {
 		}
 	}
 
+	// 收藏数 = 题目收藏 + 文章收藏
+	qCollects, _ := repository.SCard(userCollectKey(userId))
+	aCollects, _ := repository.SCard(userCollectArticleKey(userId))
+	collectTotal := int(qCollects) + int(aCollects)
+
 	return map[string]interface{}{
-		"totalCount":  totalCount,
-		"avgScore":    avgScore,
-		"maxScore":    maxScore,
-		"topJobTitle": topJobTitle,
+		"totalCount":      totalCount,
+		"avgScore":        avgScore,
+		"maxScore":        maxScore,
+		"topJobTitle":     topJobTitle,
+		"totalInterviews": totalCount,
+		"totalQuestions":  answeredSum,
+		"collections":     collectTotal,
 	}, nil
 }
 

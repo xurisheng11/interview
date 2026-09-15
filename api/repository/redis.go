@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-redis/redis/v8"
 	"interview-sim/config"
+
+	"github.com/go-redis/redis/v8"
 )
 
 var RDB *redis.Client
@@ -106,6 +107,11 @@ func SIsMember(key string, member interface{}) (bool, error) {
 // SMembers 获取 Set 所有成员
 func SMembers(key string) ([]string, error) {
 	return RDB.SMembers(Ctx, key).Result()
+}
+
+// SCard 获取 Set 成员数量
+func SCard(key string) (int64, error) {
+	return RDB.SCard(Ctx, key).Result()
 }
 
 // ZAdd 添加到有序集合

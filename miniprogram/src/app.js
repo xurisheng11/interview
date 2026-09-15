@@ -7,7 +7,7 @@ App({
     userInfo: null,
     token: null,
     // 后端经 cpolar 隧道暴露到公网（本地调试：http://localhost:8080/api/v1）
-    apiBaseUrl: 'https://240ec46d.r2.cpolar.top/api/v1'
+    apiBaseUrl: 'https://4f47a784.r2.cpolar.top/api/v1'
   },
 
   onLaunch() {
@@ -30,8 +30,9 @@ App({
       if (res.code === 200) {
         this.globalData.token = res.data.token
         this.globalData.userInfo = res.data.user
-        wx.setStorageSync('token', res.data.token)
-        wx.setStorageSync('userInfo', res.data.user)
+        // 同步 store 内存态，保持会话内登录状态一致
+        store.setToken(res.data.token)
+        store.setUser(res.data.user)
         return res.data
       }
       throw new Error(res.message || '登录失败')
@@ -41,8 +42,8 @@ App({
   logout() {
     this.globalData.token = null
     this.globalData.userInfo = null
-    wx.removeStorageSync('token')
-    wx.removeStorageSync('userInfo')
+    // clearAuth 同时清内存与本地缓存
+    store.clearAuth()
   },
 
   isLoggedIn() {

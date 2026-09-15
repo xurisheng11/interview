@@ -5,19 +5,32 @@ Page({
   data: {
     isLoggedIn: false,
     userInfo: null,
+    // 门禁重定向进行中的防抖标记，避免 onLoad/onShow 重复 reLaunch
+    loginRedirecting: false,
     stats: null,
     recentInterviews: []
   },
 
   onLoad() {
     this.checkLoginStatus()
+    this.gateLogin()
   },
 
   onShow() {
     this.checkLoginStatus()
-    if (store.isLoggedIn()) {
+    // 门禁未拦截且已登录才拉数据
+    if (!this.gateLogin() && store.isLoggedIn()) {
       this.loadData()
     }
+  },
+
+  // 登录门禁：未登录一律 reLaunch 到登录页（无 tabBar），防未登录浏览 tab 内容
+  gateLogin() {
+    if (this.data.loginRedirecting) return true
+    if (store.isLoggedIn()) return false
+    this.setData({ loginRedirecting: true })
+    wx.reLaunch({ url: '/pages/login/login' })
+    return true
   },
 
   checkLoginStatus() {

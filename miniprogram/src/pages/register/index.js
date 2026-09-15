@@ -1,4 +1,5 @@
 const api = require('../../api/index')
+const store = require('../../store/index')
 
 Page({
   data: {
@@ -127,8 +128,9 @@ Page({
           const app = getApp()
           app.globalData.token = loginRes.data.token
           app.globalData.userInfo = loginRes.data.user
-          wx.setStorageSync('token', loginRes.data.token)
-          wx.setStorageSync('userInfo', loginRes.data.user)
+          // 同步 store 内存态，保持会话内登录状态一致
+          store.setToken(loginRes.data.token)
+          store.setUser(loginRes.data.user)
           
           wx.navigateBack()
         }).catch(() => {

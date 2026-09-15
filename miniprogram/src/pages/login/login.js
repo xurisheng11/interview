@@ -1,5 +1,6 @@
 const app = getApp()
 const api = require('../../api/index')
+const store = require('../../store/index')
 
 Page({
   data: {
@@ -24,17 +25,22 @@ Page({
             // 保存登录信息
             app.globalData.token = result.data.token
             app.globalData.userInfo = result.data.user
-            wx.setStorageSync('token', result.data.token)
-            wx.setStorageSync('userInfo', result.data.user)
+            // 同步 store 内存态，否则 store.isLoggedIn() 仍视为未登录被首页门禁弹回
+            store.setToken(result.data.token)
+            store.setUser(result.data.user)
             
             wx.showToast({
               title: '登录成功',
               icon: 'success'
             })
             
-            // 跳转回上一页或首页
+            // 跳转回上一页或首页（reLaunch 进登录页时栈深为 1，navigateBack 无效，需 reLaunch 回首页）
             setTimeout(() => {
-              wx.navigateBack()
+              if (getCurrentPages().length > 1) {
+                wx.navigateBack()
+              } else {
+                wx.reLaunch({ url: '/pages/index/index' })
+              }
             }, 1500)
           }).catch(err => {
             this.setData({ loading: false })
@@ -90,16 +96,22 @@ Page({
       // 保存登录信息
       app.globalData.token = result.data.token
       app.globalData.userInfo = result.data.user
-      wx.setStorageSync('token', result.data.token)
-      wx.setStorageSync('userInfo', result.data.user)
+      // 同步 store 内存态，否则 store.isLoggedIn() 仍视为未登录被首页门禁弹回
+      store.setToken(result.data.token)
+      store.setUser(result.data.user)
       
       wx.showToast({
         title: '登录成功',
         icon: 'success'
       })
       
+      // 跳转回上一页或首页（reLaunch 进登录页时栈深为 1，navigateBack 无效，需 reLaunch 回首页）
       setTimeout(() => {
-        wx.navigateBack()
+        if (getCurrentPages().length > 1) {
+          wx.navigateBack()
+        } else {
+          wx.reLaunch({ url: '/pages/index/index' })
+        }
       }, 1500)
     }).catch(err => {
       this.setData({ accountLoading: false })

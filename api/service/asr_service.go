@@ -35,7 +35,7 @@ func TranscribeAudio(audio []byte, ext string) (string, error) {
 		"SubServiceType": 2, // 一句话识别
 		"EngSerViceType": "16k_zh",
 		"SourceType":     1, // base64 数据
-		"VoiceFormat":    voiceFormatOf(ext),
+		"VoiceFormat":    voiceFormatOf(ext), // 实测接口要求 string 类型
 		"UsrAudioKey":    fmt.Sprintf("interview-%d", time.Now().UnixNano()),
 		"Data":           base64.StdEncoding.EncodeToString(audio),
 		"FilterModal":    1, // 过滤语气词
@@ -82,21 +82,13 @@ func TranscribeAudio(audio []byte, ext string) (string, error) {
 	return out.Response.Result, nil
 }
 
-// voiceFormatOf 音频后缀 → 腾讯云 VoiceFormat 枚举（1 pcm / 2 wav / 3 mp3 / 4 speex / 5 amr / 6 m4a）
-func voiceFormatOf(ext string) int {
+// voiceFormatOf 音频后缀 → 腾讯云 VoiceFormat 格式名（实测接受：mp3,wav,pcm,m4a,speex,silk,aac,ogg-opus,amr）
+func voiceFormatOf(ext string) string {
 	switch strings.ToLower(strings.TrimPrefix(ext, ".")) {
-	case "pcm":
-		return 1
-	case "wav":
-		return 2
-	case "speex":
-		return 4
-	case "amr":
-		return 5
-	case "m4a", "aac":
-		return 6
+	case "pcm", "wav", "m4a", "speex", "silk", "aac", "amr":
+		return strings.ToLower(strings.TrimPrefix(ext, "."))
 	default:
-		return 3 // 小程序录音默认 mp3
+		return "mp3" // 小程序录音默认 mp3
 	}
 }
 

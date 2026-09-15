@@ -199,6 +199,24 @@
   gap: 12rpx;
 }
 
+.record-sub-hint {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  color: #666;
+}
+
+/* 录音中的实时识别文本反馈 */
+.record-live {
+  margin: 0 0 24rpx;
+  padding: 16rpx 20rpx;
+  background: #222;
+  border-radius: 12rpx;
+  font-size: 26rpx;
+  color: #ddd;
+  text-align: left;
+}
+
 .record-dot {
   width: 16rpx;
   height: 16rpx;
@@ -228,11 +246,24 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  /* 固定圆形尺寸：清零 button 默认内边距/外边距，防止被撑成椭圆 */
+  flex: 0 0 160rpx;
   width: 160rpx;
+  min-width: 160rpx;
+  max-width: 160rpx;
   height: 160rpx;
+  min-height: 160rpx;
+  padding: 0;
+  margin: 0;
   border-radius: 50%;
   border: none;
   background: #3a3a3a;
+  box-sizing: border-box;
+  line-height: 1.2;
+}
+
+.btn-record::after {
+  border: none;
 }
 
 .btn-record.start {
@@ -286,7 +317,11 @@
 }
 
 .btn-prev, .btn-next {
-  min-width: 180rpx;
+  /* 固定宽度+禁收缩+清零默认内边距，防止文字被挤换行 */
+  flex-shrink: 0;
+  width: 200rpx;
+  min-width: 200rpx;
+  padding: 0;
   height: 88rpx;
   background: #3a3a3a;
   border-radius: 44rpx;
@@ -295,6 +330,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  border: none;
+  white-space: nowrap;
+}
+
+.btn-prev text, .btn-next text {
+  white-space: nowrap;
+  font-size: 28rpx;
+}
+
+/* 清除微信 button 默认 ::after 边框 */
+.btn-prev::after, .btn-next::after, .btn-skip::after, .btn-play::after {
   border: none;
 }
 
@@ -309,6 +355,7 @@
 
 .btn-center {
   flex: 1;
+  margin: 0 16rpx;
   display: flex;
   justify-content: center;
 }
@@ -320,6 +367,7 @@
   border-radius: 32rpx;
   font-size: 26rpx;
   color: #888;
+  white-space: nowrap;
 }
 
 /* 完成弹窗 */

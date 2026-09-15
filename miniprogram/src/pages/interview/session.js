@@ -4,6 +4,15 @@ const api = require('../../api/index')
 const recorderManager = wx.getRecorderManager()
 const innerAudioContext = wx.createInnerAudioContext()
 
+// 语音转文字管理器（微信同声传译插件）：语音模式下边录边转文字写入回答
+// 插件未在后台添加时 requirePlugin 会抛错，降级为纯录音
+let recognitionManager = null
+try {
+  recognitionManager = requirePlugin('WechatSI').getRecordRecognitionManager()
+} catch (e) {
+  recognitionManager = null
+}
+
 Page({
   data: {
     // 面试信息
@@ -23,12 +32,16 @@ Page({
     currentQuestion: null,
     answer: '',
     maxLength: 2000,
+    // 面试模式：text=纯文字；video=语音模式（录音答题，摄像头视频为 Web 端能力）
+    mode: 'text',
     
     // 录音状态
     isRecording: false,
     audioPath: '',
     recordTime: 0,
     isPlaying: false,
+    // 录音中的实时识别中间结果（语音转文字反馈）
+    liveRecognizeText: '',
     
     // UI状态
     submitting: false,
@@ -128,6 +141,57 @@ Page({
         wx.showToast({ title: '录音失败，请检查麦克风权限后重试', icon: 'none' })
       }
     })
+
+    // 语音识别管理器：识别结果写入回答框，录音文件仅供回放
+    if (recognitionManager) {
+      recognitionManager.onStart(() => {
+        this.setData({ isRecording: true, recordTime: 0, liveRecognizeText: '' })
+        this.syncSessionDisplay()
+        this.startRecordTimer()
+      })
+
+      recognitionManager.onRecognize((res) => {
+        // 流式中间结果，让"说话→文字"实时可见
+        this.setData({ liveRecognizeText: res.result || '' })
+      })
+
+      recognitionManager.onStop((res) => {
+        this.setData({
+          isRecording: false,
+          audioPath: res.tempFilePath || '',
+          liveRecognizeText: ''
+        })
+        this.stopRecordTimer()
+        this.syncSessionDisplay()
+        this.appendRecognizedText(res.result)
+      })
+
+      recognitionManager.onError((err) => {
+        console.error('语音识别错误', err)
+        this.setData({ isRecording: false, liveRecognizeText: '' })
+        this.stopRecordTimer()
+        this.syncSessionDisplay()
+        const code = err && err.retcode
+        if (code === -30012) return // 无识别任务时调 stop，忽略
+        if (code === -30004) {
+          wx.showToast({ title: '声音太小或听不清，请重试或手动输入', icon: 'none' })
+        } else {
+          wx.showToast({ title: '语音识别失败，请重试或手动输入', icon: 'none' })
+        }
+      })
+    }
+  },
+
+  // 识别结果追加进回答（多段录音自动拼接），并同步到题目记录
+  appendRecognizedText(text) {
+    const trimmed = (text || '').trim()
+    if (!trimmed) {
+      wx.showToast({ title: '未识别到语音内容，请重试或手动输入', icon: 'none' })
+      return
+    }
+    const answer = this.data.answer ? this.data.answer + '\n' + trimmed : trimmed
+    this.setData({ answer })
+    this.saveCurrentAnswer()
   },
 
   // 加载面试数据
@@ -151,7 +215,8 @@ Page({
         questions: questions,
         totalCount: questions.length,
         currentQuestion: questions[0] || null,
-        remainingTime: interview.questionTime || 300 // 默认5分钟
+        remainingTime: interview.questionTime || 300, // 默认5分钟
+        mode: interview.mode || 'text'
       })
       this.syncSessionDisplay()
       
@@ -205,8 +270,17 @@ Page({
   // 切换录音
   toggleRecord() {
     if (this.data.isRecording) {
-      recorderManager.stop()
+      if (this.usingRecognition) {
+        recognitionManager.stop()
+      } else {
+        recorderManager.stop()
+      }
+    } else if (recognitionManager) {
+      // 语音模式首选语音转文字：识别结果自动写入回答（单次上限 60 秒）
+      this.usingRecognition = true
+      recognitionManager.start({ duration: 60000, lang: 'zh_CN' })
     } else {
+      this.usingRecognition = false
       recorderManager.start({
         duration: 60000, // 60秒
         sampleRate: 16000,
@@ -261,7 +335,8 @@ Page({
         currentIndex: newIndex,
         currentQuestion: this.data.questions[newIndex],
         answer: this.data.questions[newIndex].userAnswer || '',
-        audioPath: this.data.questions[newIndex].audioPath || ''
+        audioPath: this.data.questions[newIndex].audioPath || '',
+        liveRecognizeText: ''
       })
       this.syncSessionDisplay()
     }
@@ -278,7 +353,8 @@ Page({
         currentIndex: newIndex,
         currentQuestion: this.data.questions[newIndex],
         answer: this.data.questions[newIndex].userAnswer || '',
-        audioPath: this.data.questions[newIndex].audioPath || ''
+        audioPath: this.data.questions[newIndex].audioPath || '',
+        liveRecognizeText: ''
       })
       this.syncSessionDisplay()
     } else {

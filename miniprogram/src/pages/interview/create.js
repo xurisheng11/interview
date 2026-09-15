@@ -102,11 +102,11 @@ Page({
     // 公司名称（可选）
     companyName: '',
 
-    // 面试模式
+    // 面试模式（value 保持 video 兼容后端；小程序端实现为录音答题，摄像头视频为 Web 端能力）
     selectedMode: 'text',
     modes: [
       { value: 'text', name: '文字模式', desc: '打字输入回答' },
-      { value: 'video', name: '视频模式', desc: '语音/视频回答' }
+      { value: 'video', name: '语音模式', desc: '说话答题，语音自动转文字' }
     ],
 
     // 答题时间（每题）

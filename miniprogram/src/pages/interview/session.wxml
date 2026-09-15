@@ -34,13 +34,13 @@
   <!-- 答案输入区 -->
   <view class="answer-section">
     <view class="answer-header">
-      <text class="answer-label">你的回答</text>
-      <text class="answer-tips">建议条理清晰、要点完整</text>
+      <text class="answer-label">{{mode === 'video' ? '你的回答（语音自动转文字）' : '你的回答'}}</text>
+      <text class="answer-tips">{{mode === 'video' ? '录音期间语音实时转写，可编辑、计入评分' : '建议条理清晰、要点完整'}}</text>
     </view>
     
     <textarea 
       class="answer-input {{isRecording ? 'recording' : ''}}"
-      placeholder="请输入你的回答..."
+      placeholder="{{mode === 'video' ? '录音时自动填入，也可手动输入' : '请输入你的回答...'}}"
       value="{{answer}}"
       bindinput="onAnswerInput"
       maxlength="{{maxLength}}"
@@ -52,16 +52,21 @@
     </view>
   </view>
 
-  <!-- 录音区域 -->
-  <view class="record-section">
+  <!-- 录音区域（仅语音模式显示；录音同时语音转文字写入回答框） -->
+  <view class="record-section" wx:if="{{mode === 'video'}}">
     <view class="record-hint" wx:if="{{!isRecording && !audioPath}}">
-      <text>点击下方按钮开始录音</text>
+      <text>点击下方按钮开始说话，语音实时转文字填入回答</text>
+      <text class="record-sub-hint">单次录音上限 60 秒，可多段录音自动拼接；也可手动输入</text>
     </view>
     
     <view class="record-hint recording-hint" wx:if="{{isRecording}}">
       <text class="record-dot"></text>
-      <text>录音中...</text>
+      <text>正在听写...</text>
       <text class="record-time">{{recordTimeText}}</text>
+    </view>
+
+    <view class="record-live" wx:if="{{isRecording}}">
+      <text>{{liveRecognizeText || '正在聆听，请开始说话...'}}</text>
     </view>
 
     <view class="record-actions">

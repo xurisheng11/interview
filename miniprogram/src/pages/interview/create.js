@@ -106,7 +106,7 @@ Page({
     selectedMode: 'text',
     modes: [
       { value: 'text', name: '文字模式', desc: '打字输入回答' },
-      { value: 'video', name: '语音模式', desc: '录音练习，文字作答' }
+      { value: 'video', name: '语音模式', desc: '说话答题，录音停止后自动转文字' }
     ],
 
     // 答题时间（每题）

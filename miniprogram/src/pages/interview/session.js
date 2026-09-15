@@ -40,6 +40,8 @@ Page({
     audioPath: '',
     recordTime: 0,
     isPlaying: false,
+    // 录音停止后后端转写中（腾讯云一句话识别）
+    isTranscribing: false,
     // 录音中的实时识别中间结果（语音转文字反馈）
     liveRecognizeText: '',
     // 语音转文字能力是否可用（个人主体小程序插件不可用，降级为纯录音）
@@ -126,6 +128,11 @@ Page({
         audioPath: res.tempFilePath
       })
       this.stopRecordTimer()
+      this.syncSessionDisplay()
+      // 语音模式：录音停止后上传后端转文字（腾讯云一句话识别），结果追加进回答
+      if (this.data.mode === 'video' && res.tempFilePath) {
+        this.transcribeAudio(res.tempFilePath)
+      }
     })
 
     recorderManager.onError((err) => {
@@ -293,6 +300,50 @@ Page({
         format: 'mp3'
       })
     }
+  },
+
+  // 上传录音到后端转写为文字，追加进回答框
+  transcribeAudio(filePath) {
+    const app = getApp()
+    const token = wx.getStorageSync('token')
+    this.setData({ isTranscribing: true })
+    wx.uploadFile({
+      url: app.globalData.apiBaseUrl + '/asr/transcribe',
+      filePath: filePath,
+      name: 'file',
+      header: { Authorization: 'Bearer ' + token },
+      success: (res) => {
+        let text = ''
+        let errMsg = ''
+        try {
+          const data = JSON.parse(res.data)
+          if (data.code === 200 && data.data) {
+            text = data.data.text || ''
+          } else {
+            errMsg = data.message || '转写失败'
+          }
+        } catch (e) {
+          errMsg = '转写响应解析失败'
+        }
+        if (errMsg) {
+          wx.showToast({ title: errMsg + '，可手动输入', icon: 'none' })
+          return
+        }
+        if (text) {
+          const answer = this.data.answer ? this.data.answer + '\n' + text : text
+          this.setData({ answer })
+          wx.showToast({ title: '已转写并追加到回答', icon: 'none' })
+        } else {
+          wx.showToast({ title: '未识别到语音，可重录或手动输入', icon: 'none' })
+        }
+      },
+      fail: () => {
+        wx.showToast({ title: '转写请求失败，可手动输入', icon: 'none' })
+      },
+      complete: () => {
+        this.setData({ isTranscribing: false })
+      }
+    })
   },
 
   // 播放录音

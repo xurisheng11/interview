@@ -34,13 +34,13 @@
   <!-- 答案输入区 -->
   <view class="answer-section">
     <view class="answer-header">
-      <text class="answer-label">{{mode === 'video' ? (speechToText ? '你的回答（语音自动转文字）' : '你的回答') : '你的回答'}}</text>
-      <text class="answer-tips">{{mode === 'video' ? (speechToText ? '录音期间语音实时转写，可编辑、计入评分' : '录音仅供练习回放，请手动输入回答要点') : '建议条理清晰、要点完整'}}</text>
+      <text class="answer-label">{{mode === 'video' ? '你的回答（语音自动转文字）' : '你的回答'}}</text>
+      <text class="answer-tips">{{mode === 'video' ? '录音停止后自动转写追加，可编辑、计入评分' : '建议条理清晰、要点完整'}}</text>
     </view>
     
     <textarea 
       class="answer-input {{isRecording ? 'recording' : ''}}"
-      placeholder="{{mode === 'video' ? (speechToText ? '录音时自动填入，也可手动输入' : '录音练习后，请输入你的回答...') : '请输入你的回答...'}}"
+      placeholder="{{mode === 'video' ? '录音结束后自动填入，也可手动输入' : '请输入你的回答...'}}"
       value="{{answer}}"
       bindinput="onAnswerInput"
       maxlength="{{maxLength}}"
@@ -52,40 +52,37 @@
     </view>
   </view>
 
-  <!-- 录音区域（仅语音模式显示；插件可用时录音同步语音转文字写入回答框） -->
+  <!-- 录音区域（仅语音模式；横向紧凑卡片：左麦克风、中状态、右播放） -->
   <view class="record-section" wx:if="{{mode === 'video'}}">
-    <view class="record-hint" wx:if="{{!isRecording && !audioPath}}">
-      <text>{{speechToText ? '点击下方按钮开始说话，语音实时转文字填入回答' : '点击下方按钮录音练习，回答请手动输入文字'}}</text>
-      <text class="record-sub-hint">{{speechToText ? '单次录音上限 60 秒，可多段录音自动拼接；也可手动输入' : '单次录音上限 60 秒，录完可回放自查'}}</text>
-    </view>
-    
-    <view class="record-hint recording-hint" wx:if="{{isRecording}}">
-      <text class="record-dot"></text>
-      <text>{{speechToText ? '正在听写...' : '正在录音...'}}</text>
-      <text class="record-time">{{recordTimeText}}</text>
+    <view class="record-row">
+      <button
+        class="btn-record {{isRecording ? 'stop' : 'start'}}"
+        bindtap="toggleRecord"
+        disabled="{{!currentQuestion || isTranscribing}}"
+      >
+        <text class="record-icon">{{isRecording ? '⏹' : '🎤'}}</text>
+      </button>
+
+      <view class="record-info">
+        <view class="record-status-line">
+          <text class="record-dot" wx:if="{{isRecording || isTranscribing}}"></text>
+          <text class="record-status {{isRecording || isTranscribing ? 'on' : ''}}">{{isTranscribing ? '正在转写，请稍候...' : (isRecording ? (speechToText ? '正在听写...' : '正在录音...') : (audioPath ? '录音完成，转写文字已追加到回答' : '点麦克风说话答题，停止后自动转文字'))}}</text>
+          <text class="record-time" wx:if="{{isRecording}}">{{recordTimeText}} / 01:00</text>
+        </view>
+        <text class="record-sub-hint">{{isTranscribing ? '转写约需几秒，请稍候勿离开' : '单次上限 60 秒，可多段录音逐段转写拼接'}}</text>
+      </view>
+
+      <button
+        class="btn-play"
+        bindtap="playAudio"
+        wx:if="{{audioPath && !isRecording && !isTranscribing}}"
+      >
+        <text>{{isPlaying ? '⏸' : '▶'}}</text>
+      </button>
     </view>
 
     <view class="record-live" wx:if="{{isRecording && speechToText}}">
       <text>{{liveRecognizeText || '正在聆听，请开始说话...'}}</text>
-    </view>
-
-    <view class="record-actions">
-      <button 
-        class="btn-record {{isRecording ? 'stop' : 'start'}}"
-        bindtap="toggleRecord"
-        disabled="{{!currentQuestion}}"
-      >
-        <text class="record-icon">{{isRecording ? '⏹' : '🎤'}}</text>
-        <text class="record-label">{{isRecording ? '停止' : '录音'}}</text>
-      </button>
-
-      <button 
-        class="btn-play {{audioPath ? '' : 'disabled'}}"
-        bindtap="playAudio"
-        wx:if="{{audioPath && !isPlaying}}"
-      >
-        <text>▶ 播放</text>
-      </button>
     </view>
   </view>
 

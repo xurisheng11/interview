@@ -1,0 +1,144 @@
+<!-- 公司面试知识库页 -->
+<view class="container safe-bottom">
+  <!-- 搜索区 -->
+  <view class="card search-card anim-fade-in">
+    <view class="search-title">🏢 公司面试知识库</view>
+    <view class="search-desc">输入公司名称，AI 为你生成该公司的面试流程、常见题目和备考技巧</view>
+    <input class="search-input" placeholder="输入公司名称，如：字节跳动、腾讯…" placeholder-class="input-placeholder"
+      value="{{company}}" bindinput="onCompanyInput" bindconfirm="search" confirm-type="search" />
+    <picker mode="selector" range="{{jobTitles}}" value="{{jobTitleIndex}}" bindchange="onJobTitleChange">
+      <view class="job-trigger" hover-class="btn-press">
+        <text class="{{jobTitleIndex > -1 ? '' : 'placeholder'}}">{{jobTitleIndex > -1 ? jobTitles[jobTitleIndex] : '岗位方向（可选）'}}</text>
+        <text class="picker-arrow">›</text>
+      </view>
+    </picker>
+    <button class="btn-primary search-btn" hover-class="btn-press" bindtap="search"
+      loading="{{loading}}" disabled="{{loading}}">🔍 AI 查询</button>
+    <view class="hot-companies">
+      <text class="hot-label">热门：</text>
+      <view wx:for="{{hotCompanies}}" wx:key="*this" class="hot-tag" hover-class="btn-press"
+        bindtap="quickSearch" data-company="{{item}}">{{item}}</view>
+    </view>
+  </view>
+
+  <!-- 加载中 -->
+  <view wx:if="{{loading}}" class="loading-wrap anim-fade-in">
+    <view class="loading-icon">🤖</view>
+    <view class="loading-text">AI 正在检索 <text class="loading-company">{{company}}</text> 的面试情报，请稍候…</view>
+    <view class="loading-bar">
+      <view class="loading-bar-fill" style="width: {{loadingPercent}}%"></view>
+    </view>
+  </view>
+
+  <!-- 查询结果 -->
+  <block wx:if="{{result && !loading}}">
+    <!-- 结果头部 -->
+    <view class="result-header anim-fade-in">
+      <view class="result-company">{{result.company}}</view>
+      <view class="result-meta">
+        <text wx:if="{{result.jobTitle}}" class="result-tag">{{result.jobTitle}}</text>
+        <text wx:if="{{result.difficulty}}" class="result-tag diff">难度：{{result.difficulty}}</text>
+      </view>
+    </view>
+
+    <!-- 面试流程 -->
+    <view class="card anim-fade-in">
+      <view class="section-title">📋 面试流程</view>
+      <view class="process-text">{{result.process}}</view>
+    </view>
+
+    <!-- 面试技巧 -->
+    <view class="card anim-fade-in">
+      <view class="section-title">💡 面试技巧</view>
+      <view class="tips-list">
+        <view wx:for="{{result.tips}}" wx:key="index" class="tip-item">
+          <view class="tip-num">{{index + 1}}</view>
+          <text class="tip-text">{{item}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 常见面试题 -->
+    <view class="card anim-fade-in">
+      <view class="section-title">❓ 常见面试题（{{filteredQuestions.length}} 道）</view>
+      <!-- 筛选 -->
+      <view class="filter-tabs">
+        <view class="filter-tab {{qFilter === 'all' ? 'active' : ''}}" bindtap="setFilter" data-filter="all">全部</view>
+        <view class="filter-tab {{qFilter === 'technical' ? 'active' : ''}}" bindtap="setFilter" data-filter="technical">技术题</view>
+        <view class="filter-tab {{qFilter === 'behavioral' ? 'active' : ''}}" bindtap="setFilter" data-filter="behavioral">行为题</view>
+      </view>
+
+      <view class="questions-list">
+        <view wx:for="{{visibleQuestions}}" wx:key="index" class="question-item"
+          hover-class="q-pressed" bindtap="openQuestion" data-content="{{item.content}}">
+          <view class="q-header">
+            <text class="q-num">{{index + 1}}</text>
+            <text class="q-type {{item.type === 'technical' ? 'tech' : 'behavior'}}">{{item.type === 'technical' ? '技术' : '行为'}}</text>
+            <text wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this" wx:if="{{index < 2}}" class="q-tag">{{tag}}</text>
+            <text class="q-arrow">›</text>
+          </view>
+          <view class="q-content">{{item.content}}</view>
+        </view>
+      </view>
+
+      <!-- 加载更多 -->
+      <view wx:if="{{hasMore}}" class="load-more" hover-class="btn-press" bindtap="loadMore">
+        查看更多（已展示 {{visibleQuestions.length}}/{{filteredQuestions.length}} 道）↓
+      </view>
+      <view wx:if="{{!hasMore && filteredQuestions.length > 11}}" class="all-loaded">✅ 已加载全部题目</view>
+    </view>
+
+    <!-- 发起面试入口 -->
+    <button class="btn-primary interview-btn anim-fade-in" hover-class="btn-press" bindtap="startInterview">
+      🚀 发起模拟面试
+    </button>
+  </block>
+
+  <!-- 空状态引导 -->
+  <view wx:if="{{!result && !loading}}" class="guide-wrap anim-fade-in">
+    <view class="guide-icon">🔍</view>
+    <view class="guide-text">搜索任意公司，获取 AI 整理的面试情报</view>
+    <view class="guide-examples">
+      <view wx:for="{{examples}}" wx:key="company" class="example-card" hover-class="btn-press"
+        bindtap="quickSearch" data-company="{{item.company}}">
+        <view class="example-company">{{item.company}}</view>
+        <view class="example-desc">{{item.desc}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 题目详情弹层 -->
+  <view wx:if="{{showQuestion}}" class="mask" catchtap="closeQuestion" catchtouchmove="noop">
+    <view class="question-popup" catchtap="noop">
+      <view class="popup-header">
+        <text class="q-type {{activeQuestion.type === 'technical' ? 'tech' : 'behavior'}}">
+          {{activeQuestion.type === 'technical' ? '技术题' : '行为题'}}
+        </text>
+        <text class="popup-close" catchtap="closeQuestion">✕</text>
+      </view>
+      <view class="popup-question">{{activeQuestion.content}}</view>
+      <view class="popup-tags" wx:if="{{activeQuestion.tags && activeQuestion.tags.length}}">
+        <text wx:for="{{activeQuestion.tags}}" wx:key="*this" class="q-tag">{{item}}</text>
+      </view>
+
+      <!-- 参考答案区 -->
+      <view class="answer-section">
+        <view class="answer-label">📝 参考答案</view>
+
+        <!-- 未加载 -->
+        <view wx:if="{{!activeQuestion.answerLoaded && !answerLoading}}" class="answer-placeholder">
+          <button class="btn-primary" hover-class="btn-press" bindtap="loadAnswer">🤖 AI 生成参考答案</button>
+        </view>
+
+        <!-- 加载中 -->
+        <view wx:if="{{answerLoading}}" class="answer-loading">AI 正在生成答案，请稍候…</view>
+
+        <!-- 已加载 -->
+        <block wx:if="{{activeQuestion.answerLoaded && !answerLoading}}">
+          <view wx:if="{{activeQuestion.answer}}" class="answer-content">{{activeQuestion.answer}}</view>
+          <view wx:else class="answer-empty">暂无参考答案</view>
+        </block>
+      </view>
+    </view>
+  </view>
+</view>

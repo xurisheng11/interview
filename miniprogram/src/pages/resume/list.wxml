@@ -1,0 +1,74 @@
+<view class="container">
+  <!-- 顶部上传区域 -->
+  <view class="upload-section anim-fade-in">
+    <view class="upload-header">
+      <text class="page-title">📄 我的简历</text>
+    </view>
+    <button
+      class="btn-upload"
+      hover-class="btn-press"
+      bindtap="handleUpload"
+      disabled="{{uploading}}"
+    >
+      <text class="btn-upload-icon">↑</text>
+      <text>{{uploading ? '上传中…' : '上传简历'}}</text>
+    </button>
+    <text class="upload-tip">支持 PDF、Word 文档，最大 10 MB</text>
+  </view>
+
+  <!-- 加载中 -->
+  <view wx:if="{{loading}}" class="loading">加载中...</view>
+
+  <!-- 空状态 -->
+  <view wx:elif="{{resumes.length === 0}}" class="empty-state anim-fade-in">
+    <view class="empty-cube icon-cube">简</view>
+    <text class="empty-text">还没有上传过简历</text>
+    <text class="empty-desc">上传简历后，AI 将自动分析并为你生成针对性面试题目</text>
+    <button class="btn-start" hover-class="btn-press" bindtap="handleUpload">
+      上传第一份简历
+    </button>
+  </view>
+
+  <!-- 简历列表 -->
+  <view wx:else class="resume-list">
+    <view
+      wx:for="{{resumes}}"
+      wx:key="id"
+      class="resume-card anim-fade-in"
+      hover-class="card-pressed"
+      bindtap="goDetail"
+      bindlongpress="handleLongPress"
+      data-id="{{item.id}}"
+      data-filename="{{item.filename}}"
+      style="animation-delay: {{index * 0.06}}s"
+    >
+      <!-- 左侧状态色条 -->
+      <view class="card-accent {{item.statusClass}}"></view>
+
+      <view class="card-top">
+        <view class="resume-icon-wrap">
+          <text class="resume-icon">📄</text>
+        </view>
+        <view class="resume-info">
+          <text class="resume-filename">{{item.filename}}</text>
+          <text class="resume-date">{{item.uploadedAtText}}</text>
+        </view>
+        <view class="status-tag {{item.statusClass}}">
+          <view class="status-dot"></view>
+          <text>{{item.statusText}}</text>
+        </view>
+      </view>
+
+      <view class="card-bottom">
+        <view class="score-area">
+          <text class="score-label">AI 评分</text>
+          <text class="score-value {{item.scoreClass}}" wx:if="{{item.totalScore != null}}">{{item.totalScore}}</text>
+          <text class="score-value score-none" wx:else>—</text>
+        </view>
+        <view class="card-arrow">
+          <text>查看详情 ›</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

@@ -53,7 +53,8 @@ Page({
   },
 
   viewHistory() {
-    wx.navigateTo({
+    // 面试列表是 tabBar 页面，必须用 switchTab
+    wx.switchTab({
       url: '/pages/interview/list'
     })
   },
@@ -70,18 +71,44 @@ Page({
   },
 
   viewCollections() {
-    wx.showModal({
-      title: '我的收藏',
-      content: '收藏功能开发中...\n\n您可以在题库页面收藏感兴趣的题目。',
-      showCancel: false
+    wx.navigateTo({
+      url: '/pages/collections/index'
     })
   },
 
   viewContributions() {
-    wx.showModal({
-      title: '我的贡献',
-      content: '贡献功能开发中...\n\n期待您的优质题目投稿！',
-      showCancel: false
+    wx.navigateTo({
+      url: '/pages/contribution/my'
+    })
+  },
+
+  viewResume() {
+    wx.navigateTo({
+      url: '/pages/resume/list'
+    })
+  },
+
+  viewLearn() {
+    wx.navigateTo({
+      url: '/pages/learn/index'
+    })
+  },
+
+  viewCommunity() {
+    wx.navigateTo({
+      url: '/pages/community/index'
+    })
+  },
+
+  viewCompanyIntel() {
+    wx.navigateTo({
+      url: '/pages/company/intel'
+    })
+  },
+
+  viewCompanyQuestions() {
+    wx.navigateTo({
+      url: '/pages/contribution/company'
     })
   },
 

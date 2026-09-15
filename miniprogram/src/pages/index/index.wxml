@@ -59,6 +59,67 @@
           </view>
           <text class="action-text">查看报告</text>
         </view>
+        <view class="action-item" hover-class="action-pressed" bindtap="goToLearn">
+          <view class="action-icon bg-purple">
+            <text class="icon-text">学</text>
+          </view>
+          <text class="action-text">学习中心</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 功能导航 -->
+    <view class="card anim-fade-in">
+      <text class="section-title">更多功能</text>
+      <view class="func-grid">
+        <view class="func-item" hover-class="action-pressed" bindtap="goToResume">
+          <view class="action-icon bg-cyan">
+            <text class="icon-text">简</text>
+          </view>
+          <text class="action-text">我的简历</text>
+        </view>
+        <view class="func-item" hover-class="action-pressed" bindtap="goToCommunity">
+          <view class="action-icon bg-pink">
+            <text class="icon-text">社</text>
+          </view>
+          <text class="action-text">知识社区</text>
+        </view>
+        <view class="func-item" hover-class="action-pressed" bindtap="goToCompanyIntel">
+          <view class="action-icon bg-gold">
+            <text class="icon-text">企</text>
+          </view>
+          <text class="action-text">公司情报</text>
+        </view>
+        <view class="func-item" hover-class="action-pressed" bindtap="goToContributions">
+          <view class="action-icon bg-green">
+            <text class="icon-text">献</text>
+          </view>
+          <text class="action-text">公司题库</text>
+        </view>
+        <view class="func-item" hover-class="action-pressed" bindtap="goToMyContributions">
+          <view class="action-icon bg-orange">
+            <text class="icon-text">贡</text>
+          </view>
+          <text class="action-text">我的贡献</text>
+        </view>
+        <view class="func-item" hover-class="action-pressed" bindtap="goToCollections">
+          <view class="action-icon bg-purple">
+            <text class="icon-text">藏</text>
+          </view>
+          <text class="action-text">我的收藏</text>
+        </view>
+        <view class="func-item" hover-class="action-pressed" bindtap="goToProfile">
+          <view class="action-icon bg-blue">
+            <text class="icon-text">个</text>
+          </view>
+          <text class="action-text">个人中心</text>
+        </view>
+        <view class="func-item" hover-class="action-pressed" bindtap="goToHelp">
+          <view class="action-icon bg-gray">
+            <text class="icon-text">帮</text>
+          </view>
+          <text class="action-text">使用帮助</text>
+        </view>
       </view>
     </view>
 

@@ -1,0 +1,122 @@
+<!--pages/community/detail.wxml-->
+<view class="container" wx:if="{{article}}">
+  <!-- 文章主体 -->
+  <view class="article-card card anim-fade-in">
+    <view class="article-header">
+      <text class="article-title">{{article.title}}</text>
+      <view class="article-meta">
+        <view class="meta-tags">
+          <text
+            wx:for="{{article.tags}}"
+            wx:key="*this"
+            class="tag tag-primary"
+          >{{item}}</text>
+          <text wx:if="{{article.isAiGenerated}}" class="tag tag-warning">AI生成</text>
+        </view>
+        <text class="meta-time">{{article._time}}</text>
+      </view>
+    </view>
+
+    <view class="divider"></view>
+
+    <!-- 文章正文 -->
+    <view class="article-body">
+      <rich-text nodes="{{article.content}}" class="rich-content"></rich-text>
+    </view>
+
+    <view class="divider"></view>
+
+    <!-- 操作按钮 -->
+    <view class="action-row">
+      <view
+        class="action-btn like-btn {{article.liked ? 'active' : ''}}"
+        hover-class="btn-press"
+        bindtap="handleLike"
+      >
+        <text class="action-icon">👍</text>
+        <text>点赞 {{article.likeCount || 0}}</text>
+      </view>
+      <view
+        class="action-btn collect-btn {{article.collected ? 'active' : ''}}"
+        hover-class="btn-press"
+        bindtap="handleCollect"
+      >
+        <text class="action-icon">⭐</text>
+        <text>收藏 {{article.collectCount || 0}}</text>
+      </view>
+      <view class="action-btn back-btn" hover-class="btn-press" bindtap="goBack">
+        <text>← 返回社区</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 评论区 -->
+  <view class="comment-section card anim-fade-in">
+    <view class="section-title">💬 评论 ({{comments.length}})</view>
+
+    <!-- 发表评论 -->
+    <view class="comment-input-wrap">
+      <textarea
+        class="comment-textarea"
+        placeholder="发表你的评论..."
+        placeholder-class="comment-placeholder"
+        value="{{commentText}}"
+        bindinput="onCommentInput"
+        maxlength="500"
+        auto-height
+      />
+      <view class="comment-submit-row">
+        <text class="word-count">{{commentText.length || 0}}/500</text>
+        <view
+          class="submit-btn {{!commentText.trim() || submittingComment ? 'disabled' : ''}}"
+          hover-class="{{!commentText.trim() || submittingComment ? '' : 'btn-press'}}"
+          bindtap="{{!commentText.trim() || submittingComment ? '' : 'submitComment'}}"
+        >
+          <text wx:if="{{submittingComment}}">提交中...</text>
+          <text wx:else>发表评论</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="divider"></view>
+
+    <!-- 评论列表 -->
+    <view wx:if="{{commentsLoading}}" class="comments-loading">
+      <view class="loading-spinner"></view>
+      <text>加载评论中...</text>
+    </view>
+
+    <view wx:else>
+      <view wx:if="{{comments.length === 0}}" class="empty-comments">
+        <text>暂无评论，来发表第一条吧</text>
+      </view>
+
+      <view
+        wx:for="{{comments}}"
+        wx:key="_id"
+        class="comment-item"
+      >
+        <view class="comment-author">{{item._author}}</view>
+        <view class="comment-content">{{item.content}}</view>
+        <view class="comment-time">{{item._time}}</view>
+      </view>
+    </view>
+  </view>
+</view>
+
+<!-- 页面 loading -->
+<view class="loading" wx:if="{{loading}}">
+  <view class="loading-spinner"></view>
+  <text>加载中...</text>
+</view>
+
+<!-- 文章不存在 -->
+<view class="empty-state" wx:if="{{!loading && !article}}">
+  <view class="empty-icon-wrap">
+    <view class="empty-cube icon-cube">❌</view>
+  </view>
+  <text class="empty-text">文章不存在或加载失败</text>
+  <view class="empty-action" hover-class="btn-press" bindtap="goBack">
+    <text>返回社区</text>
+  </view>
+</view>

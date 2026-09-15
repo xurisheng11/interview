@@ -1,0 +1,444 @@
+/* 公司面试知识库页 */
+
+/* 搜索区 */
+.search-card {
+  padding: 32rpx;
+  margin-bottom: 24rpx;
+}
+
+.search-title {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #333;
+  text-align: center;
+}
+
+.search-desc {
+  font-size: 24rpx;
+  color: #888;
+  text-align: center;
+  margin: 12rpx 0 28rpx;
+  line-height: 1.6;
+}
+
+.search-input {
+  background: var(--bg-input, #f5f7fa);
+  border-radius: 16rpx;
+  padding: 22rpx 28rpx;
+  font-size: 28rpx;
+  color: #333;
+  margin-bottom: 16rpx;
+}
+
+.input-placeholder {
+  color: #b0b7c3;
+}
+
+.job-trigger {
+  background: var(--bg-input, #f5f7fa);
+  border-radius: 16rpx;
+  padding: 22rpx 28rpx;
+  font-size: 28rpx;
+  color: #333;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.job-trigger .placeholder {
+  color: #b0b7c3;
+}
+
+.picker-arrow {
+  color: #b0b7c3;
+  font-size: 30rpx;
+}
+
+.search-btn {
+  width: 100%;
+}
+
+.hot-companies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14rpx;
+  align-items: center;
+  margin-top: 24rpx;
+}
+
+.hot-label {
+  font-size: 24rpx;
+  color: #888;
+}
+
+.hot-tag {
+  background: var(--brand-light);
+  color: var(--brand);
+  font-size: 22rpx;
+  padding: 8rpx 20rpx;
+  border-radius: 24rpx;
+}
+
+/* 加载中 */
+.loading-wrap {
+  text-align: center;
+  padding: 100rpx 0;
+}
+
+.loading-icon {
+  font-size: 88rpx;
+  margin-bottom: 24rpx;
+  animation: bounce 1s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-16rpx); }
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: #555;
+  margin-bottom: 28rpx;
+}
+
+.loading-company {
+  font-weight: 600;
+  color: var(--brand);
+}
+
+.loading-bar {
+  max-width: 400rpx;
+  margin: 0 auto;
+  height: 12rpx;
+  background: #eef2f8;
+  border-radius: 8rpx;
+  overflow: hidden;
+}
+
+.loading-bar-fill {
+  height: 100%;
+  background: var(--gradient-brand);
+  border-radius: 8rpx;
+  transition: width 0.6s ease;
+}
+
+/* 结果 */
+.result-header {
+  margin-bottom: 24rpx;
+}
+
+.result-company {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #333;
+}
+
+.result-meta {
+  display: flex;
+  gap: 14rpx;
+  margin-top: 14rpx;
+  flex-wrap: wrap;
+}
+
+.result-tag {
+  font-size: 22rpx;
+  padding: 6rpx 18rpx;
+  border-radius: 8rpx;
+  background: var(--brand-light);
+  color: var(--brand);
+}
+
+.result-tag.diff {
+  background: #fff7e6;
+  color: #d48806;
+}
+
+.process-text {
+  font-size: 26rpx;
+  color: #444;
+  line-height: 1.8;
+}
+
+/* 技巧列表 */
+.tips-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.tip-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16rpx;
+  padding: 16rpx 0;
+  border-bottom: 2rpx solid #f5f5f5;
+}
+
+.tip-item:last-child {
+  border-bottom: none;
+}
+
+.tip-num {
+  background: var(--gradient-brand);
+  color: #fff;
+  border-radius: 50%;
+  width: 36rpx;
+  height: 36rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22rpx;
+  flex-shrink: 0;
+}
+
+.tip-text {
+  font-size: 26rpx;
+  color: #444;
+  line-height: 1.6;
+}
+
+/* 筛选 */
+.filter-tabs {
+  display: flex;
+  gap: 14rpx;
+  margin: 20rpx 0 24rpx;
+}
+
+.filter-tab {
+  font-size: 24rpx;
+  color: #666;
+  background: #f5f7fa;
+  padding: 10rpx 26rpx;
+  border-radius: 24rpx;
+}
+
+.filter-tab.active {
+  background: var(--gradient-brand);
+  color: #fff;
+  font-weight: 500;
+}
+
+/* 题目列表 */
+.questions-list {
+  margin-top: 8rpx;
+}
+
+.question-item {
+  padding: 20rpx 12rpx;
+  border-bottom: 2rpx solid #f0f2f6;
+  border-radius: 8rpx;
+}
+
+.question-item:last-of-type {
+  border-bottom: none;
+}
+
+.q-pressed {
+  background: var(--brand-light);
+}
+
+.q-header {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 10rpx;
+  flex-wrap: wrap;
+}
+
+.q-num {
+  background: #eef2f8;
+  color: #555;
+  border-radius: 8rpx;
+  padding: 2rpx 12rpx;
+  font-size: 22rpx;
+  font-weight: 600;
+}
+
+.q-type {
+  font-size: 20rpx;
+  padding: 2rpx 14rpx;
+  border-radius: 8rpx;
+}
+
+.q-type.tech {
+  background: var(--brand-light);
+  color: var(--brand);
+}
+
+.q-type.behavior {
+  background: #fff7e6;
+  color: #d48806;
+}
+
+.q-tag {
+  font-size: 20rpx;
+  padding: 2rpx 12rpx;
+  border-radius: 8rpx;
+  background: #f5f5f5;
+  color: #888;
+}
+
+.q-arrow {
+  margin-left: auto;
+  color: #ccc;
+  font-size: 24rpx;
+}
+
+.q-content {
+  font-size: 26rpx;
+  color: #333;
+  line-height: 1.6;
+}
+
+.load-more {
+  text-align: center;
+  font-size: 24rpx;
+  color: var(--brand);
+  padding: 20rpx 0 8rpx;
+}
+
+.all-loaded {
+  text-align: center;
+  font-size: 22rpx;
+  color: #bbb;
+  padding: 16rpx 0 4rpx;
+}
+
+.interview-btn {
+  margin-bottom: 40rpx;
+}
+
+/* 空状态引导 */
+.guide-wrap {
+  text-align: center;
+  padding: 80rpx 0;
+}
+
+.guide-icon {
+  font-size: 100rpx;
+}
+
+.guide-text {
+  font-size: 28rpx;
+  color: #888;
+  margin: 24rpx 0 40rpx;
+}
+
+.guide-examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.example-card {
+  flex: 1;
+  min-width: 40%;
+  background: #fff;
+  border: 2rpx solid #e8eef7;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  text-align: left;
+  box-shadow: var(--shadow-card);
+}
+
+.example-company {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 8rpx;
+}
+
+.example-desc {
+  font-size: 22rpx;
+  color: #888;
+}
+
+/* 题目详情弹层 */
+.mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48rpx;
+}
+
+.question-popup {
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 36rpx 32rpx;
+}
+
+.popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.popup-close {
+  font-size: 32rpx;
+  color: #999;
+  padding: 8rpx;
+}
+
+.popup-question {
+  font-size: 30rpx;
+  color: #111;
+  line-height: 1.7;
+  font-weight: 500;
+}
+
+.popup-tags {
+  margin-top: 16rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.answer-section {
+  margin-top: 28rpx;
+  padding-top: 28rpx;
+  border-top: 2rpx solid #f0f2f6;
+}
+
+.answer-label {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--brand);
+  margin-bottom: 20rpx;
+}
+
+.answer-placeholder {
+  text-align: center;
+  padding: 30rpx 0;
+}
+
+.answer-placeholder .btn-primary {
+  width: 80%;
+}
+
+.answer-loading {
+  text-align: center;
+  color: #888;
+  font-size: 26rpx;
+  padding: 30rpx 0;
+}
+
+.answer-content {
+  font-size: 26rpx;
+  color: #444;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+.answer-empty {
+  color: #bbb;
+  font-size: 26rpx;
+}

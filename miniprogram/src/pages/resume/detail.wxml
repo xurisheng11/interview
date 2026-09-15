@@ -1,0 +1,175 @@
+<view class="container">
+  <!-- 加载中 -->
+  <view wx:if="{{loading}}" class="loading">加载中...</view>
+
+  <!-- 不存在 -->
+  <view wx:elif="{{!resume}}" class="empty-state">
+    <text class="empty-text">简历不存在或无权访问</text>
+    <button class="btn-back" hover-class="btn-press" bindtap="goBack">返回列表</button>
+  </view>
+
+  <!-- 详情内容 -->
+  <view wx:else>
+    <!-- 文件信息卡片 -->
+    <view class="card info-card anim-fade-in">
+      <view class="resume-header">
+        <view class="resume-icon-lg-wrap">
+          <text class="resume-icon-lg">📄</text>
+        </view>
+        <view class="resume-meta">
+          <text class="resume-filename-lg">{{resume.filename}}</text>
+          <view class="resume-tags">
+            <view class="meta-tag">
+              <text>{{resume.fileSizeText}}</text>
+            </view>
+            <view class="meta-tag">
+              <text>{{resume.uploadedAtText}}</text>
+            </view>
+            <view class="status-tag {{resume.statusClass}}">
+              <view class="status-dot"></view>
+              <text>{{resume.statusText}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- AI 分析结果 -->
+    <view class="card section-card anim-fade-in" style="animation-delay: 0.08s">
+      <view class="section-header">
+        <text class="section-title">📊 AI 简历分析</text>
+        <button
+          wx:if="{{resume.isFailed}}"
+          class="btn-retry"
+          hover-class="btn-press"
+          disabled="{{retrying}}"
+          bindtap="handleRetry"
+        >
+          {{retrying ? '处理中…' : '重新分析'}}
+        </button>
+      </view>
+
+      <!-- 分析中 -->
+      <view wx:if="{{resume.isAnalyzing}}" class="status-box">
+        <text class="status-box-icon">⏳</text>
+        <text class="status-box-text">AI 正在分析简历，请稍候…</text>
+      </view>
+
+      <!-- 分析失败 -->
+      <view wx:elif="{{resume.isFailed}}" class="status-box status-box-fail">
+        <text class="status-box-icon">⚠️</text>
+        <text class="status-box-text status-box-text-fail">简历分析失败，请点击上方按钮重试</text>
+      </view>
+
+      <!-- 分析完成 -->
+      <view wx:elif="{{resume.isDone && resume.analysis}}">
+        <!-- 总分 -->
+        <view class="total-score-wrap">
+          <view class="score-circle">
+            <text class="score-circle-num {{resume.scoreClass}}">{{resume.analysis.totalScore || 0}}</text>
+            <text class="score-circle-unit">分</text>
+          </view>
+          <text class="total-score-label">简历综合评分</text>
+        </view>
+
+        <!-- 维度评分 -->
+        <view wx:if="{{resume.hasDimensions}}" class="dimensions-section">
+          <text class="subsection-title">评分维度</text>
+          <view class="dimension-list">
+            <view wx:for="{{resume.analysis.dimensions}}" wx:key="name" class="dimension-item">
+              <view class="dimension-top">
+                <text class="dimension-name">{{item.name}}</text>
+                <text class="dimension-score">{{item.score}}</text>
+              </view>
+              <view class="dimension-bar">
+                <view class="dimension-bar-fill" style="width: {{item.score}}%"></view>
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <!-- 改进建议 -->
+        <view wx:if="{{resume.hasSuggestions}}" class="suggestions-section">
+          <text class="subsection-title">💡 改进建议</text>
+          <view class="suggestions-list">
+            <view wx:for="{{resume.analysis.suggestions}}" wx:key="*this" class="suggestion-item">
+              <text>{{item}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 简历内容摘要 -->
+    <view wx:if="{{resume.isDone && resume.parsedContent}}" class="card section-card anim-fade-in" style="animation-delay: 0.16s">
+      <text class="section-title">📋 简历内容摘要</text>
+
+      <!-- 目标岗位 -->
+      <view wx:if="{{resume.hasJobTitle}}" class="content-section">
+        <text class="content-label">🎯 目标岗位</text>
+        <text class="content-value">{{resume.parsedContent.jobTitle}}</text>
+      </view>
+
+      <!-- 技能关键词 -->
+      <view wx:if="{{resume.hasSkills}}" class="content-section">
+        <text class="content-label">🛠️ 技能关键词</text>
+        <view class="skill-tags">
+          <view wx:for="{{resume.parsedContent.skills}}" wx:key="*this" class="skill-tag">
+            <text>{{item}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 工作经历 -->
+      <view wx:if="{{resume.hasWork}}" class="content-section">
+        <text class="content-label">💼 工作经历</text>
+        <view wx:for="{{resume.parsedContent.workExperience}}" wx:key="index" class="entry-item">
+          <text class="entry-title">{{item.position}} @ {{item.company}}</text>
+          <text class="entry-duration">{{item.duration}}</text>
+          <text class="entry-desc">{{item.desc}}</text>
+        </view>
+      </view>
+
+      <!-- 项目经历 -->
+      <view wx:if="{{resume.hasProjects}}" class="content-section">
+        <text class="content-label">🚀 项目经历</text>
+        <view wx:for="{{resume.parsedContent.projects}}" wx:key="index" class="entry-item">
+          <view class="entry-title-row">
+            <text class="entry-title">{{item.name}}</text>
+            <text class="entry-role" wx:if="{{item.role}}">（{{item.role}}）</text>
+          </view>
+          <text class="entry-stack" wx:if="{{item.stack}}">技术栈：{{item.stack}}</text>
+          <text class="entry-desc">{{item.desc}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 操作区域 -->
+    <view class="card action-card anim-fade-in" style="animation-delay: 0.24s">
+      <text class="section-title">🚀 操作</text>
+
+      <!-- 发起面试 -->
+      <view class="action-block">
+        <text class="action-tip">基于简历内容生成个性化面试题目，进行针对性练习。</text>
+        <button
+          class="btn-action-primary"
+          hover-class="btn-press"
+          disabled="{{!resume.isDone || startingInterview}}"
+          bindtap="handleCreateInterview"
+        >
+          {{resume.isDone ? (startingInterview ? '创建中…' : '开始简历面试') : '分析完成后可发起'}}
+        </button>
+        <text wx:if="{{!resume.isDone}}" class="action-hint">
+          当前简历{{resume.statusText}}，请等待分析完成后再发起面试。
+        </text>
+      </view>
+
+      <view class="divider"></view>
+
+      <!-- 删除简历 -->
+      <button class="btn-action-danger" hover-class="btn-press" bindtap="handleDelete">
+        删除简历
+      </button>
+    </view>
+  </view>
+</view>

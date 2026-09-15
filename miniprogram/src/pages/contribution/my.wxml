@@ -1,0 +1,67 @@
+<!-- 我的贡献页 -->
+<view class="container safe-bottom">
+  <!-- 统计卡片 -->
+  <view class="stats-grid anim-fade-in">
+    <view class="stat-card">
+      <view class="stat-value">{{stats.total}}</view>
+      <view class="stat-label">贡献题目</view>
+    </view>
+    <view class="stat-card">
+      <view class="stat-value verified">{{stats.verified}}</view>
+      <view class="stat-label">已验证</view>
+    </view>
+    <view class="stat-card">
+      <view class="stat-value approved">{{stats.approved}}</view>
+      <view class="stat-label">已通过</view>
+    </view>
+    <view class="stat-card">
+      <view class="stat-value pending">{{stats.pending}}</view>
+      <view class="stat-label">待审核</view>
+    </view>
+  </view>
+
+  <!-- 积分信息 -->
+  <view class="credit-bar anim-fade-in">
+    <text>💎 当前积分：<text class="credit-num">{{credits}}</text></text>
+    <view class="credit-btn" hover-class="btn-press" bindtap="goContribute">＋ 继续贡献</view>
+  </view>
+
+  <!-- 贡献列表 -->
+  <view wx:if="{{loading}}" class="loading-wrap">加载中…</view>
+
+  <block wx:elif="{{contributions.length}}">
+    <view class="contribution-card anim-fade-in" wx:for="{{contributions}}" wx:key="id">
+      <view class="c-top">
+        <text class="c-company">{{item.company}}</text>
+        <text class="tag tag-{{item.statusCls}}">{{item.statusText}}</text>
+      </view>
+      <view class="c-job" wx:if="{{item.jobTitle}}">{{item.jobTitle}}</view>
+      <view class="c-content">{{item.content}}</view>
+      <view class="c-tags">
+        <text class="mini-tag">{{item.typeText}}</text>
+        <text class="mini-tag diff-{{item.diffCls}}">{{item.diffText}}</text>
+        <text wx:if="{{item.year}}" class="c-year">{{item.year}}年</text>
+      </view>
+      <view class="c-footer">
+        <view class="c-stats">
+          <text>👍 {{item.helpfulCount || 0}}</text>
+          <text>🚀 {{item.useCount || 0}} 次使用</text>
+        </view>
+        <text class="c-date">{{item.dateText}}</text>
+      </view>
+    </view>
+  </block>
+
+  <!-- 空状态 -->
+  <view wx:else class="empty-state anim-fade-in">
+    <view class="empty-icon">📝</view>
+    <view class="empty-title">还没有贡献记录</view>
+    <view class="empty-sub">分享你在面试中遇到的真实题目，帮助更多人</view>
+    <button class="btn-primary" hover-class="btn-press" bindtap="goContribute">去贡献题目</button>
+  </view>
+
+  <!-- 底部入口 -->
+  <view wx:if="{{contributions.length}}" class="bottom-link anim-fade-in" hover-class="btn-press" bindtap="goCompany">
+    🏢 浏览公司题库 ›
+  </view>
+</view>

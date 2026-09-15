@@ -222,7 +222,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 200rpx;
+  flex: 1;
   padding: 12rpx 0;
   border-radius: 20rpx;
   transition: all 0.15s ease;
@@ -273,6 +273,31 @@
   box-shadow: 0 8rpx 20rpx rgba(250, 173, 20, 0.28), inset 0 -6rpx 12rpx rgba(0, 0, 0, 0.10);
 }
 
+.bg-purple {
+  background: linear-gradient(135deg, #b37feb 0%, #722ed1 100%);
+  box-shadow: 0 8rpx 20rpx rgba(114, 46, 209, 0.28), inset 0 -6rpx 12rpx rgba(0, 0, 0, 0.10);
+}
+
+.bg-cyan {
+  background: linear-gradient(135deg, #5cdbd3 0%, #08979c 100%);
+  box-shadow: 0 8rpx 20rpx rgba(19, 194, 194, 0.28), inset 0 -6rpx 12rpx rgba(0, 0, 0, 0.10);
+}
+
+.bg-pink {
+  background: linear-gradient(135deg, #ff85c0 0%, #c41d7f 100%);
+  box-shadow: 0 8rpx 20rpx rgba(235, 47, 150, 0.28), inset 0 -6rpx 12rpx rgba(0, 0, 0, 0.10);
+}
+
+.bg-gold {
+  background: linear-gradient(135deg, #ffd666 0%, #ad6800 100%);
+  box-shadow: 0 8rpx 20rpx rgba(212, 136, 6, 0.28), inset 0 -6rpx 12rpx rgba(0, 0, 0, 0.10);
+}
+
+.bg-gray {
+  background: linear-gradient(135deg, #bfbfbf 0%, #595959 100%);
+  box-shadow: 0 8rpx 20rpx rgba(89, 89, 89, 0.24), inset 0 -6rpx 12rpx rgba(0, 0, 0, 0.10);
+}
+
 .icon-text {
   color: #fff;
   font-size: 40rpx;
@@ -283,6 +308,37 @@
   font-size: 26rpx;
   font-weight: 500;
   color: var(--text-sub);
+}
+
+/* ============ 功能导航宫格 ============ */
+.func-grid {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.func-item {
+  width: 25%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20rpx 0;
+  border-radius: 20rpx;
+  transition: all 0.15s ease;
+}
+
+.func-item .action-icon {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 28rpx;
+  margin-bottom: 12rpx;
+}
+
+.func-item .icon-text {
+  font-size: 34rpx;
+}
+
+.func-item .action-text {
+  font-size: 24rpx;
 }
 
 /* ============ 统计数据 ============ */

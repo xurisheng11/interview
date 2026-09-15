@@ -271,6 +271,31 @@
   box-shadow: 0 6rpx 16rpx rgba(82, 196, 26, 0.25);
 }
 
+.icon-resume {
+  background: linear-gradient(135deg, #ff9c6e 0%, #d4380d 100%);
+  box-shadow: 0 6rpx 16rpx rgba(250, 84, 28, 0.25);
+}
+
+.icon-learn {
+  background: linear-gradient(135deg, #85a5ff 0%, #2f54eb 100%);
+  box-shadow: 0 6rpx 16rpx rgba(47, 84, 235, 0.25);
+}
+
+.icon-community {
+  background: linear-gradient(135deg, #5cdbd3 0%, #08979c 100%);
+  box-shadow: 0 6rpx 16rpx rgba(19, 194, 194, 0.25);
+}
+
+.icon-company {
+  background: linear-gradient(135deg, #b37feb 0%, #531dab 100%);
+  box-shadow: 0 6rpx 16rpx rgba(114, 46, 209, 0.25);
+}
+
+.icon-bank {
+  background: linear-gradient(135deg, #ffd666 0%, #ad6800 100%);
+  box-shadow: 0 6rpx 16rpx rgba(212, 136, 6, 0.25);
+}
+
 .icon-settings {
   background: linear-gradient(135deg, #b37feb 0%, #531dab 100%);
   box-shadow: 0 6rpx 16rpx rgba(114, 46, 209, 0.25);

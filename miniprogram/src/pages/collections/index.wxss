@@ -1,0 +1,105 @@
+/* 我的收藏页 */
+
+.loading-wrap {
+  text-align: center;
+  color: #999;
+  padding: 80rpx 0;
+  font-size: 26rpx;
+}
+
+/* 收藏卡片 */
+.collect-card {
+  background: #fff;
+  border-radius: 16rpx;
+  margin-bottom: 20rpx;
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.card-body {
+  padding: 28rpx;
+}
+
+.card-pressed {
+  background: #fafbfd;
+}
+
+.q-tags {
+  display: flex;
+  gap: 12rpx;
+  margin-bottom: 14rpx;
+}
+
+.mini-tag {
+  font-size: 22rpx;
+  padding: 4rpx 16rpx;
+  border-radius: 8rpx;
+  background: var(--brand-light);
+  color: var(--brand);
+}
+
+.mini-tag.diff-success { background: #f6ffed; color: #52c41a; }
+.mini-tag.diff-warning { background: #fff7e6; color: #d48806; }
+.mini-tag.diff-danger { background: #fff1f0; color: #ff4d4f; }
+.mini-tag.diff-info { background: #f5f5f5; color: #888; }
+
+.q-content {
+  font-size: 28rpx;
+  color: #333;
+  line-height: 1.7;
+}
+
+.q-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16rpx;
+  gap: 16rpx;
+}
+
+.q-company {
+  font-size: 22rpx;
+  color: var(--brand);
+}
+
+.q-date {
+  font-size: 22rpx;
+  color: #999;
+  margin-left: auto;
+}
+
+/* 取消收藏操作区 */
+.card-action {
+  border-top: 2rpx solid #f5f5f5;
+  padding: 20rpx;
+  text-align: center;
+  font-size: 24rpx;
+  color: #ff4d4f;
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: 120rpx 60rpx;
+}
+
+.empty-icon {
+  font-size: 100rpx;
+}
+
+.empty-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #555;
+  margin: 24rpx 0 12rpx;
+}
+
+.empty-sub {
+  font-size: 26rpx;
+  color: #999;
+  margin-bottom: 40rpx;
+}
+
+.empty-state .btn-primary {
+  width: 60%;
+}

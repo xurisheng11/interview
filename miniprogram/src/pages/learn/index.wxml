@@ -1,0 +1,71 @@
+<!-- 学习中心首页 -->
+<view class="container safe-bottom">
+  <!-- 冲刺计划入口 -->
+  <view class="sprint-banner anim-fade-in" hover-class="btn-press" bindtap="goPlan">
+    <!-- 加载中 -->
+    <view wx:if="{{loading}}" class="sprint-banner-main">
+      <view class="sprint-banner-title">🏃 专属冲刺计划</view>
+      <view class="sprint-banner-desc">正在获取计划进度…</view>
+    </view>
+
+    <!-- 已有计划：展示当前进度 -->
+    <block wx:elif="{{plan}}">
+      <view class="sprint-banner-main">
+        <view class="sprint-banner-title">🏃 {{plan.title}}</view>
+        <view class="sprint-banner-desc">
+          冲刺第 {{planStats.currentDay}}/{{planStats.totalDays}} 天 · 剩余 {{planStats.remainingDays}} 天
+        </view>
+        <view class="sprint-progress">
+          <view class="sprint-progress-bar" style="width: {{planStats.taskProgress}}%"></view>
+        </view>
+        <view class="sprint-progress-text">任务完成率 {{planStats.taskProgress}}%</view>
+      </view>
+      <view class="sprint-banner-arrow">›</view>
+    </block>
+
+    <!-- 无计划：生成入口 -->
+    <block wx:else>
+      <view class="sprint-banner-main">
+        <view class="sprint-banner-title">🏃 定制专属冲刺计划</view>
+        <view class="sprint-banner-desc">
+          设定目标岗位和冲刺天数（30/60/90天），AI 教练为你生成分阶段、可打卡的备考计划
+        </view>
+      </view>
+      <view class="sprint-banner-btn">去定制</view>
+    </block>
+  </view>
+
+  <!-- 学习路径 -->
+  <view class="section-title anim-fade-in">学习路径</view>
+  <view class="path-intro anim-fade-in">
+    面试考察通常分为 5 大类题型，建议按「基础 → 进阶 → 高级」三个阶段循序渐进，先把每一类练到 60 分以上再进入下一类，效率最高。
+  </view>
+
+  <!-- 阶段卡片 -->
+  <view class="stage-card anim-fade-in" wx:for="{{stages}}" wx:key="id">
+    <view class="stage-head">
+      <view class="stage-icon icon-cube stage-{{item.id}}">{{item.icon}}</view>
+      <view class="stage-info">
+        <view class="stage-name">{{item.name}}</view>
+        <view class="stage-duration">⏱ 建议时长：{{item.duration}}</view>
+      </view>
+    </view>
+    <view class="stage-desc">{{item.desc}}</view>
+
+    <!-- 学习主题 -->
+    <view class="topic-list">
+      <view class="topic-item" wx:for="{{item.topics}}" wx:for-item="topic" wx:key="id">
+        <view class="topic-head">
+          <text class="topic-name">{{topic.icon}} {{topic.name}}</text>
+          <text class="topic-difficulty {{topic.level}}">{{topic.difficulty}}</text>
+        </view>
+        <view class="topic-desc">{{topic.desc}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 备考建议 -->
+  <view class="tip-card anim-fade-in">
+    💡 建议：按顺序完成各阶段的学习主题，每类题型练到 60 分以上再进入下一类；全部准备完后做一次完整模拟面试检验效果。
+  </view>
+</view>

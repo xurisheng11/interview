@@ -12,7 +12,18 @@
     "pages/profile/index",
     "pages/settings/index",
     "pages/help/index",
-    "pages/mine/mine"
+    "pages/mine/mine",
+    "pages/resume/list",
+    "pages/resume/detail",
+    "pages/community/index",
+    "pages/community/detail",
+    "pages/learn/index",
+    "pages/learn/plan",
+    "pages/contribution/contribute",
+    "pages/contribution/my",
+    "pages/contribution/company",
+    "pages/company/intel",
+    "pages/collections/index"
   ],
   "window": {
     "navigationBarTitleText": "面试模拟",

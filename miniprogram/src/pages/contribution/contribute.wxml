@@ -1,0 +1,157 @@
+<!-- 贡献面试题页 -->
+<view class="container safe-bottom">
+  <!-- 顶部横幅 -->
+  <view class="hero anim-fade-in">
+    <view class="hero-title">📝 贡献面试题</view>
+    <view class="hero-sub">
+      你在小红书、Boss 直聘、牛客网上看到的真实面试题吗？提交上来帮助更多人，每道题奖励 2 积分，审核通过额外奖励 3 积分。
+    </view>
+    <view class="credit-box">
+      <text>💎 当前积分：</text>
+      <text class="credit-num">{{credits}}</text>
+    </view>
+  </view>
+
+  <!-- 提交表单 -->
+  <view class="card form-card anim-fade-in">
+    <view class="form-item">
+      <view class="form-label"><text class="required">*</text> 公司名称</view>
+      <input class="form-input" placeholder="如：字节跳动、阿里巴巴" placeholder-class="input-placeholder"
+        value="{{company}}" bindinput="onCompanyInput" maxlength="30" />
+    </view>
+
+    <view class="form-item">
+      <view class="form-label">岗位名称</view>
+      <input class="form-input" placeholder="如：后端开发、前端工程师" placeholder-class="input-placeholder"
+        value="{{jobTitle}}" bindinput="onJobTitleInput" maxlength="30" />
+    </view>
+
+    <view class="form-row">
+      <view class="form-item form-item-half">
+        <view class="form-label">面试年份</view>
+        <picker mode="selector" range="{{['2018','2019','2020','2021','2022','2023','2024','2025','2026']}}" bindchange="onYearChange">
+          <view class="form-picker" hover-class="btn-press">
+            <text>{{year}} 年</text>
+            <text class="picker-arrow">›</text>
+          </view>
+        </picker>
+      </view>
+      <view class="form-item form-item-half">
+        <view class="form-label">面试轮次</view>
+        <picker mode="selector" range="{{rounds}}" value="{{roundIndex}}" bindchange="onRoundChange">
+          <view class="form-picker" hover-class="btn-press">
+            <text class="{{roundIndex > -1 ? '' : 'placeholder'}}">{{roundIndex > -1 ? rounds[roundIndex] : '选择轮次'}}</text>
+            <text class="picker-arrow">›</text>
+          </view>
+        </picker>
+      </view>
+    </view>
+
+    <!-- 题目列表 -->
+    <view class="form-label"><text class="required">*</text> 面试题目（已添加 {{questions.length}} 道）</view>
+    <view class="questions-section">
+      <view class="question-item" wx:for="{{questions}}" wx:key="index">
+        <view class="q-header">
+          <text class="q-num">题目 {{index + 1}}</text>
+          <text wx:if="{{questions.length > 1}}" class="q-remove" catchtap="removeQuestion" data-index="{{index}}">删除</text>
+        </view>
+        <textarea class="q-textarea" placeholder="请输入面试题目内容…" placeholder-class="input-placeholder"
+          value="{{item.content}}" bindinput="onQuestionInput" data-index="{{index}}" maxlength="500" auto-height />
+        <view class="q-meta">
+          <view class="meta-chip" hover-class="btn-press" catchtap="openTypePicker" data-index="{{index}}">
+            {{item.questionTypeLabel}}
+          </view>
+          <view class="meta-chip" hover-class="btn-press" catchtap="openDiffPicker" data-index="{{index}}">
+            {{item.difficultyLabel}}
+          </view>
+        </view>
+        <input class="q-tags-input" placeholder="标签（逗号分隔）" placeholder-class="input-placeholder"
+          value="{{item.tagsInput}}" bindinput="onTagsInput" data-index="{{index}}" maxlength="50" />
+      </view>
+
+      <view class="add-btn" hover-class="btn-press" bindtap="addQuestion">＋ 添加一道题目</view>
+    </view>
+
+    <!-- 提交按钮 -->
+    <button class="btn-primary submit-btn" hover-class="btn-press"
+      bindtap="submit" loading="{{submitting}}" disabled="{{submitting}}">
+      {{submitting ? '提交中…' : '提交贡献'}}
+    </button>
+  </view>
+
+  <!-- 积分规则 -->
+  <view class="card anim-fade-in">
+    <view class="section-title">💎 积分规则</view>
+    <view class="rule-list">
+      <view class="rule-item"><text>📤 提交每道题</text><text class="rule-credit">+2 积分</text></view>
+      <view class="rule-item"><text>✅ 审核通过</text><text class="rule-credit">+3 积分</text></view>
+      <view class="rule-item"><text>👍 投票验证题目</text><text class="rule-credit">+1 积分</text></view>
+      <view class="rule-item"><text>🚀 题目被他人使用</text><text class="rule-credit">+1 积分</text></view>
+      <view class="rule-item"><text>🎁 新用户注册</text><text class="rule-credit">+10 积分</text></view>
+    </view>
+  </view>
+
+  <!-- 最近贡献 -->
+  <view class="card anim-fade-in">
+    <view class="section-title-row">
+      <view class="section-title">📊 我的最近贡献</view>
+      <text class="link-more" bindtap="goMy">全部 ›</text>
+    </view>
+    <block wx:if="{{myContributions.length}}">
+      <view class="contribution-item" wx:for="{{myContributions}}" wx:key="id">
+        <view class="c-company">{{item.company}}</view>
+        <view class="c-content">{{item.content}}</view>
+        <view class="c-meta">
+          <text class="tag tag-{{item.statusCls}}">{{item.statusText}}</text>
+        </view>
+      </view>
+    </block>
+    <view wx:else class="empty-tip">暂无贡献记录，提交第一道题开始吧！</view>
+  </view>
+
+  <!-- 贡献指南 -->
+  <view class="card anim-fade-in">
+    <view class="section-title">📖 贡献指南</view>
+    <view class="guide-list">
+      <view class="guide-item">· 题目来源于真实面试经历（小红书、牛客、Boss 等平台分享）</view>
+      <view class="guide-item">· 请勿提交广告、软文、虚假信息</view>
+      <view class="guide-item">· 题目将经过社区投票验证，高质量题目标记为「已验证」</view>
+      <view class="guide-item">· 举报超过 3 次的题目将重新审核</view>
+      <view class="guide-item">· 每道题必须包含完整的题目内容，技术题建议包含考察知识点</view>
+    </view>
+  </view>
+
+  <!-- 底部快捷入口 -->
+  <view class="bottom-links anim-fade-in">
+    <view class="link-btn" hover-class="btn-press" bindtap="goCompany">🏢 浏览公司题库</view>
+    <view class="link-btn" hover-class="btn-press" bindtap="goMy">🏆 我的贡献</view>
+  </view>
+
+  <!-- 题目类型选择弹层 -->
+  <view wx:if="{{showTypePicker}}" class="mask" catchtap="closeTypePicker" catchtouchmove="noop">
+    <view class="picker-popup" catchtap="noop">
+      <view class="popup-title">选择题目类型</view>
+      <view class="popup-options">
+        <view wx:for="{{questionTypes}}" wx:key="value" class="popup-option"
+          hover-class="btn-press" bindtap="chooseType" data-value="{{item.value}}" data-label="{{item.label}}">
+          {{item.label}}
+        </view>
+      </view>
+      <view class="popup-cancel" hover-class="btn-press" bindtap="closeTypePicker">取消</view>
+    </view>
+  </view>
+
+  <!-- 难度选择弹层 -->
+  <view wx:if="{{showDiffPicker}}" class="mask" catchtap="closeDiffPicker" catchtouchmove="noop">
+    <view class="picker-popup" catchtap="noop">
+      <view class="popup-title">选择难度</view>
+      <view class="popup-options">
+        <view wx:for="{{difficulties}}" wx:key="value" class="popup-option"
+          hover-class="btn-press" bindtap="chooseDiff" data-value="{{item.value}}" data-label="{{item.label}}">
+          {{item.label}}
+        </view>
+      </view>
+      <view class="popup-cancel" hover-class="btn-press" bindtap="closeDiffPicker">取消</view>
+    </view>
+  </view>
+</view>

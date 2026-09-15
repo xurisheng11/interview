@@ -1,0 +1,321 @@
+/* 简历列表页面样式 */
+.container {
+  padding: 24rpx;
+  padding-bottom: 48rpx;
+}
+
+/* ============ 上传区域 ============ */
+.upload-section {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  margin-bottom: 24rpx;
+  box-shadow: var(--shadow-card);
+}
+
+.upload-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+}
+
+.page-title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.btn-upload {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 88rpx;
+  background: var(--gradient-brand);
+  color: #fff;
+  font-size: 30rpx;
+  font-weight: 600;
+  border-radius: 44rpx;
+  border: none;
+  box-shadow: var(--shadow-brand);
+  letter-spacing: 2rpx;
+}
+
+.btn-upload::after {
+  border: none;
+}
+
+.btn-upload[disabled] {
+  opacity: 0.6;
+}
+
+.btn-upload-icon {
+  font-size: 36rpx;
+  margin-right: 10rpx;
+  font-weight: 700;
+}
+
+.btn-press {
+  transform: scale(0.97);
+  opacity: 0.92;
+}
+
+.upload-tip {
+  display: block;
+  text-align: center;
+  font-size: 24rpx;
+  color: var(--text-hint);
+  margin-top: 16rpx;
+}
+
+/* ============ 空状态 ============ */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 140rpx 0;
+}
+
+.empty-cube {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 48rpx;
+  background: linear-gradient(135deg, #d6e6ff 0%, #b3d1ff 100%);
+  color: var(--brand);
+  font-size: 64rpx;
+  font-weight: 700;
+  margin-bottom: 36rpx;
+  position: relative;
+}
+
+.empty-cube::after {
+  content: '';
+  position: absolute;
+  top: 16rpx;
+  left: 26rpx;
+  width: 44rpx;
+  height: 22rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.45);
+  transform: rotate(-20deg);
+}
+
+.empty-text {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 12rpx;
+}
+
+.empty-desc {
+  font-size: 26rpx;
+  color: var(--text-hint);
+  margin-bottom: 40rpx;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.btn-start {
+  width: 480rpx;
+  height: 92rpx;
+  background: var(--gradient-brand);
+  color: #fff;
+  font-size: 32rpx;
+  font-weight: 600;
+  letter-spacing: 2rpx;
+  border-radius: 46rpx;
+  border: none;
+  box-shadow: var(--shadow-brand);
+}
+
+.btn-start::after {
+  border: none;
+}
+
+/* ============ 简历列表 ============ */
+.resume-list {
+  margin-top: 8rpx;
+}
+
+.resume-card {
+  position: relative;
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 32rpx 32rpx 32rpx 40rpx;
+  margin-bottom: 24rpx;
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  transition: all 0.15s ease;
+}
+
+.card-pressed {
+  transform: scale(0.98);
+  box-shadow: 0 4rpx 12rpx rgba(20, 45, 90, 0.08);
+}
+
+/* 左侧状态色条 */
+.card-accent {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 8rpx;
+}
+
+.card-accent.pending {
+  background: linear-gradient(180deg, #ffc53d, #d48806);
+}
+
+.card-accent.analyzing {
+  background: linear-gradient(180deg, #ffc53d, #d48806);
+}
+
+.card-accent.done {
+  background: linear-gradient(180deg, #52a9ff, #0958d9);
+}
+
+.card-accent.failed {
+  background: linear-gradient(180deg, #ff7875, #cf1322);
+}
+
+/* 卡片顶部 */
+.card-top {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 24rpx;
+}
+
+.resume-icon-wrap {
+  flex-shrink: 0;
+  width: 72rpx;
+  height: 72rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafd;
+  border-radius: 18rpx;
+  margin-right: 20rpx;
+}
+
+.resume-icon {
+  font-size: 40rpx;
+}
+
+.resume-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.resume-filename {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--text-main);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 6rpx;
+}
+
+.resume-date {
+  font-size: 24rpx;
+  color: var(--text-hint);
+}
+
+/* 状态标签 */
+.status-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 6rpx 18rpx;
+  border-radius: 999rpx;
+  font-size: 22rpx;
+  font-weight: 500;
+  flex-shrink: 0;
+  margin-left: 16rpx;
+}
+
+.status-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  margin-right: 8rpx;
+  background: currentColor;
+}
+
+.status-tag.pending {
+  background: #fff7e0;
+  color: #ef9400;
+}
+
+.status-tag.analyzing {
+  background: #fff7e0;
+  color: #ef9400;
+}
+
+.status-tag.done {
+  background: #f0fbe4;
+  color: var(--success);
+}
+
+.status-tag.failed {
+  background: #fff1f0;
+  color: var(--danger);
+}
+
+/* 卡片底部 */
+.card-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 20rpx;
+  border-top: 1rpx solid #f2f4f7;
+}
+
+.score-area {
+  display: flex;
+  align-items: baseline;
+}
+
+.score-label {
+  font-size: 26rpx;
+  color: var(--text-hint);
+  margin-right: 12rpx;
+}
+
+.score-value {
+  font-size: 48rpx;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.score-value.score-high {
+  color: var(--success);
+}
+
+.score-value.score-mid {
+  color: var(--brand);
+}
+
+.score-value.score-low {
+  color: #ef9400;
+}
+
+.score-value.score-none {
+  color: #c5ccd6;
+  font-size: 40rpx;
+}
+
+.card-arrow {
+  font-size: 26rpx;
+  color: var(--brand);
+  font-weight: 500;
+}
+
+/* ============ 加载状态 ============ */
+.loading {
+  text-align: center;
+  padding: 100rpx 0;
+  color: var(--text-hint);
+}

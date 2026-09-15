@@ -1,0 +1,125 @@
+<!-- 公司面试题库页 -->
+<view class="container safe-bottom">
+  <!-- 页头 -->
+  <view class="page-header anim-fade-in">
+    <view class="page-title">🏢 公司面试题库</view>
+    <view class="page-sub">浏览其他用户贡献的真实面试题，投票帮助筛选高质量题目</view>
+  </view>
+
+  <!-- 搜索栏 -->
+  <view class="search-bar anim-fade-in">
+    <input class="search-input" placeholder="输入公司名称搜索（如：字节跳动）" placeholder-class="input-placeholder"
+      value="{{searchCompany}}" bindinput="onCompanyInput" bindconfirm="search" confirm-type="search" />
+    <button class="search-btn" hover-class="btn-press" bindtap="search" loading="{{searching}}">搜索</button>
+  </view>
+
+  <view class="contribute-link anim-fade-in" hover-class="btn-press" bindtap="goContribute">
+    ＋ 我要贡献题目
+  </view>
+
+  <!-- 降级提示 -->
+  <view wx:if="{{fallback}}" class="fallback-tip anim-fade-in">
+    <view class="fallback-icon">🔍</view>
+    <view class="fallback-content">
+      <view class="fallback-title">{{fallback.message}}</view>
+      <view wx:if="{{fallback.similar && fallback.similar.length}}" class="fallback-similar">
+        <text>相似公司：</text>
+        <text wx:for="{{fallback.similar}}" wx:key="id" class="similar-tag"
+          bindtap="goToCompany" data-company="{{item.company}}">{{item.company}}</text>
+      </view>
+      <view class="fallback-action" hover-class="btn-press" bindtap="goContribute">成为第一个贡献者 →</view>
+    </view>
+  </view>
+
+  <block wx:if="{{!fallback}}">
+    <!-- 搜索提示 -->
+    <view wx:if="{{searchCompany}}" class="search-tip anim-fade-in">
+      正在浏览 <text class="tip-strong">{{searchCompany}}</text> 的题目
+    </view>
+
+    <!-- tab 切换 -->
+    <view class="tabs anim-fade-in">
+      <view class="tab {{activeTab === 'verified' ? 'active' : ''}}" bindtap="switchTab" data-tab="verified">
+        ✅ 已验证 <text class="tab-badge">{{verifiedList.length}}</text>
+      </view>
+      <view class="tab {{activeTab === 'pending' ? 'active' : ''}}" bindtap="switchTab" data-tab="pending">
+        ⏳ 待验证 <text class="tab-badge warning">{{pendingList.length}}</text>
+      </view>
+    </view>
+
+    <!-- 积分提示条 -->
+    <view wx:if="{{activeTab === 'verified'}}" class="credits-bar anim-fade-in">
+      <text>💎 当前积分：<text class="credit-num">{{credits}}</text></text>
+      <text class="credits-cost">每次搜索已验证题库 -1 积分</text>
+    </view>
+
+    <!-- 已验证列表 -->
+    <block wx:if="{{activeTab === 'verified'}}">
+      <view wx:if="{{!verifiedList.length}}" class="empty-state anim-fade-in">
+        <view class="empty-icon">📭</view>
+        <view class="empty-title">暂无已验证题目</view>
+        <view class="empty-sub">还没有用户通过验证的题目，成为第一个贡献者吧！</view>
+        <button class="btn-primary" hover-class="btn-press" bindtap="goContribute">贡献第一道题</button>
+      </view>
+      <view wx:for="{{verifiedList}}" wx:key="id" class="question-card verified anim-fade-in">
+        <view class="q-company">{{item.company}} · {{item.round || '通用'}}</view>
+        <view class="q-content">{{item.content}}</view>
+        <view class="q-meta">
+          <text class="mini-tag diff-{{item.diffCls}}">{{item.diffText}}</text>
+          <text class="mini-tag">{{item.typeText}}</text>
+          <text wx:if="{{item.year}}" class="q-year">{{item.year}}年</text>
+        </view>
+        <view class="q-stats">
+          <text>👍 {{item.helpfulCount || 0}}</text>
+          <text>👁 {{item.useCount || 0}} 次使用</text>
+        </view>
+      </view>
+    </block>
+
+    <!-- 待验证列表 -->
+    <block wx:if="{{activeTab === 'pending'}}">
+      <view wx:if="{{!pendingList.length}}" class="empty-state anim-fade-in">
+        <view class="empty-icon">✅</view>
+        <view class="empty-title">暂无待验证题目</view>
+        <view class="empty-sub">请先在上方搜索公司名称</view>
+      </view>
+      <view wx:for="{{pendingList}}" wx:key="id" class="question-card pending anim-fade-in">
+        <view class="q-company">{{item.company}} · {{item.round || '通用'}}</view>
+        <view class="q-content">{{item.content}}</view>
+        <view class="q-meta">
+          <text class="mini-tag diff-{{item.diffCls}}">{{item.diffText}}</text>
+          <text class="mini-tag">{{item.typeText}}</text>
+          <text wx:if="{{item.year}}" class="q-year">{{item.year}}年</text>
+        </view>
+        <view class="q-stats">
+          <text>👍 {{item.helpfulCount || 0}} 有用</text>
+          <text>👎 {{item.uselessCount || 0}} 没用</text>
+        </view>
+        <!-- 投票按钮 -->
+        <view class="vote-actions">
+          <button class="vote-btn helpful {{votedMap[item.id] === 'helpful' ? 'voted' : ''}}"
+            hover-class="btn-press" bindtap="vote" data-id="{{item.id}}" data-vote="helpful"
+            disabled="{{votedMap[item.id]}}">👍 有用</button>
+          <button class="vote-btn useless {{votedMap[item.id] === 'useless' ? 'voted' : ''}}"
+            hover-class="btn-press" bindtap="vote" data-id="{{item.id}}" data-vote="useless"
+            disabled="{{votedMap[item.id]}}">👎 没用</button>
+          <view class="report-btn" hover-class="btn-press" catchtap="openReport" data-id="{{item.id}}">🚩 举报</view>
+        </view>
+      </view>
+    </block>
+  </block>
+
+  <!-- 举报弹窗 -->
+  <view wx:if="{{showReport}}" class="mask" catchtap="closeReport" catchtouchmove="noop">
+    <view class="report-popup" catchtap="noop">
+      <view class="popup-title">🚩 举报题目</view>
+      <view class="report-question" wx:if="{{reportQuestion}}">{{reportQuestion.content}}</view>
+      <textarea class="report-textarea" placeholder="请说明举报原因（选填）" placeholder-class="input-placeholder"
+        value="{{reportReason}}" bindinput="onReportInput" maxlength="200" auto-height />
+      <view class="report-btns">
+        <button class="btn-cancel" hover-class="btn-press" bindtap="closeReport">取消</button>
+        <button class="btn-primary" hover-class="btn-press" bindtap="submitReport">确认举报</button>
+      </view>
+    </view>
+  </view>
+</view>

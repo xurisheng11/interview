@@ -1,0 +1,32 @@
+<!-- 我的收藏页 -->
+<view class="container safe-bottom">
+  <!-- 收藏列表 -->
+  <view wx:if="{{loading}}" class="loading-wrap">加载中…</view>
+
+  <block wx:elif="{{collections.length}}">
+    <view class="collect-card anim-fade-in" wx:for="{{collections}}" wx:key="id">
+      <view class="card-body" hover-class="card-pressed" bindtap="viewQuestion" data-id="{{item.id}}">
+        <view class="q-tags">
+          <text wx:if="{{item.category}}" class="mini-tag">{{item.category}}</text>
+          <text class="mini-tag diff-{{item.diffCls}}">{{item.diffText}}</text>
+        </view>
+        <view class="q-content">{{item.content}}</view>
+        <view class="q-footer">
+          <text class="q-company" wx:if="{{item.company}}">{{item.company}}</text>
+          <text class="q-date" wx:if="{{item.collectedAt}}">收藏于 {{item.collectedAt}}</text>
+        </view>
+      </view>
+      <view class="card-action" hover-class="btn-press" catchtap="uncollect" data-id="{{item.id}}">
+        💔 取消收藏
+      </view>
+    </view>
+  </block>
+
+  <!-- 空状态 -->
+  <view wx:else class="empty-state anim-fade-in">
+    <view class="empty-icon">⭐</view>
+    <view class="empty-title">暂无收藏题目</view>
+    <view class="empty-sub">在题库中收藏感兴趣的题目，方便反复练习</view>
+    <button class="btn-primary" hover-class="btn-press" bindtap="goQuestions">去题库逛逛</button>
+  </view>
+</view>

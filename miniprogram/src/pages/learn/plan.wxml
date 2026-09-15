@@ -1,0 +1,276 @@
+<!-- 冲刺计划页 -->
+<view class="container safe-bottom">
+  <!-- 加载中 -->
+  <view wx:if="{{loading}}" class="loading-wrap">加载中…</view>
+
+  <!-- ===== 未定制：生成表单 ===== -->
+  <block wx:elif="{{!plan}}">
+    <view class="customize-header anim-fade-in">
+      <view class="customize-title">🏃 定制我的冲刺计划</view>
+      <view class="customize-desc">
+        告诉我们你的目标和时间安排，AI 教练将为你量身定制一份分阶段、可打卡的面试冲刺计划。
+      </view>
+    </view>
+
+    <view class="card form-card anim-fade-in">
+      <!-- 目标岗位 -->
+      <view class="form-item">
+        <view class="form-label"><text class="required">*</text> 🎯 目标岗位</view>
+        <input
+          class="form-input"
+          placeholder="如：Go 后端开发工程师"
+          placeholder-class="input-placeholder"
+          value="{{jobTitle}}"
+          bindinput="onJobTitleInput"
+          maxlength="30"
+        />
+      </view>
+
+      <!-- 目标公司 -->
+      <view class="form-item">
+        <view class="form-label">🏢 目标公司（选填）</view>
+        <input
+          class="form-input"
+          placeholder="如：字节跳动"
+          placeholder-class="input-placeholder"
+          value="{{targetCompany}}"
+          bindinput="onCompanyInput"
+          maxlength="30"
+        />
+      </view>
+
+      <!-- 冲刺天数 / 面试日期 -->
+      <view class="form-item">
+        <view class="form-label"><text class="required">*</text> 📅 冲刺天数</view>
+        <view class="days-grid">
+          <view
+            wx:for="{{daysOptions}}"
+            wx:key="value"
+            class="days-item {{!useInterviewDate && selectedDays === item.value ? 'active' : ''}}"
+            hover-class="btn-press"
+            bindtap="selectDays"
+            data-value="{{item.value}}"
+          >
+            <view class="days-num">{{item.name}}</view>
+            <view class="days-desc">{{item.desc}}</view>
+          </view>
+          <view
+            class="days-item {{useInterviewDate ? 'active' : ''}}"
+            hover-class="btn-press"
+            bindtap="selectDateMode"
+          >
+            <view class="days-num">📅 按面试日期</view>
+            <view class="days-desc">自动计算天数</view>
+          </view>
+        </view>
+
+        <!-- 面试日期选择 -->
+        <view wx:if="{{useInterviewDate}}" class="date-picker-area">
+          <picker
+            mode="date"
+            value="{{interviewDate}}"
+            start="{{minDate}}"
+            end="{{maxDate}}"
+            bindchange="onDateChange"
+          >
+            <view class="date-trigger" hover-class="btn-press">
+              <text>选择面试日期</text>
+              <text class="date-value {{interviewDate ? '' : 'placeholder'}}">{{interviewDate || '请选择'}}</text>
+            </view>
+          </picker>
+          <view wx:if="{{interviewDate}}" class="date-hint">
+            距面试 {{daysUntilInterview}} 天，将生成 {{selectedDays}} 天冲刺计划（7-180 天）
+          </view>
+        </view>
+      </view>
+
+      <!-- 每日投入 -->
+      <view class="form-item">
+        <view class="form-label"><text class="required">*</text> ⏰ 每日投入</view>
+        <view class="chip-grid">
+          <view
+            wx:for="{{minutesOptions}}"
+            wx:key="value"
+            class="chip {{dailyMinutes === item.value ? 'active' : ''}}"
+            hover-class="btn-press"
+            bindtap="selectMinutes"
+            data-value="{{item.value}}"
+          >{{item.label}}</view>
+        </view>
+      </view>
+
+      <!-- 工作经验 -->
+      <view class="form-item">
+        <view class="form-label">💼 工作经验</view>
+        <view class="chip-grid">
+          <view
+            wx:for="{{experienceOptions}}"
+            wx:key="value"
+            class="chip {{experience === item.value ? 'active' : ''}}"
+            hover-class="btn-press"
+            bindtap="selectExperience"
+            data-value="{{item.value}}"
+          >{{item.label}}</view>
+        </view>
+      </view>
+
+      <!-- 薄弱环节 -->
+      <view class="form-item">
+        <view class="form-label">📉 薄弱环节（可多选）</view>
+        <view class="chip-grid">
+          <view
+            wx:for="{{categories}}"
+            wx:key="id"
+            class="chip {{weakAreas.indexOf(item.id) > -1 ? 'active' : ''}}"
+            hover-class="btn-press"
+            bindtap="toggleWeakArea"
+            data-id="{{item.id}}"
+          >{{item.icon}} {{item.name}}</view>
+        </view>
+        <view class="form-hint">选择你自认为薄弱的题型，AI 会为其安排更多练习任务</view>
+      </view>
+
+      <!-- 生成按钮 -->
+      <button
+        class="btn-primary generate-btn"
+        hover-class="btn-press"
+        bindtap="generatePlan"
+        loading="{{generating}}"
+        disabled="{{generating}}"
+      >{{generating ? 'AI 教练正在为你定制计划…' : '✨ 生成我的冲刺计划'}}</button>
+    </view>
+  </block>
+
+  <!-- ===== 已定制：计划展示 ===== -->
+  <block wx:else>
+    <!-- 计划总览 -->
+    <view class="plan-header anim-fade-in">
+      <view class="plan-title">🏃 {{plan.title}}</view>
+      <view class="plan-summary">{{plan.summary}}</view>
+      <view class="plan-meta">
+        <text class="plan-meta-tag">🎯 {{plan.config.jobTitle}}</text>
+        <text wx:if="{{plan.config.targetCompany}}" class="plan-meta-tag">🏢 {{plan.config.targetCompany}}</text>
+        <text class="plan-meta-tag">⏰ 每日 {{stats.dailyLabel}}</text>
+        <text class="plan-meta-tag">📅 {{plan.startDate}} 开始</text>
+      </view>
+      <view class="plan-stats">
+        <view class="stat-block">
+          <view class="stat-num">{{stats.currentDay}}<text class="stat-total">/{{stats.totalDays}}</text></view>
+          <view class="stat-label">冲刺第几天</view>
+        </view>
+        <view class="stat-block">
+          <view class="stat-num">{{stats.taskProgress}}<text class="stat-total">%</text></view>
+          <view class="stat-label">任务完成率</view>
+        </view>
+        <view class="stat-block">
+          <view class="stat-num">{{stats.remainingDays}}<text class="stat-total">天</text></view>
+          <view class="stat-label">剩余时间</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 时间进度与操作 -->
+    <view class="card anim-fade-in">
+      <view class="progress-row">
+        <view class="progress-track">
+          <view class="progress-fill" style="width: {{stats.dayProgress}}%"></view>
+        </view>
+        <text class="progress-text">{{stats.dayProgress}}%</text>
+      </view>
+      <view class="progress-caption">时间进度：冲刺第 {{stats.currentDay}}/{{stats.totalDays}} 天</view>
+
+      <view class="plan-actions">
+        <view class="today-phase" wx:if="{{stats.currentPhaseName}}">
+          📍 当前阶段：<text class="phase-strong">{{stats.currentPhaseName}}</text>
+        </view>
+        <view class="today-phase" wx:elif="{{stats.currentDay > stats.totalDays}}">
+          🎉 冲刺已结束，去发起一次模拟面试检验成果吧！
+        </view>
+        <view class="action-btns">
+          <button class="btn-mini" hover-class="btn-press" bindtap="recustomize">🔄 重新定制</button>
+          <button class="btn-mini btn-mini-danger" hover-class="btn-press" bindtap="removePlan">删除计划</button>
+        </view>
+      </view>
+    </view>
+
+    <!-- 阶段任务列表（按阶段/天数分组，可勾选打卡） -->
+    <view
+      wx:for="{{phases}}"
+      wx:for-item="phase"
+      wx:key="id"
+      class="phase-card anim-fade-in {{phase.isCurrent ? 'phase-current' : ''}} {{phase.isPast ? 'phase-past' : ''}}"
+    >
+      <view class="phase-head">
+        <view class="phase-badge">阶段 {{phase.index + 1}}</view>
+        <view class="phase-title-wrap">
+          <view class="phase-name">
+            <text>{{phase.name}}</text>
+            <text wx:if="{{phase.isCurrent}}" class="tag tag-warning">进行中</text>
+            <text wx:elif="{{phase.isPast}}" class="tag tag-success">已结束</text>
+          </view>
+          <view class="phase-range">第 {{phase.dayStart}} - {{phase.dayEnd}} 天 · {{phase.goal}}</view>
+        </view>
+        <view class="phase-progress">
+          <view class="phase-progress-num">{{phase.progress}}<text class="phase-progress-unit">%</text></view>
+          <view class="phase-progress-label">阶段完成</view>
+        </view>
+      </view>
+
+      <view class="phase-tasks">
+        <view
+          wx:for="{{phase.tasks}}"
+          wx:for-item="task"
+          wx:for-index="tIndex"
+          wx:key="id"
+          class="task-item {{task.done ? 'task-done' : ''}}"
+          hover-class="task-pressed"
+          bindtap="toggleTask"
+          data-phase="{{phase.index}}"
+          data-task="{{tIndex}}"
+        >
+          <view class="task-checkbox {{task.done ? 'checked' : ''}}">
+            <text wx:if="{{task.done}}" class="task-check-icon">✓</text>
+          </view>
+          <view class="task-content">{{task.content}}</view>
+          <view
+            wx:if="{{task.actionLabel}}"
+            class="task-action"
+            hover-class="btn-press"
+            catchtap="goAction"
+            data-action="{{task.action}}"
+          >{{task.actionLabel}} ›</view>
+        </view>
+        <view wx:if="{{!phase.tasks.length}}" class="empty-tip">本阶段暂无任务</view>
+      </view>
+    </view>
+
+    <!-- 里程碑检验点 -->
+    <view class="card anim-fade-in">
+      <view class="section-title">🚩 里程碑检验点</view>
+      <block wx:if="{{plan.milestones && plan.milestones.length}}">
+        <view
+          wx:for="{{plan.milestones}}"
+          wx:key="day"
+          class="milestone-item {{stats.currentDay > item.day ? 'milestone-past' : ''}}"
+        >
+          <view class="milestone-day">第{{item.day}}天</view>
+          <view class="milestone-content">{{item.content}}</view>
+        </view>
+      </block>
+      <view wx:else class="empty-tip">暂无里程碑</view>
+    </view>
+
+    <!-- 每日例行任务 -->
+    <view class="card anim-fade-in">
+      <view class="section-title">☀️ 每日例行任务</view>
+      <block wx:if="{{plan.dailyRoutine && plan.dailyRoutine.length}}">
+        <view class="routine-item" wx:for="{{plan.dailyRoutine}}" wx:key="*this">
+          <view class="routine-dot"></view>
+          <text class="routine-text">{{item}}</text>
+        </view>
+      </block>
+      <view wx:else class="empty-tip">暂无例行任务</view>
+      <view wx:if="{{plan.tips}}" class="plan-tips">💪 {{plan.tips}}</view>
+    </view>
+  </block>
+</view>

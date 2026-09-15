@@ -67,8 +67,8 @@ Page({
   },
 
   goToReport() {
-    // 跳转到面试列表查看报告
-    wx.navigateTo({
+    // 面试列表是 tabBar 页面，必须用 switchTab
+    wx.switchTab({
       url: '/pages/interview/list'
     })
   },
@@ -78,5 +78,43 @@ Page({
     wx.navigateTo({
       url: `/pages/interview/detail?id=${id}`
     })
+  },
+
+  // ===== 功能导航 =====
+
+  goToLearn() {
+    wx.navigateTo({ url: '/pages/learn/index' })
+  },
+
+  goToResume() {
+    wx.navigateTo({ url: '/pages/resume/list' })
+  },
+
+  goToCommunity() {
+    wx.navigateTo({ url: '/pages/community/index' })
+  },
+
+  goToCompanyIntel() {
+    wx.navigateTo({ url: '/pages/company/intel' })
+  },
+
+  goToContributions() {
+    wx.navigateTo({ url: '/pages/contribution/company' })
+  },
+
+  goToMyContributions() {
+    wx.navigateTo({ url: '/pages/contribution/my' })
+  },
+
+  goToCollections() {
+    wx.navigateTo({ url: '/pages/collections/index' })
+  },
+
+  goToProfile() {
+    wx.navigateTo({ url: '/pages/profile/index' })
+  },
+
+  goToHelp() {
+    wx.navigateTo({ url: '/pages/help/index' })
   }
 })

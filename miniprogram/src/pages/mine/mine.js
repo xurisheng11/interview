@@ -7,10 +7,10 @@ Page({
     isLoggedIn: false,
     userInfo: null,
     stats: {
-      interviews: 0,
-      questions: 0,
+      totalInterviews: 0,
+      totalQuestions: 0,
       collections: 0,
-      credits: 0
+      maxScore: 0
     }
   },
 
@@ -146,10 +146,10 @@ Page({
             isLoggedIn: false,
             userInfo: null,
             stats: {
-              interviews: 0,
-              questions: 0,
+              totalInterviews: 0,
+              totalQuestions: 0,
               collections: 0,
-              credits: 0
+              maxScore: 0
             }
           })
           wx.showToast({

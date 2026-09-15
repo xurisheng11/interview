@@ -42,12 +42,12 @@
     <view class="card stats-card anim-fade-in">
       <view class="stats-grid">
         <view class="stat-item" hover-class="stat-pressed" bindtap="viewInterviews">
-          <text class="stat-value v-blue">{{stats.interviews || 0}}</text>
+          <text class="stat-value v-blue">{{stats.totalInterviews || 0}}</text>
           <text class="stat-label">面试次数</text>
         </view>
         <view class="stat-divider"></view>
         <view class="stat-item" hover-class="stat-pressed" bindtap="viewQuestions">
-          <text class="stat-value v-green">{{stats.questions || 0}}</text>
+          <text class="stat-value v-green">{{stats.totalQuestions || 0}}</text>
           <text class="stat-label">答题数</text>
         </view>
         <view class="stat-divider"></view>
@@ -57,8 +57,8 @@
         </view>
         <view class="stat-divider"></view>
         <view class="stat-item">
-          <text class="stat-value v-purple">{{stats.credits || 0}}</text>
-          <text class="stat-label">积分</text>
+          <text class="stat-value v-purple">{{stats.maxScore || 0}}</text>
+          <text class="stat-label">最高分</text>
         </view>
       </view>
     </view>

@@ -6,8 +6,8 @@ App({
   globalData: {
     userInfo: null,
     token: null,
-    // 后端经 cpolar 隧道暴露到公网（本地调试：http://localhost:8080/api/v1）
-    apiBaseUrl: 'https://4f47a784.r2.cpolar.top/api/v1'
+    // 后端部署在微信云托管（本地调试：http://localhost:8080/api/v1）
+    apiBaseUrl: 'https://interview-api-314219-4-1305636691.sh.run.tcloudbase.com/api/v1'
   },
 
   onLaunch() {
@@ -47,6 +47,7 @@ App({
   },
 
   isLoggedIn() {
-    return !!this.globalData.token
+    // 与 store 保持一致：本地缓存为唯一事实源
+    return !!wx.getStorageSync('token')
   }
 })

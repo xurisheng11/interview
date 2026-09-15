@@ -1,4 +1,5 @@
 // API 请求模块
+const store = require('../store/index')
 
 const request = (options) => {
   return new Promise((resolve, reject) => {
@@ -31,12 +32,23 @@ const request = (options) => {
             })
             reject(new Error(res.data.message))
           }
+        } else if (res.statusCode === 401) {
+          // HTTP 401：token 失效，清理登录态并回登录页（不弹误导性的"服务器错误"）
+          store.clearAuth()
+          const pages = getCurrentPages()
+          const cur = pages.length ? pages[pages.length - 1] : null
+          if (!cur || cur.route !== 'pages/login/login') {
+            wx.redirectTo({ url: '/pages/login/login' })
+          }
+          reject(new Error((res.data && res.data.message) || '登录已过期，请重新登录'))
         } else {
+          // 优先透传后端具体错误（如"账号不存在"/"密码错误"），取不到再兜底
+          const msg = (res.data && res.data.message) || ('请求失败(' + res.statusCode + ')')
           wx.showToast({
-            title: '服务器错误',
+            title: msg,
             icon: 'none'
           })
-          reject(new Error('服务器错误'))
+          reject(new Error(msg))
         }
       },
       fail: (err) => {

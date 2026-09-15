@@ -78,9 +78,14 @@ class Store {
     this.notify()
   }
 
-  // 检查是否已登录
+  // 检查是否已登录（以本地缓存为唯一事实源，内存态与之对账，避免双轨不一致）
   isLoggedIn() {
-    return !!this.state.token
+    const token = wx.getStorageSync('token')
+    if (token !== this.state.token) {
+      this.state.token = token || null
+      this.state.user = token ? (wx.getStorageSync('userInfo') || null) : null
+    }
+    return !!token
   }
 }
 

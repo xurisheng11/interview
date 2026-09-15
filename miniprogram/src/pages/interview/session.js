@@ -4,8 +4,8 @@ const api = require('../../api/index')
 const recorderManager = wx.getRecorderManager()
 const innerAudioContext = wx.createInnerAudioContext()
 
-// 语音转文字管理器（微信同声传译插件）：语音模式下边录边转文字写入回答
-// 插件未在后台添加时 requirePlugin 会抛错，降级为纯录音
+// 语音转文字管理器（微信同声传译插件）：插件仅对非个人主体小程序开放，
+// 个人主体账号无法添加（app.json 已不声明插件），requirePlugin 失败自动降级为纯录音
 let recognitionManager = null
 try {
   recognitionManager = requirePlugin('WechatSI').getRecordRecognitionManager()
@@ -42,6 +42,8 @@ Page({
     isPlaying: false,
     // 录音中的实时识别中间结果（语音转文字反馈）
     liveRecognizeText: '',
+    // 语音转文字能力是否可用（个人主体小程序插件不可用，降级为纯录音）
+    speechToText: false,
     
     // UI状态
     submitting: false,
@@ -92,6 +94,8 @@ Page({
   },
 
   onLoad(options) {
+    // 按实际能力渲染文案：插件可用才承诺"语音转文字"（个人主体小程序插件不可用，降级纯录音）
+    this.setData({ speechToText: !!recognitionManager })
     if (!options.id) {
       wx.showToast({ title: '参数错误', icon: 'none' })
       wx.navigateBack()

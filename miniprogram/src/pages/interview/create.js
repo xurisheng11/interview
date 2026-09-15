@@ -2,17 +2,56 @@ const api = require('../../api/index')
 
 Page({
   data: {
-    // 岗位选择
-    selectedJobTitle: 'frontend',
-    jobTitles: [
-      { value: 'frontend', name: '前端开发', desc: 'Vue/React/Angular' },
-      { value: 'backend', name: '后端开发', desc: 'Java/Go/Python' },
-      { value: 'fullstack', name: '全栈开发', desc: '前后端都要' },
-      { value: 'mobile', name: '移动端开发', desc: 'iOS/Android' },
-      { value: 'algorithm', name: '算法工程师', desc: '数据结构/机器学习' },
-      { value: 'devops', name: 'DevOps工程师', desc: '运维/云原生' },
-      { value: 'data', name: '数据工程师', desc: '大数据/数据分析' },
-      { value: 'qa', name: '测试开发', desc: '自动化测试' }
+    // 岗位选择（按类别分组，与 UI 前端一致）
+    selectedJobTitle: '前端开发',
+    selectedCategory: 'tech',
+    isCustomJob: false,
+    customJobInput: '',
+    jobCategories: [
+      {
+        name: 'tech',
+        label: '技术类',
+        icon: '💻',
+        jobs: [
+          '后端开发', '前端开发', '全栈开发', '移动端开发(Android)',
+          '移动端开发(iOS)', '大数据工程师', 'AI算法工程师', '测试工程师',
+          '运维/DevOps', '网络安全', '嵌入式开发', '游戏开发',
+          '游戏客户端开发', '游戏服务端开发', '数据分析', '数据工程',
+          '机器学习工程师', '深度学习工程师', 'NLP工程师', '推荐算法工程师'
+        ]
+      },
+      {
+        name: 'product',
+        label: '产品与设计',
+        icon: '🎨',
+        jobs: [
+          '产品经理', '产品助理', '高级产品经理', '数据产品经理',
+          'AI产品经理', 'C端产品经理', 'B端产品经理', '平台产品经理',
+          'UI设计师', 'UX设计师', '视觉设计师', '交互设计师',
+          '平面设计师', '品牌设计师', '视频设计师'
+        ]
+      },
+      {
+        name: 'operation',
+        label: '运营与市场',
+        icon: '📈',
+        jobs: [
+          '运营专员', '内容运营', '用户运营', '活动运营',
+          '新媒体运营', '电商运营', '社群运营', '游戏运营',
+          '市场策划', '市场营销', '商务拓展', '销售代表',
+          '客户经理', '渠道运营', '增长运营'
+        ]
+      },
+      {
+        name: 'admin',
+        label: '职能类',
+        icon: '📋',
+        jobs: [
+          '会计/财务', '人力资源', '行政管理', '法务/合规',
+          '采购/供应链', '质量管理', '项目协调', '总裁助理',
+          '投资关系', '公关媒介', '党建专员', '行政前台'
+        ]
+      }
     ],
 
     // 面试轮次
@@ -102,9 +141,38 @@ Page({
     this.setData({ currentStep: step })
   },
 
+  // 选择岗位分类
+  selectCategory(e) {
+    this.setData({ 
+      selectedCategory: e.currentTarget.dataset.name,
+      customJobInput: '',
+      isCustomJob: false
+    })
+  },
+
   // 选择岗位
   selectJobTitle(e) {
-    this.setData({ selectedJobTitle: e.currentTarget.dataset.value })
+    this.setData({ 
+      selectedJobTitle: e.currentTarget.dataset.name,
+      isCustomJob: false,
+      customJobInput: ''
+    })
+  },
+
+  // 自定义岗位输入
+  onCustomJobInput(e) {
+    this.setData({ customJobInput: e.detail.value })
+  },
+
+  // 应用自定义岗位
+  applyCustomJob() {
+    const val = this.data.customJobInput.trim()
+    if (val) {
+      this.setData({ 
+        selectedJobTitle: val,
+        isCustomJob: true 
+      })
+    }
   },
 
   // 选择轮次
@@ -175,8 +243,7 @@ Page({
 
   // 获取岗位名称
   getJobTitleName() {
-    const job = this.data.jobTitles.find(j => j.value === this.data.selectedJobTitle)
-    return job ? job.name : '前端开发'
+    return this.data.selectedJobTitle || '前端开发'
   },
 
   // 开始面试

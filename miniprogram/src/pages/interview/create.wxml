@@ -23,17 +23,52 @@
     <view class="section">
       <text class="section-title">选择岗位</text>
       <text class="section-hint">选择你想要练习的岗位类型</text>
-      <view class="job-grid">
+
+      <!-- 分类标签 -->
+      <view class="category-tabs">
         <view 
-          wx:for="{{jobTitles}}" 
-          wx:key="value"
-          class="job-item {{selectedJobTitle === item.value ? 'active' : ''}}"
-          bindtap="selectJobTitle"
-          data-value="{{item.value}}"
+          wx:for="{{jobCategories}}" 
+          wx:key="name"
+          class="category-tab {{selectedCategory === item.name ? 'active' : ''}}"
+          bindtap="selectCategory"
+          data-name="{{item.name}}"
         >
-          <text class="job-name">{{item.name}}</text>
-          <text class="job-desc">{{item.desc}}</text>
+          <text class="category-icon">{{item.icon}}</text>
+          <text class="category-label">{{item.label}}</text>
         </view>
+      </view>
+
+      <!-- 岗位列表 -->
+      <view class="job-grid">
+        <block wx:for="{{jobCategories}}" wx:key="name">
+          <block wx:if="{{selectedCategory === item.name}}">
+            <view 
+              wx:for="{{item.jobs}}" 
+              wx:for-item="job" 
+              wx:key="*this"
+              class="job-item {{selectedJobTitle === job && !isCustomJob ? 'active' : ''}}"
+              bindtap="selectJobTitle"
+              data-name="{{job}}"
+            >
+              <text class="job-name">{{job}}</text>
+            </view>
+          </block>
+        </block>
+      </view>
+
+      <!-- 自定义岗位 -->
+      <view class="custom-job-wrap">
+        <view class="custom-job-input-row">
+          <input 
+            class="custom-job-input"
+            placeholder="或输入自定义岗位..."
+            value="{{customJobInput}}"
+            bindinput="onCustomJobInput"
+            bindconfirm="applyCustomJob"
+          />
+          <button class="btn-custom-job" bindtap="applyCustomJob" size="mini">确定</button>
+        </view>
+        <text wx:if="{{isCustomJob}}" class="custom-job-tip">已选自定义岗位：{{selectedJobTitle}}</text>
       </view>
     </view>
 

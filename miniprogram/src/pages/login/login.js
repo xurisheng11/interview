@@ -134,4 +134,4 @@ Page({
       url: '/pages/register/index'
     })
   }
-}))
+})

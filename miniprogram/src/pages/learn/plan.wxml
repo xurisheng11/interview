@@ -121,7 +121,7 @@
           <view
             wx:for="{{categories}}"
             wx:key="id"
-            class="chip {{weakAreas.indexOf(item.id) > -1 ? 'active' : ''}}"
+            class="chip {{weakAreaMap[item.id] ? 'active' : ''}}"
             hover-class="btn-press"
             bindtap="toggleWeakArea"
             data-id="{{item.id}}"

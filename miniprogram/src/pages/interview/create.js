@@ -65,6 +65,8 @@ Page({
 
     // 面试形式
     selectedTypes: ['structured'],
+    // WXML 不支持 .indexOf() 方法调用，用映射表驱动选中态渲染
+    selectedTypeMap: { structured: true },
     interviewTypeOptions: [
       { value: 'structured', name: '结构化面试', desc: '标准化题目' },
       { value: 'semi-structured', name: '半结构化', desc: '灵活调整' },
@@ -81,6 +83,7 @@ Page({
 
     // 重点领域（可多选）
     selectedFocusAreas: [],
+    selectedFocusMap: {},
     focusAreaOptions: [
       { value: '算法', name: '算法与数据结构' },
       { value: '框架', name: '主流框架原理' },
@@ -127,12 +130,21 @@ Page({
 
     // UI状态
     loading: false,
-    currentStep: 1
+    currentStep: 1,
+    // 开始按钮可用态（wxml 只能绑 data 字段，getter 在模板里取不到）
+    canStart: true
   },
 
-  // 计算属性
-  get canStart() {
-    return this.data.selectedJobTitle && this.data.selectedRound && this.data.selectedDifficulty
+  onLoad() {
+    this.updateCanStart()
+  },
+
+  // 计算开始按钮可用态（结果写入 data 供 wxml 绑定）
+  updateCanStart() {
+    const canStart = !!(this.data.selectedJobTitle && this.data.selectedRound && this.data.selectedDifficulty)
+    if (canStart !== this.data.canStart) {
+      this.setData({ canStart })
+    }
   },
 
   // 步骤切换
@@ -157,6 +169,7 @@ Page({
       isCustomJob: false,
       customJobInput: ''
     })
+    this.updateCanStart()
   },
 
   // 自定义岗位输入
@@ -172,12 +185,14 @@ Page({
         selectedJobTitle: val,
         isCustomJob: true 
       })
+      this.updateCanStart()
     }
   },
 
   // 选择轮次
   selectRound(e) {
     this.setData({ selectedRound: e.currentTarget.dataset.value })
+    this.updateCanStart()
   },
 
   // 选择面试形式（可多选）
@@ -195,12 +210,15 @@ Page({
         return
       }
     }
-    this.setData({ selectedTypes: [...types] })
+    const map = {}
+    types.forEach(t => { map[t] = true })
+    this.setData({ selectedTypes: types, selectedTypeMap: map })
   },
 
   // 选择难度
   selectDifficulty(e) {
     this.setData({ selectedDifficulty: e.currentTarget.dataset.value })
+    this.updateCanStart()
   },
 
   // 选择重点领域（可多选）
@@ -218,7 +236,9 @@ Page({
         return
       }
     }
-    this.setData({ selectedFocusAreas: [...areas] })
+    const map = {}
+    areas.forEach(a => { map[a] = true })
+    this.setData({ selectedFocusAreas: areas, selectedFocusMap: map })
   },
 
   // 公司名称输入
@@ -248,7 +268,7 @@ Page({
 
   // 开始面试
   startInterview() {
-    if (!this.canStart) {
+    if (!this.data.canStart) {
       wx.showToast({ title: '请完善面试信息', icon: 'none' })
       return
     }

@@ -132,11 +132,11 @@
         <view 
           wx:for="{{interviewTypeOptions}}" 
           wx:key="value"
-          class="type-item {{selectedTypes.indexOf(item.value) > -1 ? 'active' : ''}}"
+          class="type-item {{selectedTypeMap[item.value] ? 'active' : ''}}"
           bindtap="toggleInterviewType"
           data-value="{{item.value}}"
         >
-          <text class="type-icon">{{selectedTypes.indexOf(item.value) > -1 ? '✓' : ''}}</text>
+          <text class="type-icon">{{selectedTypeMap[item.value] ? '✓' : ''}}</text>
           <text class="type-name">{{item.name}}</text>
           <text class="type-desc">{{item.desc}}</text>
         </view>
@@ -151,7 +151,7 @@
         <view 
           wx:for="{{focusAreaOptions}}" 
           wx:key="value"
-          class="focus-item {{selectedFocusAreas.indexOf(item.value) > -1 ? 'active' : ''}}"
+          class="focus-item {{selectedFocusMap[item.value] ? 'active' : ''}}"
           bindtap="toggleFocusArea"
           data-value="{{item.value}}"
         >

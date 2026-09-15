@@ -27,6 +27,8 @@ Page({
     dailyMinutes: 60,
     experience: 'fresh',
     weakAreas: [],
+    // WXML 不支持 .indexOf() 方法调用，用映射表驱动选中态渲染
+    weakAreaMap: {},
 
     daysOptions: [
       { value: 30, name: '30天', desc: '短期突击' },
@@ -210,7 +212,9 @@ Page({
     } else {
       areas.push(id)
     }
-    this.setData({ weakAreas: [...areas] })
+    const map = {}
+    areas.forEach(a => { map[a] = true })
+    this.setData({ weakAreas: areas, weakAreaMap: map })
   },
 
   // ===== 生成 / 管理计划 =====
@@ -316,6 +320,7 @@ Page({
           dailyMinutes: config.dailyMinutes || 60,
           experience: config.experience || 'fresh',
           weakAreas: config.weakAreas ? [...config.weakAreas] : [],
+          weakAreaMap: (config.weakAreas || []).reduce((m, id) => { m[id] = true; return m }, {}),
           useInterviewDate: false,
           interviewDate: '',
           daysUntilInterview: 0

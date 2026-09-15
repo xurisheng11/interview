@@ -6,7 +6,14 @@ Page({
     interviewId: null,
     interview: null,
     report: null,
-    isNew: false
+    isNew: false,
+    // wxml 不支持函数调用，展示文本/评分等级类必须入 data
+    statusText: '',
+    typeText: '',
+    scoreClassTotal: '',
+    scoreClassAccuracy: '',
+    scoreClassFluency: '',
+    scoreClassLogic: ''
   },
 
   onLoad(options) {
@@ -39,6 +46,7 @@ Page({
         interview: interviewRes.data,
         report: reportRes ? reportRes.data : null
       })
+      this.syncDetailDisplay()
     }).catch(err => {
       this.setData({ loading: false })
       wx.showToast({
@@ -99,6 +107,19 @@ Page({
         }
       })
     }
+  },
+
+  // 同步展示文本与评分等级类到 data（供 wxml 渲染）
+  syncDetailDisplay() {
+    const { interview, report } = this.data
+    this.setData({
+      statusText: interview ? this.getStatusText(interview.status) : '',
+      typeText: interview ? this.getTypeText(interview.interviewType) : '',
+      scoreClassTotal: report ? this.getScoreClass(report.totalScore || 0) : '',
+      scoreClassAccuracy: report ? this.getScoreClass(report.accuracy || 0) : '',
+      scoreClassFluency: report ? this.getScoreClass(report.fluency || 0) : '',
+      scoreClassLogic: report ? this.getScoreClass(report.logic || 0) : ''
+    })
   },
 
   getStatusText(status) {

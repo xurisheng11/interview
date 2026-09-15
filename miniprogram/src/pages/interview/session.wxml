@@ -3,7 +3,7 @@
   <view class="progress-bar">
     <view class="progress-info">
       <text class="progress-text">第 {{currentIndex + 1}} / {{totalCount}} 题</text>
-      <text class="timer-text">⏱ {{formatTime(remainingTime)}}</text>
+      <text class="timer-text">⏱ {{remainingTimeText}}</text>
     </view>
     <view class="progress-track">
       <view class="progress-fill" style="width: {{progressPercent}}%"></view>
@@ -14,10 +14,10 @@
   <view class="question-card" wx:if="{{currentQuestion}}">
     <view class="question-header">
       <view class="question-type-tag">
-        <text>{{getTypeName(currentQuestion.type)}}</text>
+        <text>{{currentTypeName}}</text>
       </view>
       <view class="question-difficulty {{currentQuestion.difficulty}}">
-        <text>{{getDifficultyName(currentQuestion.difficulty)}}</text>
+        <text>{{currentDifficultyName}}</text>
       </view>
     </view>
     
@@ -61,7 +61,7 @@
     <view class="record-hint recording-hint" wx:if="{{isRecording}}">
       <text class="record-dot"></text>
       <text>录音中...</text>
-      <text class="record-time">{{formatTime(recordTime)}}</text>
+      <text class="record-time">{{recordTimeText}}</text>
     </view>
 
     <view class="record-actions">

@@ -12,14 +12,14 @@
         <text class="title">{{interview.company}} - {{interview.position}}</text>
         <view class="status-badge {{interview.status}}">
           <view class="status-dot"></view>
-          <text>{{getStatusText(interview.status)}}</text>
+          <text>{{statusText}}</text>
         </view>
       </view>
 
       <view class="info-grid">
         <view class="info-item">
           <text class="info-label">面试类型</text>
-          <text class="info-value">{{getTypeText(interview.interviewType)}}</text>
+          <text class="info-value">{{typeText}}</text>
         </view>
         <view class="info-item">
           <text class="info-label">时长</text>
@@ -41,35 +41,35 @@
       <text class="section-title">综合评分</text>
       <view class="score-overview">
         <view class="main-score">
-          <text class="score-num {{getScoreClass(report.totalScore)}}">{{report.totalScore || 0}}</text>
+          <text class="score-num {{scoreClassTotal}}">{{report.totalScore || 0}}</text>
           <text class="score-unit">分</text>
         </view>
         <view class="score-detail">
           <view class="score-row">
             <view class="score-row-top">
               <text class="score-item-label">回答准确度</text>
-              <text class="score-item-value {{getScoreClass(report.accuracy)}}">{{report.accuracy || 0}}</text>
+              <text class="score-item-value {{scoreClassAccuracy}}">{{report.accuracy || 0}}</text>
             </view>
             <view class="score-bar">
-              <view class="score-bar-fill {{getScoreClass(report.accuracy)}}" style="width: {{report.accuracy || 0}}%"></view>
+              <view class="score-bar-fill {{scoreClassAccuracy}}" style="width: {{report.accuracy || 0}}%"></view>
             </view>
           </view>
           <view class="score-row">
             <view class="score-row-top">
               <text class="score-item-label">表达流畅度</text>
-              <text class="score-item-value {{getScoreClass(report.fluency)}}">{{report.fluency || 0}}</text>
+              <text class="score-item-value {{scoreClassFluency}}">{{report.fluency || 0}}</text>
             </view>
             <view class="score-bar">
-              <view class="score-bar-fill {{getScoreClass(report.fluency)}}" style="width: {{report.fluency || 0}}%"></view>
+              <view class="score-bar-fill {{scoreClassFluency}}" style="width: {{report.fluency || 0}}%"></view>
             </view>
           </view>
           <view class="score-row">
             <view class="score-row-top">
               <text class="score-item-label">逻辑清晰度</text>
-              <text class="score-item-value {{getScoreClass(report.logic)}}">{{report.logic || 0}}</text>
+              <text class="score-item-value {{scoreClassLogic}}">{{report.logic || 0}}</text>
             </view>
             <view class="score-bar">
-              <view class="score-bar-fill {{getScoreClass(report.logic)}}" style="width: {{report.logic || 0}}%"></view>
+              <view class="score-bar-fill {{scoreClassLogic}}" style="width: {{report.logic || 0}}%"></view>
             </view>
           </view>
         </view>

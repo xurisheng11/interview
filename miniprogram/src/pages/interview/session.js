@@ -12,6 +12,12 @@ Page({
     currentIndex: 0,
     totalCount: 0,
     remainingTime: 0,
+    // wxml 不支持函数调用/getter，计时文本与进度百分比必须入 data
+    remainingTimeText: '00:00',
+    recordTimeText: '00:00',
+    progressPercent: 0,
+    currentTypeName: '',
+    currentDifficultyName: '',
     
     // 当前问题
     currentQuestion: null,
@@ -37,6 +43,18 @@ Page({
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+  },
+
+  // 同步计时文本与进度条到 data（供 wxml 渲染）
+  syncSessionDisplay() {
+    const { remainingTime, recordTime, currentIndex, totalCount, currentQuestion } = this.data
+    this.setData({
+      remainingTimeText: this.formatTime(remainingTime),
+      recordTimeText: this.formatTime(recordTime),
+      progressPercent: totalCount === 0 ? 0 : ((currentIndex + 1) / totalCount) * 100,
+      currentTypeName: currentQuestion ? this.getTypeName(currentQuestion.type) : '',
+      currentDifficultyName: currentQuestion ? this.getDifficultyName(currentQuestion.difficulty) : ''
+    })
   },
 
   // 获取类型名称
@@ -81,6 +99,7 @@ Page({
   initRecorder() {
     recorderManager.onStart(() => {
       this.setData({ isRecording: true, recordTime: 0 })
+      this.syncSessionDisplay()
       this.startRecordTimer()
     })
 
@@ -96,7 +115,18 @@ Page({
       console.error('录音错误', err)
       this.setData({ isRecording: false })
       this.stopRecordTimer()
-      wx.showToast({ title: '录音失败', icon: 'none' })
+      this.syncSessionDisplay()
+      // NotFoundError = 环境无录音设备（Windows 模拟器常见），给出可操作提示
+      const msg = (err && err.errMsg) || ''
+      if (msg.indexOf('NotFound') > -1) {
+        wx.showToast({
+          title: '当前环境无录音设备：模拟器不支持录音，请真机预览测试',
+          icon: 'none',
+          duration: 4000
+        })
+      } else {
+        wx.showToast({ title: '录音失败，请检查麦克风权限后重试', icon: 'none' })
+      }
     })
   },
 
@@ -123,6 +153,7 @@ Page({
         currentQuestion: questions[0] || null,
         remainingTime: interview.questionTime || 300 // 默认5分钟
       })
+      this.syncSessionDisplay()
       
       this.startTimer()
     }).catch(err => {
@@ -142,6 +173,7 @@ Page({
         this.handleTimeUp()
       } else {
         this.setData({ remainingTime: remaining })
+        this.syncSessionDisplay()
       }
     }, 1000)
   },
@@ -207,6 +239,7 @@ Page({
   startRecordTimer() {
     this.recordTimer = setInterval(() => {
       this.setData({ recordTime: this.data.recordTime + 1 })
+      this.syncSessionDisplay()
     }, 1000)
   },
 
@@ -230,6 +263,7 @@ Page({
         answer: this.data.questions[newIndex].userAnswer || '',
         audioPath: this.data.questions[newIndex].audioPath || ''
       })
+      this.syncSessionDisplay()
     }
   },
 
@@ -246,6 +280,7 @@ Page({
         answer: this.data.questions[newIndex].userAnswer || '',
         audioPath: this.data.questions[newIndex].audioPath || ''
       })
+      this.syncSessionDisplay()
     } else {
       // 最后一题，提交
       this.completeInterview()
@@ -317,11 +352,5 @@ Page({
 
   closeModal() {
     // 阻止关闭
-  },
-
-  // 计算进度
-  get progressPercent() {
-    if (this.data.totalCount === 0) return 0
-    return ((this.data.currentIndex + 1) / this.data.totalCount) * 100
   }
 })

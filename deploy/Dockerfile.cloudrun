@@ -1,0 +1,46 @@
+# 微信云托管 all-in-one 镜像：Go 后端 + MySQL 8 + Redis 7 单容器
+# 云托管没有独立 MySQL/Redis 服务，全部塞进一个容器跑（体验期方案）
+# 打包：deploy/pack-cloudrun.ps1 会把它重命名为 Dockerfile 放进 zip 根目录
+
+# ---------- 构建阶段 ----------
+FROM golang:1.24-bookworm AS builder
+
+WORKDIR /src
+
+COPY api/go.mod api/go.sum ./
+RUN go mod download
+
+COPY api/ ./
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/server .
+
+# ---------- 运行阶段 ----------
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+      mysql-server redis-server ca-certificates curl \
+ && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# 注意目录结构：后端按「二进制所在目录的上一级 /db/migrations」找迁移脚本
+COPY --from=builder /out/server   /app/api/server
+COPY api/db/migrations            /app/db/migrations
+COPY deploy/cloudrun-start.sh     /app/start.sh
+RUN chmod +x /app/start.sh
+
+EXPOSE 8080
+
+# 容器内自包含中间件地址；敏感项（WX_SECRET 等）在云托管控制台以环境变量注入
+ENV SERVER_PORT=8080 \
+    GIN_MODE=release \
+    REDIS_HOST=127.0.0.1 \
+    REDIS_PORT=6379 \
+    MYSQL_HOST=127.0.0.1 \
+    MYSQL_PORT=3306 \
+    MYSQL_USER=interview \
+    MYSQL_DB=interview_sim
+
+CMD ["/app/start.sh"]

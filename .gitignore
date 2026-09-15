@@ -24,3 +24,7 @@ Thumbs.db
 
 # Kiro specsï¼ˆå¯é€‰ï¼ŒæŒ‰éœ€ä¿ç•™ï¼‰
 # .kiro/
+
+# ÔÆÍĞ¹Ü´ò°ü²úÎï
+deploy/cloudrun-pack.zip
+deploy/.cloudrun-pack/

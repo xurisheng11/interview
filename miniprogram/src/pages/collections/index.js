@@ -85,7 +85,7 @@ Page({
       confirmColor: '#ff4d4f',
       success: res => {
         if (!res.confirm) return
-        api.question.collect(id).then(() => {
+        api.question.uncollect(id).then(() => {
           const questions = this.data.questions.filter(q => q.id !== id)
           this.setData({ questions })
           wx.showToast({ title: '已取消收藏', icon: 'success' })
@@ -103,7 +103,7 @@ Page({
       confirmColor: '#ff4d4f',
       success: res => {
         if (!res.confirm) return
-        api.community.collect(id).then(() => {
+        api.community.uncollect(id).then(() => {
           const articles = this.data.articles.filter(a => a.id !== id)
           this.setData({ articles })
           wx.showToast({ title: '已取消收藏', icon: 'success' })

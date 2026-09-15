@@ -135,10 +135,16 @@ export const question = {
     data
   }),
 
-  // 收藏/取消收藏题目
+  // 收藏题目
   collect: (id) => request({
     url: `/questions/${id}/collect`,
     method: 'POST'
+  }),
+
+  // 取消收藏题目
+  uncollect: (id) => request({
+    url: `/questions/${id}/collect`,
+    method: 'DELETE'
   })
 }
 
@@ -283,6 +289,12 @@ export const community = {
   collect: (id) => request({
     url: `/community/articles/${id}/collect`,
     method: 'POST'
+  }),
+
+  // 取消收藏文章
+  uncollect: (id) => request({
+    url: `/community/articles/${id}/collect`,
+    method: 'DELETE'
   }),
 
   // 获取评论列表

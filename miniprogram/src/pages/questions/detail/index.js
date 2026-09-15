@@ -28,6 +28,8 @@ Page({
         isCollected: !!question.isCollected,
         loading: false 
       })
+      // 详情接口匿名公开、不含收藏态，登录后用收藏集合反查真实状态
+      this.syncCollectState()
     }).catch(err => {
       console.error('加载题目失败', err)
       this.setData({ 
@@ -62,6 +64,17 @@ Page({
     return map[difficulty] || '中等'
   },
 
+  // 同步当前用户对本题的收藏状态（详情接口不返回该字段）
+  syncCollectState() {
+    if (!wx.getStorageSync('token')) return
+    api.profile.getCollections().then(res => {
+      const data = res.data || {}
+      const qList = Array.isArray(data.questions) ? data.questions : []
+      const collected = qList.some(q => q.questionId === this.data.questionId)
+      this.setData({ isCollected: collected })
+    }).catch(() => {})
+  },
+
   // 收藏 / 取消收藏
   toggleCollect() {
     if (!wx.getStorageSync('token')) {
@@ -70,7 +83,11 @@ Page({
     }
     const next = !this.data.isCollected
     this.setData({ isCollected: next })
-    api.question.collect(this.data.questionId).then(() => {
+    // 收藏走 POST、取消走 DELETE（后端非切换式接口）
+    const req = next
+      ? api.question.collect(this.data.questionId)
+      : api.question.uncollect(this.data.questionId)
+    req.then(() => {
       wx.showToast({
         title: next ? '已收藏' : '已取消收藏',
         icon: 'none'

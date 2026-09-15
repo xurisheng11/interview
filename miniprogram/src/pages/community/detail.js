@@ -72,9 +72,13 @@ Page({
     })
   },
 
-  // 收藏
+  // 收藏 / 取消收藏（收藏走 POST、取消走 DELETE，后端非切换式接口）
   handleCollect() {
-    api.community.collect(this.data.articleId).then(() => {
+    const wasCollected = this.data.article.collected
+    const req = wasCollected
+      ? api.community.uncollect(this.data.articleId)
+      : api.community.collect(this.data.articleId)
+    req.then(() => {
       const article = this.data.article
       if (article.collected) {
         article.collectCount = Math.max(0, (article.collectCount || 0) - 1)

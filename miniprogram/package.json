@@ -4,6 +4,7 @@
   "description": "面试模拟系统微信小程序",
   "main": "src/app.js",
   "scripts": {
+    "upload": "node scripts/upload.js",
     "dev": "npm run build:weapp -- --watch",
     "build:weapp": "echo '请使用微信开发者工具打开本项目'",
     "build:swan": "echo '请使用百度开发者工具打开本项目'",
@@ -11,7 +12,14 @@
     "build:tt": "echo '请使用字节跳动开发者工具打开本项目'",
     "build:h5": "echo '请使用 H5 构建命令'"
   },
-  "keywords": ["miniprogram", "interview", "wechat"],
+  "keywords": [
+    "miniprogram",
+    "interview",
+    "wechat"
+  ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "miniprogram-ci": "^2.1.31"
+  }
 }

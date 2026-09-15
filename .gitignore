@@ -28,3 +28,7 @@ Thumbs.db
 # 云托管打包产物
 deploy/cloudrun-pack.zip
 deploy/.cloudrun-pack/
+
+# miniprogram upload private key (never commit)
+miniprogram/private.*.key
+miniprogram/*.key

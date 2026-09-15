@@ -32,3 +32,5 @@ deploy/.cloudrun-pack/
 # miniprogram upload private key (never commit)
 miniprogram/private.*.key
 miniprogram/*.key
+
+miniprogram/node_modules/

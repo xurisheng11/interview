@@ -212,9 +212,22 @@
 }
 
 .action-hint {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
   font-size: 24rpx;
   color: var(--brand);
   font-weight: 500;
+}
+
+.collect-star {
+  font-size: 34rpx;
+  line-height: 1;
+  color: #c5ccd6;
+}
+
+.collect-star.on {
+  color: #faad14;
 }
 
 /* ============ 空状态 ============ */

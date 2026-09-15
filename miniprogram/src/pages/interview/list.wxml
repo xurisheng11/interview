@@ -9,18 +9,18 @@
         </view>
         <view class="status-badge {{item.status}}">
           <view class="status-dot"></view>
-          <text>{{getStatusText(item.status)}}</text>
+          <text>{{item.statusText}}</text>
         </view>
       </view>
 
       <view class="card-body">
         <view class="info-row">
           <text class="label">难度</text>
-          <text class="value">{{getDifficultyText(item.difficulty)}}</text>
+          <text class="value">{{item.difficultyText}}</text>
         </view>
         <view class="info-row">
           <text class="label">面试轮次</text>
-          <text class="value">{{getRoundText(item.round)}}</text>
+          <text class="value">{{item.roundText}}</text>
         </view>
         <view class="info-row">
           <text class="label">时间</text>
@@ -31,7 +31,7 @@
       <view class="card-footer" wx:if="{{item.totalScore > 0}}">
         <view class="score-section">
           <text class="score-label">综合得分</text>
-          <text class="score-value {{getScoreClass(item.totalScore)}}">{{item.totalScore}}</text>
+          <text class="score-value {{item.scoreClass}}">{{item.totalScore}}</text>
         </view>
         <view class="action-hint">
           <text>查看详情 ›</text>

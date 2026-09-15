@@ -22,7 +22,14 @@ Page({
   loadList() {
     return api.interview.list().then(res => {
       // 后端返回数组直接是列表
-      this.setData({ list: res.data || [] })
+      const list = (res.data || []).map(item => ({
+        ...item,
+        statusText: this.getStatusText(item.status),
+        difficultyText: this.getDifficultyText(item.difficulty),
+        roundText: this.getRoundText(item.round),
+        scoreClass: this.getScoreClass(item.totalScore)
+      }))
+      this.setData({ list })
     }).catch(err => {
       console.log('加载面试列表失败', err)
       this.setData({ list: [] })

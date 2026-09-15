@@ -13,10 +13,10 @@
   <view class="question-card" wx:else>
     <view class="card-header">
       <view class="question-type {{question.type}}">
-        <text>{{getTypeName(question.type)}}</text>
+        <text>{{question.typeName}}</text>
       </view>
       <view class="question-difficulty {{question.difficulty}}">
-        <text>{{getDifficultyName(question.difficulty)}}</text>
+        <text>{{question.difficultyName}}</text>
       </view>
     </view>
 
@@ -44,6 +44,10 @@
 
   <!-- 底部操作 -->
   <view class="bottom-bar" wx:if="{{!loading && !error}}">
+    <button class="btn-like {{isCollected ? 'active' : ''}}" bindtap="toggleCollect">
+      <text class="icon">{{isCollected ? '★' : '☆'}}</text>
+      <text>{{isCollected ? '已收藏' : '收藏'}}</text>
+    </button>
     <button class="btn-practice" bindtap="startPractice">
       <text>开始练习</text>
     </button>

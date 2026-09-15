@@ -52,7 +52,11 @@ Page({
       }
       
       this.setData({ 
-        questions,
+        questions: questions.map(q => ({
+          ...q,
+          typeName: this.getTypeName(q.type),
+          difficultyName: this.getDifficultyName(q.difficulty)
+        })),
         loading: false 
       })
     }).catch(err => {
@@ -88,6 +92,24 @@ Page({
     const id = e.currentTarget.dataset.id
     wx.navigateTo({
       url: `/pages/questions/detail/index?id=${id}`
+    })
+  },
+
+  // 列表快捷收藏
+  toggleCollect(e) {
+    if (!wx.getStorageSync('token')) {
+      wx.navigateTo({ url: '/pages/login/login' })
+      return
+    }
+    const { id, index } = e.currentTarget.dataset
+    const key = `questions[${index}].isCollected`
+    const next = !this.data.questions[index].isCollected
+    this.setData({ [key]: next })
+    api.question.collect(id).then(() => {
+      wx.showToast({ title: next ? '已收藏' : '已取消收藏', icon: 'none' })
+    }).catch(() => {
+      this.setData({ [key]: !next })
+      wx.showToast({ title: '操作失败', icon: 'none' })
     })
   }
 })

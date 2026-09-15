@@ -5,7 +5,8 @@ Page({
     questionId: null,
     question: {},
     loading: true,
-    error: null
+    error: null,
+    isCollected: false
   },
 
   onLoad(options) {
@@ -19,8 +20,12 @@ Page({
     this.setData({ loading: true, error: null })
     
     api.question.get(this.data.questionId).then(res => {
+      const question = res.data || {}
+      question.typeName = this.getTypeName(question.type)
+      question.difficultyName = this.getDifficultyName(question.difficulty)
       this.setData({ 
-        question: res.data || {},
+        question,
+        isCollected: !!question.isCollected,
         loading: false 
       })
     }).catch(err => {
@@ -57,16 +62,36 @@ Page({
     return map[difficulty] || '中等'
   },
 
+  // 收藏 / 取消收藏
+  toggleCollect() {
+    if (!wx.getStorageSync('token')) {
+      wx.navigateTo({ url: '/pages/login/login' })
+      return
+    }
+    const next = !this.data.isCollected
+    this.setData({ isCollected: next })
+    api.question.collect(this.data.questionId).then(() => {
+      wx.showToast({
+        title: next ? '已收藏' : '已取消收藏',
+        icon: 'none'
+      })
+    }).catch(err => {
+      // 失败回滚
+      this.setData({ isCollected: !next })
+      wx.showToast({ title: '操作失败', icon: 'none' })
+    })
+  },
+
   // 开始练习
   startPractice() {
-    wx.showModal({
-      title: '开始练习',
-      content: '将以此题目开始一次模拟面试练习',
-      success: (res) => {
-        if (res.confirm) {
-          wx.navigateBack()
-        }
-      }
+    if (!wx.getStorageSync('token')) {
+      wx.navigateTo({ url: '/pages/login/login' })
+      return
+    }
+    const q = this.data.question
+    const jobTitle = q.jobTitle || ''
+    wx.navigateTo({
+      url: `/pages/interview/create?jobTitle=${encodeURIComponent(jobTitle)}`
     })
   }
 })

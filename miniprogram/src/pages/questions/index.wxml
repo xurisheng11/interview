@@ -41,10 +41,10 @@
     >
       <view class="card-header">
         <view class="question-type {{item.type}}">
-          <text>{{getTypeName(item.type)}}</text>
+          <text>{{item.typeName}}</text>
         </view>
         <view class="question-difficulty {{item.difficulty}}">
-          <text>{{getDifficultyName(item.difficulty)}}</text>
+          <text>{{item.difficultyName}}</text>
         </view>
       </view>
 
@@ -64,6 +64,7 @@
           </view>
         </view>
         <view class="action-hint">
+          <text class="collect-star {{item.isCollected ? 'on' : ''}}" catchtap="toggleCollect" data-id="{{item.questionId}}" data-index="{{index}}">{{item.isCollected ? '★' : '☆'}}</text>
           <text>查看详情 ›</text>
         </view>
       </view>

@@ -255,6 +255,21 @@ ADMIN_PASSWORD=强密码
 3. 排障入口：云托管控制台 → 服务管理 → **日志**（redis / mysqld / 后端 GIN 日志都在标准输出）
 4. > 官方提示：默认公网域名仅供测试，**进不了小程序合法域名白名单**（见下一步）
 
+## 云托管地址配置清单（本次部署实例）
+
+当前默认域名：`https://interview-api-314219-4-1305636691.sh.run.tcloudbase.com`
+
+这个地址要写进以下位置，缺一不可：
+
+| 序号 | 位置 | 写法 | 状态 |
+|------|------|------|------|
+| 1 | 小程序后端地址：`miniprogram/src/app.js` → `globalData.apiBaseUrl` | `https://interview-api-314219-4-1305636691.sh.run.tcloudbase.com/api/v1` | ✅ 已配置 |
+| 2 | 接口连通性验证（浏览器 / curl） | `https://interview-api-314219-4-1305636691.sh.run.tcloudbase.com/api/v1/questions?page=1&pageSize=1` | 返回 JSON 即正常 |
+| 3 | 小程序后台服务器域名（mp.weixin.qq.com → 开发管理 → 服务器域名，request 与 uploadFile 都要加） | `https://interview-api-314219-4-1305636691.sh.run.tcloudbase.com` | ⚠️ 实测被平台拒绝（「云托管域名仅用作测试」），体验月走调试模式；正式发布换自有域名后在此填新地址 |
+| 4 | Web 前端（可选，仅当 `ui/` 独立部署且非同源反代时） | 环境变量 `VUE_APP_API_BASE_URL=https://interview-api-314219-4-1305636691.sh.run.tcloudbase.com/api/v1` | 默认同源 `/api/v1` 走 Nginx 反代则不用配 |
+
+> 重新部署后若默认域名变化，以上 4 处需同步替换。
+
 ## 第 5 步：小程序对接（重要：默认域名进不了合法域名白名单）
 
 **实测：微信平台会拒绝把 `*.run.tcloudbase.com` 加入 request 合法域名**，报错「云托管域名仅用作测试使用，不可用在正式环境下」。这是平台策略，不是配置填错。

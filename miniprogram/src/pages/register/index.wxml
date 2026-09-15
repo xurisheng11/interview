@@ -40,7 +40,7 @@
       <input 
         class="input-field"
         type="password"
-        placeholder="请输入密码（6位以上）"
+        placeholder="请输入密码（8位以上）"
         value="{{password}}"
         bindinput="onPasswordInput"
         maxlength="20"

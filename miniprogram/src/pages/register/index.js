@@ -9,7 +9,9 @@ Page({
     password: '',
     confirmPassword: '',
     agreed: false,
-    loading: false
+    loading: false,
+    // 注册按钮可用态（wxml 只能绑 data 字段，getters 在模板里取不到，必须入 data）
+    canRegister: false
   },
 
   // 验证手机号格式
@@ -23,42 +25,51 @@ Page({
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
   },
 
-  // 计算是否可以注册
-  get canRegister() {
-    const { username, phone, password, confirmPassword, agreed } = this.data
-    return (
+  // 计算是否可以注册（结果写入 data 供 wxml 绑定）
+  updateCanRegister() {
+    const { username, phone, email, password, confirmPassword, agreed } = this.data
+    const canRegister = (
       username.trim().length >= 2 &&
       this.validatePhone(phone) &&
-      this.validateEmail(this.data.email) &&
-      password.length >= 6 &&
+      this.validateEmail(email) &&
+      password.length >= 8 &&
       password === confirmPassword &&
       agreed
     )
+    if (canRegister !== this.data.canRegister) {
+      this.setData({ canRegister })
+    }
   },
 
   // 输入处理
   onUsernameInput(e) {
     this.setData({ username: e.detail.value })
+    this.updateCanRegister()
   },
 
   onPhoneInput(e) {
     this.setData({ phone: e.detail.value })
+    this.updateCanRegister()
   },
 
   onEmailInput(e) {
     this.setData({ email: e.detail.value })
+    this.updateCanRegister()
   },
 
   onPasswordInput(e) {
     this.setData({ password: e.detail.value })
+    this.updateCanRegister()
   },
 
   onConfirmPasswordInput(e) {
     this.setData({ confirmPassword: e.detail.value })
+    this.updateCanRegister()
   },
 
   onAgreementChange(e) {
     this.setData({ agreed: e.detail.value.length > 0 })
+    this.updateCanRegister()
   },
 
   // 查看用户协议
@@ -81,7 +92,7 @@ Page({
 
   // 注册
   handleRegister() {
-    if (!this.canRegister) {
+    if (!this.data.canRegister) {
       const { username, phone, password, confirmPassword, agreed } = this.data
       
       if (!agreed) {
@@ -96,8 +107,8 @@ Page({
         wx.showToast({ title: '请输入正确的手机号', icon: 'none' })
         return
       }
-      if (password.length < 6) {
-        wx.showToast({ title: '密码至少6位', icon: 'none' })
+      if (password.length < 8) {
+        wx.showToast({ title: '密码至少8位', icon: 'none' })
         return
       }
       if (password !== confirmPassword) {
@@ -111,9 +122,12 @@ Page({
 
     api.auth.register({
       username: this.data.username.trim(),
+      // 后端账号字段：单一 account 或分开的 phone/email 都接受
+      account: this.data.phone.trim(),
       phone: this.data.phone.trim(),
       email: this.data.email.trim(),
-      password: this.data.password
+      password: this.data.password,
+      confirmPassword: this.data.confirmPassword
     }).then(res => {
       this.setData({ loading: false })
       

@@ -1,24 +1,48 @@
-<view class="container">
-  <!-- 未登录状态 -->
-  <view wx:if="{{!isLoggedIn}}" class="login-prompt anim-fade-in">
-    <view class="hero-section">
-      <view class="hero-badge">
-        <text class="hero-badge-text">AI</text>
+<!-- 未登录状态（与登录页同一风格：渐变头部 + 浮起面板） -->
+<view wx:if="{{!isLoggedIn}}" class="login-container">
+  <!-- 品牌渐变头部 -->
+  <view class="hero">
+    <view class="deco-circle deco-1"></view>
+    <view class="deco-circle deco-2"></view>
+    <view class="hero-inner">
+      <view class="logo-ring">
+        <image class="logo" src="/assets/logo.png" mode="aspectFit"></image>
       </view>
-      <text class="hero-title">面试模拟系统</text>
-      <text class="hero-desc">AI 驱动的面试练习平台</text>
+      <text class="app-name">面试模拟系统</text>
+      <text class="app-desc">AI 驱动的面试练习平台</text>
       <view class="hero-feature">
         <text class="feature-dot"></text>
         <text class="feature-text">智能出题 · 实时评估 · 深度复盘</text>
         <text class="feature-dot"></text>
       </view>
     </view>
-    <button class="btn-login" bindtap="goLogin">微信一键登录</button>
-    <text class="login-tip">登录后可同步练习记录与评分报告</text>
   </view>
 
-  <!-- 已登录状态 -->
-  <view wx:else>
+  <!-- 登录面板（浮起） -->
+  <view class="login-body anim-fade-in">
+    <button class="btn-wx-login" bindtap="goLogin">
+      <image class="wx-icon" src="/assets/icons/wx.png" mode="aspectFit"></image>
+      <text>微信一键登录</text>
+    </button>
+    <text class="login-tip">登录后可同步练习记录与评分报告</text>
+    <view class="login-alt">
+      <text class="link" bindtap="goAccountLogin">账号密码登录</text>
+      <text class="alt-divider">·</text>
+      <text class="link" bindtap="goRegister">注册新账号</text>
+    </view>
+  </view>
+
+  <!-- 底部协议 -->
+  <view class="login-footer">
+    <text class="agreement">登录即表示同意</text>
+    <text class="link" bindtap="goAgreement">《用户协议》</text>
+    <text class="agreement">和</text>
+    <text class="link" bindtap="goPrivacy">《隐私政策》</text>
+  </view>
+</view>
+
+<!-- 已登录状态 -->
+<view wx:else class="container">
     <!-- 用户信息卡片（品牌渐变卡） -->
     <view class="user-card anim-fade-in">
       <view class="deco-circle deco-1"></view>
@@ -157,5 +181,4 @@
         </view>
       </view>
     </view>
-  </view>
 </view>

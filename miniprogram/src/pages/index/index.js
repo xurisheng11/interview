@@ -53,6 +53,35 @@ Page({
     })
   },
 
+  goAccountLogin() {
+    // 跳转到登录页使用账号密码登录
+    wx.navigateTo({
+      url: '/pages/login/login'
+    })
+  },
+
+  goRegister() {
+    wx.navigateTo({
+      url: '/pages/register/index'
+    })
+  },
+
+  goAgreement() {
+    wx.showModal({
+      title: '用户协议',
+      content: '面试模拟系统用户协议\n\n1. 服务条款\n2. 用户权利与义务\n3. 隐私保护\n4. 免责声明',
+      showCancel: false
+    })
+  },
+
+  goPrivacy() {
+    wx.showModal({
+      title: '隐私政策',
+      content: '我们重视您的隐私保护\n\n1. 信息收集\n2. 信息使用\n3. 信息存储\n4. Cookie政策',
+      showCancel: false
+    })
+  },
+
   goToInterview() {
     wx.navigateTo({
       url: '/pages/interview/create'

@@ -3,69 +3,80 @@
   padding: 24rpx;
 }
 
-/* ============ 未登录 Hero ============ */
-.login-prompt {
+/* ============ 未登录态（对齐登录页风格：渐变头部 + 浮起面板） ============ */
+.login-container {
+  min-height: 100vh;
+  background:
+    radial-gradient(1200rpx 600rpx at 110% -10%, rgba(22, 119, 255, 0.08), transparent),
+    linear-gradient(180deg, #eaf3ff 0%, #f4f6fa 40%);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding-top: 160rpx;
+  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
 }
 
-.hero-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  margin-bottom: 72rpx;
-}
-
-.hero-badge {
-  width: 140rpx;
-  height: 140rpx;
-  border-radius: 40rpx;
-  background: linear-gradient(135deg, #52a9ff 0%, #1677ff 48%, #0958d9 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 40rpx;
-  box-shadow: 0 16rpx 40rpx rgba(22, 119, 255, 0.35);
+/* 品牌渐变头部 */
+.hero {
   position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #52a9ff 0%, #1677ff 48%, #0958d9 100%);
+  border-radius: 0 0 48rpx 48rpx;
+  padding: 96rpx 48rpx 128rpx;
+  box-shadow: 0 12rpx 36rpx rgba(22, 119, 255, 0.25);
 }
 
-.hero-badge::after {
-  content: '';
-  position: absolute;
-  top: 10rpx;
-  left: 16rpx;
-  width: 44rpx;
-  height: 24rpx;
-  border-radius: 999rpx;
-  background: rgba(255, 255, 255, 0.35);
-  transform: rotate(-20deg);
+/* hero 专属装饰光斑尺寸（避免影响已登录用户卡） */
+.hero .deco-1 {
+  width: 300rpx;
+  height: 300rpx;
+  top: -120rpx;
+  right: -80rpx;
 }
 
-.hero-badge-text {
-  font-size: 52rpx;
-  font-weight: 800;
-  color: #fff;
-  letter-spacing: 2rpx;
+.hero .deco-2 {
+  width: 160rpx;
+  height: 160rpx;
+  bottom: -60rpx;
+  left: 60rpx;
+  background: rgba(255, 255, 255, 0.08);
 }
 
-.hero-title {
-  display: block;
-  font-size: 52rpx;
-  font-weight: 700;
-  color: var(--text-main);
-  margin-bottom: 16rpx;
-  letter-spacing: 2rpx;
+.hero-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.hero-desc {
-  display: block;
-  font-size: 28rpx;
-  color: var(--text-sub);
+.logo-ring {
+  width: 176rpx;
+  height: 176rpx;
+  border-radius: 48rpx;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2rpx solid rgba(255, 255, 255, 0.4);
+  padding: 12rpx;
   margin-bottom: 32rpx;
+}
+
+.logo {
+  width: 148rpx;
+  height: 148rpx;
+  border-radius: 40rpx;
+  display: block;
+}
+
+.app-name {
+  font-size: 44rpx;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 12rpx;
+  letter-spacing: 2rpx;
+}
+
+.app-desc {
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 28rpx;
 }
 
 .hero-feature {
@@ -73,7 +84,8 @@
   align-items: center;
   gap: 16rpx;
   padding: 10rpx 28rpx;
-  background: var(--brand-bg);
+  background: rgba(255, 255, 255, 0.18);
+  border: 1rpx solid rgba(255, 255, 255, 0.3);
   border-radius: 999rpx;
 }
 
@@ -81,42 +93,98 @@
   width: 10rpx;
   height: 10rpx;
   border-radius: 50%;
-  background: var(--brand);
+  background: #fff;
+  opacity: 0.8;
 }
 
 .feature-text {
   font-size: 24rpx;
-  color: var(--brand);
+  color: #fff;
   letter-spacing: 1rpx;
 }
 
-.btn-login {
-  width: 600rpx;
+/* 登录面板（浮起） */
+.login-body {
+  position: relative;
+  z-index: 2;
+  margin: -84rpx 40rpx 0;
+  background: #fff;
+  border-radius: 32rpx;
+  padding: 48rpx 40rpx 40rpx;
+  box-shadow: 0 16rpx 48rpx rgba(20, 45, 90, 0.10);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.btn-wx-login {
+  width: 100%;
   height: 96rpx;
-  line-height: 96rpx;
-  background: linear-gradient(135deg, #52a9ff 0%, #1677ff 48%, #0958d9 100%);
+  background: linear-gradient(135deg, #2ad46b 0%, #07c160 50%, #059a4c 100%);
   color: #fff;
   font-size: 32rpx;
   font-weight: 600;
   letter-spacing: 2rpx;
   border-radius: 48rpx;
   border: none;
-  box-shadow: 0 8rpx 24rpx rgba(22, 119, 255, 0.32);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(7, 193, 96, 0.32);
 }
 
-.btn-login::after {
+.btn-wx-login::after {
   border: none;
 }
 
-.btn-login:active {
+.btn-wx-login:active {
   transform: scale(0.97);
   opacity: 0.92;
 }
 
+.wx-icon {
+  width: 48rpx;
+  height: 48rpx;
+  margin-right: 16rpx;
+  border-radius: 12rpx;
+}
+
 .login-tip {
-  margin-top: 28rpx;
+  margin-top: 24rpx;
   font-size: 24rpx;
   color: var(--text-hint);
+}
+
+.login-alt {
+  margin-top: 28rpx;
+  display: flex;
+  align-items: center;
+  font-size: 26rpx;
+}
+
+.alt-divider {
+  margin: 0 20rpx;
+  color: #d8dee7;
+}
+
+/* 底部协议 */
+.login-footer {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  padding: 48rpx 40rpx;
+  font-size: 24rpx;
+  color: var(--text-hint);
+}
+
+.agreement {
+  color: var(--text-hint);
+}
+
+.link {
+  color: var(--brand);
 }
 
 /* ============ 用户卡片（品牌渐变） ============ */

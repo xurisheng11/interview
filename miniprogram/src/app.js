@@ -6,7 +6,8 @@ App({
   globalData: {
     userInfo: null,
     token: null,
-    apiBaseUrl: 'http://localhost:8080/api/v1'
+    // 后端经 cpolar 隧道暴露到公网（本地调试：http://localhost:8080/api/v1）
+    apiBaseUrl: 'https://240ec46d.r2.cpolar.top/api/v1'
   },
 
   onLaunch() {

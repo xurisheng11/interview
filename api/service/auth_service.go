@@ -7,12 +7,13 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/google/uuid"
-	"golang.org/x/crypto/bcrypt"
 	"interview-sim/config"
 	"interview-sim/model"
 	"interview-sim/pkg/jwt"
 	"interview-sim/repository"
+
+	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var (
@@ -26,7 +27,9 @@ var (
 
 type RegisterReq struct {
 	Username        string `json:"username" binding:"required,min=2,max=20"`
-	Account         string `json:"account" binding:"required"`
+	Account         string `json:"account" binding:"omitempty"`
+	Phone           string `json:"phone" binding:"omitempty"`
+	Email           string `json:"email" binding:"omitempty"`
 	Password        string `json:"password" binding:"required"`
 	ConfirmPassword string `json:"confirmPassword" binding:"required"`
 }
@@ -50,12 +53,20 @@ func Register(req *RegisterReq) (*AuthResult, error) {
 	if req.Password != req.ConfirmPassword {
 		return nil, ErrPasswordMismatch
 	}
+	// account 兼容两种入参：单一 account 字段，或分开的 phone / email 字段
+	account := req.Account
+	if account == "" {
+		account = req.Email
+	}
+	if account == "" {
+		account = req.Phone
+	}
 	// account 格式校验（手机号或邮箱）
-	if !isValidAccount(req.Account) {
+	if !isValidAccount(account) {
 		return nil, ErrInvalidAccount
 	}
 	// 检查 account 唯一性
-	exists, err := repository.AccountExists(req.Account)
+	exists, err := repository.AccountExists(account)
 	if err != nil {
 		return nil, err
 	}
@@ -89,22 +100,43 @@ func Register(req *RegisterReq) (*AuthResult, error) {
 	}
 
 	// 判断 account 是手机号还是邮箱
-	if isEmail(req.Account) {
-		user.Email = req.Account
+	if isEmail(account) {
+		user.Email = account
 	} else {
-		user.Phone = req.Account
+		user.Phone = account
+	}
+	// 分开传了额外邮箱时一并登记索引（支持邮箱登录）
+	extraEmail := ""
+	if req.Email != "" && req.Email != account {
+		if !isEmail(req.Email) {
+			return nil, ErrInvalidAccount
+		}
+		emailExists, err := repository.AccountExists(req.Email)
+		if err != nil {
+			return nil, err
+		}
+		if emailExists {
+			return nil, ErrAccountExists
+		}
+		extraEmail = req.Email
+		user.Email = extraEmail
 	}
 
 	// 保存到 Redis
 	if err := repository.SaveUser(user); err != nil {
 		return nil, err
 	}
-	if err := repository.SaveAccountIndex(req.Account, user.UserID); err != nil {
+	if err := repository.SaveAccountIndex(account, user.UserID); err != nil {
 		return nil, err
 	}
 	// 同时保存用户名索引
 	if err := repository.SaveAccountIndex(req.Username, user.UserID); err != nil {
 		return nil, err
+	}
+	if extraEmail != "" {
+		if err := repository.SaveAccountIndex(extraEmail, user.UserID); err != nil {
+			return nil, err
+		}
 	}
 	// 加入全局用户列表（按注册时间排序）
 	if err := repository.AddUserToList(user.UserID, float64(user.CreatedAt.Unix())); err != nil {
@@ -192,14 +224,14 @@ func WxLogin(req *WxLoginReq) (*AuthResult, error) {
 		// 不存在，自动注册新用户
 		nickname := "用户" + uuid.New().String()[:8]
 		user = &model.User{
-			UserID:   uuid.New().String(),
-			Username: nickname,
-			Avatar:   "",
-			Nickname: nickname,
-			Bio:      "",
-			OpenID:   openID,
+			UserID:    uuid.New().String(),
+			Username:  nickname,
+			Avatar:    "",
+			Nickname:  nickname,
+			Bio:       "",
+			OpenID:    openID,
 			CreatedAt: time.Now(),
-			Role:     "user",
+			Role:      "user",
 		}
 		// 保存到 Redis
 		if err := repository.SaveUser(user); err != nil {

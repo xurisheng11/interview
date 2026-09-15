@@ -4,9 +4,10 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gin-gonic/gin"
 	"interview-sim/pkg/response"
 	"interview-sim/service"
+
+	"github.com/gin-gonic/gin"
 )
 
 // ListArticles GET /api/v1/community/articles
@@ -92,6 +93,18 @@ func CollectArticle(c *gin.Context) {
 		return
 	}
 	response.Success(c, gin.H{"message": "收藏成功"})
+}
+
+// UncollectArticle DELETE /api/v1/community/articles/:id/collect（需鉴权）
+func UncollectArticle(c *gin.Context) {
+	userID := c.GetString("userId")
+	articleID := c.Param("id")
+
+	if err := service.UncollectArticle(userID, articleID); err != nil {
+		response.InternalError(c, err.Error())
+		return
+	}
+	response.Success(c, gin.H{"message": "已取消收藏"})
 }
 
 // ListComments GET /api/v1/community/articles/:id/comments（需鉴权）

@@ -8,10 +8,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/uuid"
 	"interview-sim/config"
 	"interview-sim/model"
 	"interview-sim/repository"
+
+	"github.com/google/uuid"
 )
 
 // ---------- 敏感词 ----------
@@ -542,6 +543,36 @@ func CollectArticle(userID, articleID string) error {
 	jobCategory := getArticleJobCategory(articleID)
 	if jobCategory != "" {
 		_ = repository.ZIncrBy(articleHotKey(jobCategory), 1, articleID)
+	}
+
+	return nil
+}
+
+// UncollectArticle 取消收藏文章（收藏按钮的取消半操作）
+func UncollectArticle(userID, articleID string) error {
+	// 仅当确实收藏过才移除并回退计数，避免 collectCount 出现负数
+	isCollected, err := repository.SIsMember(userCollectArticleKey(userID), articleID)
+	if err != nil {
+		return fmt.Errorf("检查收藏状态失败: %w", err)
+	}
+	if !isCollected {
+		return nil
+	}
+
+	if err := repository.SRem(articleCollectsKey(articleID), userID); err != nil {
+		return fmt.Errorf("取消收藏失败: %w", err)
+	}
+	if err := repository.SRem(userCollectArticleKey(userID), articleID); err != nil {
+		return fmt.Errorf("更新个人收藏失败: %w", err)
+	}
+
+	// 回退 collectCount
+	_, _ = repository.HIncrBy(articleKey(articleID), "collectCount", -1)
+
+	// 回退热度 ZSet
+	jobCategory := getArticleJobCategory(articleID)
+	if jobCategory != "" {
+		_ = repository.ZIncrBy(articleHotKey(jobCategory), -1, articleID)
 	}
 
 	return nil

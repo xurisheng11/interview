@@ -89,6 +89,7 @@ func Setup() *gin.Engine {
 			community.GET("/articles/:id", handler.GetArticle)
 			community.POST("/articles/:id/like", handler.LikeArticle)
 			community.POST("/articles/:id/collect", handler.CollectArticle)
+			community.DELETE("/articles/:id/collect", handler.UncollectArticle)
 			community.GET("/articles/:id/comments", handler.ListComments)
 			community.POST("/articles/:id/comments", handler.AddComment)
 		}

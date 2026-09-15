@@ -33,6 +33,8 @@ func Setup() *gin.Engine {
 	protected := api.Group("")
 	protected.Use(middleware.AuthRequired())
 	{
+		// 语音转文字（录音上传转写）
+		protected.POST("/asr/transcribe", handler.Transcribe)
 		interviews := protected.Group("/interviews")
 		{
 			interviews.POST("", handler.CreateInterview)

@@ -32,6 +32,8 @@ type Config struct {
 	MySQLEnabled           bool
 	WXAppID                string
 	WXSecret               string
+	TencentSecretID        string
+	TencentSecretKey       string
 }
 
 var Cfg *Config
@@ -72,6 +74,8 @@ func Init() {
 		MySQLEnabled:           mysqlEnabled,
 		WXAppID:                getEnv("WX_APP_ID", ""),
 		WXSecret:               getEnv("WX_SECRET", ""),
+		TencentSecretID:        getEnv("TENCENT_SECRET_ID", ""),
+		TencentSecretKey:       getEnv("TENCENT_SECRET_KEY", ""),
 	}
 }
 

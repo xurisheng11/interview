@@ -56,6 +56,9 @@
   border: 2rpx solid rgba(255, 255, 255, 0.4);
   padding: 12rpx;
   margin-bottom: 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .logo {

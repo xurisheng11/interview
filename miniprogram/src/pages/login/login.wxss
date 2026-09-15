@@ -59,6 +59,9 @@
   padding: 12rpx;
   margin-bottom: 32rpx;
   backdrop-filter: blur(4rpx);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .logo {

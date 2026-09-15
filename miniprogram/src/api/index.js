@@ -40,9 +40,12 @@ const request = (options) => {
         }
       },
       fail: (err) => {
+        // 临时调试：透出真实错误原因，定位后收敛为固定提示
+        console.error('请求失败', options.method || 'GET', options.url, err)
         wx.showToast({
-          title: '网络连接失败',
-          icon: 'none'
+          title: '网络连接失败: ' + (err.errMsg || '未知原因'),
+          icon: 'none',
+          duration: 5000
         })
         reject(err)
       }

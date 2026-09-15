@@ -1,5 +1,45 @@
 /* 我的收藏页 */
 
+/* 分类标签 */
+.tab-bar {
+  display: flex;
+  background: #fff;
+  border-radius: 16rpx;
+  box-shadow: var(--shadow-card);
+  margin-bottom: 24rpx;
+  padding: 8rpx;
+}
+
+.tab-item {
+  flex: 1;
+  text-align: center;
+  padding: 20rpx 0;
+  font-size: 28rpx;
+  color: #666;
+  position: relative;
+  border-radius: 12rpx;
+}
+
+.tab-pressed {
+  background: #f5f7fa;
+}
+
+.tab-active {
+  color: var(--brand);
+  font-weight: 600;
+}
+
+.tab-line {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 6rpx;
+  width: 48rpx;
+  height: 6rpx;
+  border-radius: 3rpx;
+  background: var(--brand);
+}
+
 .loading-wrap {
   text-align: center;
   color: #999;
@@ -63,6 +103,18 @@
 }
 
 .q-date {
+  font-size: 22rpx;
+  color: #999;
+  margin-left: auto;
+}
+
+/* 文章卡片 */
+.article-title {
+  font-weight: 600;
+  margin-bottom: 14rpx;
+}
+
+.q-stat {
   font-size: 22rpx;
   color: #999;
   margin-left: auto;

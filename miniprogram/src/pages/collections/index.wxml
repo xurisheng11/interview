@@ -1,32 +1,77 @@
 <!-- 我的收藏页 -->
 <view class="container safe-bottom">
-  <!-- 收藏列表 -->
+  <!-- 分类标签 -->
+  <view class="tab-bar">
+    <view class="tab-item {{tab === 'question' ? 'tab-active' : ''}}" hover-class="tab-pressed" bindtap="switchTab" data-tab="question">
+      题目
+      <view wx:if="{{tab === 'question'}}" class="tab-line"></view>
+    </view>
+    <view class="tab-item {{tab === 'article' ? 'tab-active' : ''}}" hover-class="tab-pressed" bindtap="switchTab" data-tab="article">
+      文章
+      <view wx:if="{{tab === 'article'}}" class="tab-line"></view>
+    </view>
+  </view>
+
+  <!-- 加载中 -->
   <view wx:if="{{loading}}" class="loading-wrap">加载中…</view>
 
-  <block wx:elif="{{collections.length}}">
-    <view class="collect-card anim-fade-in" wx:for="{{collections}}" wx:key="id">
-      <view class="card-body" hover-class="card-pressed" bindtap="viewQuestion" data-id="{{item.id}}">
-        <view class="q-tags">
-          <text wx:if="{{item.category}}" class="mini-tag">{{item.category}}</text>
-          <text class="mini-tag diff-{{item.diffCls}}">{{item.diffText}}</text>
+  <block wx:else>
+    <!-- 题目收藏列表 -->
+    <block wx:if="{{tab === 'question'}}">
+      <block wx:if="{{questions.length}}">
+        <view class="collect-card anim-fade-in" wx:for="{{questions}}" wx:key="id">
+          <view class="card-body" hover-class="card-pressed" bindtap="viewQuestion" data-id="{{item.id}}">
+            <view class="q-tags">
+              <text wx:if="{{item.type}}" class="mini-tag">{{item.type}}</text>
+              <text class="mini-tag diff-{{item.diffCls}}">{{item.diffText}}</text>
+            </view>
+            <view class="q-content">{{item.content}}</view>
+            <view class="q-footer">
+              <text class="q-company" wx:if="{{item.jobTitle}}">{{item.jobTitle}}</text>
+            </view>
+          </view>
+          <view class="card-action" hover-class="btn-press" catchtap="uncollect" data-id="{{item.id}}">
+            💔 取消收藏
+          </view>
         </view>
-        <view class="q-content">{{item.content}}</view>
-        <view class="q-footer">
-          <text class="q-company" wx:if="{{item.company}}">{{item.company}}</text>
-          <text class="q-date" wx:if="{{item.collectedAt}}">收藏于 {{item.collectedAt}}</text>
-        </view>
-      </view>
-      <view class="card-action" hover-class="btn-press" catchtap="uncollect" data-id="{{item.id}}">
-        💔 取消收藏
-      </view>
-    </view>
-  </block>
+      </block>
 
-  <!-- 空状态 -->
-  <view wx:else class="empty-state anim-fade-in">
-    <view class="empty-icon">⭐</view>
-    <view class="empty-title">暂无收藏题目</view>
-    <view class="empty-sub">在题库中收藏感兴趣的题目，方便反复练习</view>
-    <button class="btn-primary" hover-class="btn-press" bindtap="goQuestions">去题库逛逛</button>
-  </view>
+      <!-- 题目空状态 -->
+      <view wx:else class="empty-state anim-fade-in">
+        <view class="empty-icon">⭐</view>
+        <view class="empty-title">暂无收藏题目</view>
+        <view class="empty-sub">在题库中收藏感兴趣的题目，方便反复练习</view>
+        <button class="btn-primary" hover-class="btn-press" bindtap="goQuestions">去题库逛逛</button>
+      </view>
+    </block>
+
+    <!-- 文章收藏列表 -->
+    <block wx:if="{{tab === 'article'}}">
+      <block wx:if="{{articles.length}}">
+        <view class="collect-card anim-fade-in" wx:for="{{articles}}" wx:key="id">
+          <view class="card-body" hover-class="card-pressed" bindtap="viewArticle" data-id="{{item.id}}">
+            <view class="q-content article-title">{{item.title}}</view>
+            <view class="q-tags" wx:if="{{item.tags.length}}">
+              <text class="mini-tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</text>
+            </view>
+            <view class="q-footer">
+              <text class="q-company" wx:if="{{item.jobCategoryLabel}}">{{item.jobCategoryLabel}}</text>
+              <text class="q-stat">👍 {{item.likeCount}} · 💬 {{item.commentCount}}</text>
+            </view>
+          </view>
+          <view class="card-action" hover-class="btn-press" catchtap="uncollectArticle" data-id="{{item.id}}">
+            💔 取消收藏
+          </view>
+        </view>
+      </block>
+
+      <!-- 文章空状态 -->
+      <view wx:else class="empty-state anim-fade-in">
+        <view class="empty-icon">📄</view>
+        <view class="empty-title">暂无收藏文章</view>
+        <view class="empty-sub">在知识社区收藏好文，随时回顾</view>
+        <button class="btn-primary" hover-class="btn-press" bindtap="goCommunity">去社区逛逛</button>
+      </view>
+    </block>
+  </block>
 </view>

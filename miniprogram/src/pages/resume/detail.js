@@ -66,12 +66,32 @@ Page({
 
   /** 格式化简历数据 */
   formatResume(resume) {
+    // 总分存在 analysis.totalScore（顶层 totalScore 不存在，读错会导致评分环永远灰色）
+    var analysisScore = null
+    if (resume.analysis && resume.analysis.totalScore != null) {
+      analysisScore = resume.analysis.totalScore
+    } else if (resume.totalScore != null) {
+      analysisScore = resume.totalScore
+    }
+    // 维度最强/最弱一句话总结
+    var dims = (resume.analysis && resume.analysis.dimensions) || []
+    var dimSummary = ''
+    if (dims.length > 0) {
+      var sorted = dims.slice().sort(function (a, b) { return (b.score || 0) - (a.score || 0) })
+      var best = sorted[0]
+      var worst = sorted[sorted.length - 1]
+      dimSummary = sorted.length > 1
+        ? '最强 ' + best.name + ' · 最弱 ' + worst.name
+        : best.name + ' ' + (best.score || 0) + ' 分'
+    }
     return Object.assign({}, resume, {
       uploadedAtText: this.formatDate(resume.uploadedAt),
       fileSizeText: this.formatFileSize(resume.fileSize),
       statusText: this.statusText(resume.analysisStatus),
       statusClass: this.statusClass(resume.analysisStatus),
-      scoreClass: this.scoreClass(resume.totalScore),
+      scoreClass: this.scoreClass(analysisScore),
+      gradeText: this.gradeText(analysisScore),
+      dimSummary: dimSummary,
       isAnalyzing: resume.analysisStatus === 'pending' || resume.analysisStatus === 'analyzing',
       isFailed: resume.analysisStatus === 'failed',
       isDone: resume.analysisStatus === 'done',
@@ -195,5 +215,13 @@ Page({
     if (score >= 80) return 'score-high'
     if (score >= 60) return 'score-mid'
     return 'score-low'
+  },
+
+  gradeText(score) {
+    if (score == null) return '暂无评分'
+    if (score >= 90) return '优秀'
+    if (score >= 80) return '良好'
+    if (score >= 60) return '及格'
+    return '待提升'
   }
 })

@@ -63,13 +63,22 @@
 
       <!-- 分析完成 -->
       <view wx:elif="{{resume.isDone && resume.analysis}}">
-        <!-- 总分 -->
-        <view class="total-score-wrap">
-          <view class="score-circle">
-            <text class="score-circle-num {{resume.scoreClass}}">{{resume.analysis.totalScore || 0}}</text>
-            <text class="score-circle-unit">分</text>
+        <!-- 总分：评分环 + 侧栏信息 -->
+        <view class="score-hero">
+          <view class="score-ring {{resume.scoreClass}}">
+            <view class="score-ring-center">
+              <view class="score-line">
+                <text class="score-line-num">{{resume.analysis.totalScore || 0}}</text>
+                <text class="score-line-unit">分</text>
+              </view>
+              <text class="score-grade">{{resume.gradeText}}</text>
+            </view>
           </view>
-          <text class="total-score-label">简历综合评分</text>
+          <view class="score-hero-side">
+            <text class="score-hero-label">简历综合评分</text>
+            <text wx:if="{{resume.dimSummary}}" class="score-hero-dim">{{resume.dimSummary}}</text>
+            <text wx:else class="score-hero-dim">AI 从内容、技能、格式多维度评估</text>
+          </view>
         </view>
 
         <!-- 维度评分 -->
@@ -148,28 +157,28 @@
     <view class="card action-card anim-fade-in" style="animation-delay: 0.24s">
       <text class="section-title">🚀 操作</text>
 
-      <!-- 发起面试 -->
-      <view class="action-block">
-        <text class="action-tip">基于简历内容生成个性化面试题目，进行针对性练习。</text>
-        <button
-          class="btn-action-primary"
-          hover-class="btn-press"
-          disabled="{{!resume.isDone || startingInterview}}"
-          bindtap="handleCreateInterview"
-        >
-          {{resume.isDone ? (startingInterview ? '创建中…' : '🚀 开始简历面试') : '分析完成后可发起'}}
-        </button>
-        <text wx:if="{{!resume.isDone}}" class="action-hint">
-          当前简历{{resume.statusText}}，请等待分析完成后再发起面试。
-        </text>
+      <!-- 发起面试：主行动卡片 -->
+      <view
+        class="btn-start {{(!resume.isDone || startingInterview) ? 'disabled' : ''}}"
+        hover-class="{{(!resume.isDone || startingInterview) ? '' : 'btn-start-press'}}"
+        bindtap="handleCreateInterview"
+      >
+        <view class="btn-start-left">
+          <view class="btn-start-icon-wrap">
+            <text class="btn-start-emoji">🚀</text>
+          </view>
+          <view class="btn-start-texts">
+            <text class="btn-start-title">{{startingInterview ? '创建中…' : (resume.isDone ? '开始简历面试' : '分析完成后可发起')}}</text>
+            <text class="btn-start-sub">AI 根据简历个性化出题 · 针对性练习</text>
+          </view>
+        </view>
+        <text class="btn-start-arrow">›</text>
       </view>
 
-      <view class="divider"></view>
-
-      <!-- 删除简历 -->
-      <button class="btn-action-danger" hover-class="btn-press" bindtap="handleDelete">
-        🗑 删除简历
-      </button>
+      <!-- 删除：弱操作文字链 -->
+      <view class="btn-delete" hover-class="btn-delete-press" bindtap="handleDelete">
+        <text>🗑 删除简历</text>
+      </view>
     </view>
   </view>
 </view>

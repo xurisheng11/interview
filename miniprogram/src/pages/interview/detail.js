@@ -149,6 +149,17 @@ Page({
         if (report.avgThinkDuration > 0) metrics.push({ label: '平均思考', value: fmtDuration(report.avgThinkDuration) })
         v.videoMetrics = metrics
         v.expressionSummary = report.expressionSummary || ''
+        // 视频面试：面部情绪抓帧分析（wxml 不支持函数调用，占比文本预计算）
+        if (report.faceSummary && report.faceSummary.samples > 0) {
+          const fs = report.faceSummary
+          v.faceSummary = {
+            dominant: fs.dominantName || '未知',
+            nervousLevel: fs.nervousLevel || '',
+            tenseText: Math.round((fs.tenseRatio || 0) * 100) + '%',
+            smileText: Math.round((fs.smileRatio || 0) * 100) + '%',
+            samples: fs.samples
+          }
+        }
       }
     }
 

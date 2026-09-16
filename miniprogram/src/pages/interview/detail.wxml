@@ -77,6 +77,28 @@
           <text class="video-metric-label">{{item.label}}</text>
         </view>
       </view>
+      <view wx:if="{{view.faceSummary}}" class="face-box">
+        <text class="expression-title">😊 面部表情分析</text>
+        <view class="face-metrics">
+          <view class="face-metric">
+            <text class="face-metric-value">{{view.faceSummary.dominant}}</text>
+            <text class="face-metric-label">主要情绪</text>
+          </view>
+          <view class="face-metric">
+            <text class="face-metric-value">{{view.faceSummary.nervousLevel}}</text>
+            <text class="face-metric-label">紧张程度</text>
+          </view>
+          <view class="face-metric">
+            <text class="face-metric-value">{{view.faceSummary.smileText}}</text>
+            <text class="face-metric-label">微笑帧占比</text>
+          </view>
+          <view class="face-metric">
+            <text class="face-metric-value">{{view.faceSummary.tenseText}}</text>
+            <text class="face-metric-label">紧张信号占比</text>
+          </view>
+        </view>
+        <text class="face-note">基于全场视频抓帧 {{view.faceSummary.samples}} 帧 AI 情绪识别；改善建议见下方表达评价</text>
+      </view>
       <view wx:if="{{view.expressionSummary}}" class="expression-box">
         <text class="expression-title">🎤 表达能力评价</text>
         <text class="expression-text">{{view.expressionSummary}}</text>

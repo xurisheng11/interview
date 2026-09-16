@@ -295,6 +295,46 @@
   padding: 24rpx;
 }
 
+/* 视频面试：面部情绪分析卡片 */
+.face-box {
+  margin-top: 24rpx;
+  background: linear-gradient(135deg, #f3f8ff 0%, #fdf6ff 100%);
+  border-radius: 16rpx;
+  padding: 24rpx;
+}
+
+.face-metrics {
+  display: flex;
+  justify-content: space-between;
+  margin: 12rpx 0 8rpx;
+}
+
+.face-metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.face-metric-value {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.face-metric-label {
+  font-size: 22rpx;
+  color: var(--text-sub);
+  margin-top: 4rpx;
+}
+
+.face-note {
+  display: block;
+  font-size: 22rpx;
+  color: #98a3b3;
+  line-height: 1.6;
+}
+
 .expression-title {
   display: block;
   font-size: 26rpx;

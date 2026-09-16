@@ -129,6 +129,7 @@ Page({
 
   onUnload() {
     this.clearTimer()
+    clearTimeout(this.faceShotTimer)
     this.autoLoop = false
     if (this.data.isRecording) {
       try { recorderManager.stop() } catch (e) {}
@@ -304,7 +305,18 @@ Page({
     return found
   },
 
-  // 构建语音表达指标（语速/时长/思考时长/口头禅）
+  // 口吃/不流畅检测：转写文本中的连续重复字（“我我”）与重复短词（“然后然后”）
+  detectStutter(text) {
+    if (!text) return 0
+    let count = 0
+    const charRepeats = text.match(/([\u4e00-\u9fa5])\1+/g)
+    if (charRepeats) count += charRepeats.length
+    const wordRepeats = text.match(/([\u4e00-\u9fa5]{2,3})\1/g)
+    if (wordRepeats) count += wordRepeats.length
+    return count
+  },
+
+  // 构建语音表达指标（语速/时长/思考时长/口头禅/口吃）
   buildSpeechMetrics(cur, answer) {
     const duration = (cur && cur.speakSeconds) || 0
     const thinkDuration = (cur && cur.firstSpeechAt && this.questionShownAt)
@@ -318,7 +330,8 @@ Page({
       pauseCount: 0, // 一句话识别无法测停顿
       duration: duration,
       thinkDuration: thinkDuration,
-      verbalTics: this.detectVerbalTics(answer)
+      verbalTics: this.detectVerbalTics(answer),
+      stutterCount: this.detectStutter(answer)
     }
   },
 
@@ -358,6 +371,7 @@ Page({
       this.startTimer()
       // 视频面试：进入即开启自动识别，直接说话即可
       this.startAutoRecord()
+      this.scheduleFaceShot()
     }).catch(err => {
       wx.hideLoading()
       wx.showToast({ title: '加载失败', icon: 'none' })
@@ -602,6 +616,43 @@ Page({
     this.setData({ cameraMinimized: !this.data.cameraMinimized })
   },
 
+  // 视频面试：每题开始 12 秒后自动抓一张帧上传做表情/紧张度分析
+  scheduleFaceShot() {
+    clearTimeout(this.faceShotTimer)
+    if (!this.data.isCamera) return
+    this.faceShotTimer = setTimeout(() => {
+      this.takeFaceShot(this.data.currentIndex)
+    }, 12000)
+  },
+
+  takeFaceShot(index) {
+    // 摄像头不可用/已暂停（麦克风冲突）/本题已抓过 → 静默跳过，不影响面试
+    if (!this.data.isCamera || this.data.cameraBlocked || this.data.cameraMinimized) return
+    this.faceShotDone = this.faceShotDone || {}
+    if (this.faceShotDone[index]) return
+    const that = this
+    try {
+      const ctx = wx.createCameraContext()
+      ctx.takePhoto({
+        quality: 'compressed',
+        success: (res) => {
+          that.faceShotDone[index] = true
+          const app = getApp()
+          const token = wx.getStorageSync('token')
+          wx.uploadFile({
+            url: app.globalData.apiBaseUrl + '/interviews/' + that.data.interviewId + '/face',
+            filePath: res.tempPhotoPath,
+            name: 'file',
+            formData: { questionIndex: String(index) },
+            header: { Authorization: 'Bearer ' + token },
+            fail: () => {} // 表情分析失败不提示、不阻断
+          })
+        },
+        fail: () => {}
+      })
+    } catch (e) {}
+  },
+
   // 录音计时器
   startRecordTimer() {
     this.recordTimer = setInterval(() => {
@@ -636,6 +687,7 @@ Page({
       this.syncSessionDisplay()
       // 视频面试：新题继续自动识别
       this.startAutoRecord()
+      this.scheduleFaceShot()
     }
   },
 
@@ -681,6 +733,7 @@ Page({
       this.syncSessionDisplay()
       // 视频面试：新题自动开启识别循环
       this.startAutoRecord()
+      this.scheduleFaceShot()
     } else {
       // 最后一题，提交
       this.completeInterview()

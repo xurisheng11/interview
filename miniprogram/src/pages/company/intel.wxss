@@ -515,7 +515,7 @@
   font-size: 26rpx;
   color: #444;
   line-height: 1.8;
-  white-space: pre-wrap;
+  /* 正文改走 rich-text，换行由渲染出的 HTML 控制，不再需要 pre-wrap */
   background: #f8fafd;
   border-left: 6rpx solid var(--brand-light);
   border-radius: 4rpx 16rpx 16rpx 4rpx;

@@ -139,7 +139,7 @@
 
         <!-- 已加载 -->
         <block wx:if="{{activeQuestion.answerLoaded && !answerLoading}}">
-          <view wx:if="{{activeQuestion.answer}}" class="answer-content">{{activeQuestion.answer}}</view>
+          <rich-text wx:if="{{activeQuestion.answer}}" class="answer-content" nodes="{{activeQuestion.answerHtml}}"></rich-text>
           <view wx:else class="answer-empty">暂无参考答案</view>
         </block>
       </view>

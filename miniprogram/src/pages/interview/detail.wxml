@@ -154,7 +154,7 @@
           <text class="ref-arrow {{item._refOpen ? 'open' : ''}}">▾</text>
         </view>
         <view wx:if="{{item.referenceAnswer && item._refOpen}}" class="ref-body">
-          <text>{{item.referenceAnswer}}</text>
+          <rich-text nodes="{{item._refHtml}}"></rich-text>
         </view>
       </view>
     </view>

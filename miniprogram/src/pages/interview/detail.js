@@ -1,4 +1,5 @@
 const api = require('../../api/index')
+const { mdToHtml } = require('../../utils/markdown')
 
 // 枚举中文名（与后端 model 对齐）
 const STATUS_NAMES = { ongoing: '进行中', paused: '已暂停', completed: '已完成' }
@@ -127,6 +128,8 @@ Page({
           pros: q.pros || [],
           cons: q.cons || [],
           referenceAnswer: q.referenceAnswer || '',
+          // 参考答案由 AI 生成、带 Markdown，转 HTML 后走 rich-text 渲染
+          _refHtml: mdToHtml(q.referenceAnswer || ''),
           expressionFeedback: q.expressionFeedback || '',
           _refOpen: false
         }

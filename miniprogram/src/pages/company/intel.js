@@ -1,4 +1,5 @@
 const api = require('../../api/index')
+const { mdToHtml } = require('../../utils/markdown')
 
 // 岗位方向选项（与 UI 前端一致）
 const JOB_TITLES = [
@@ -143,12 +144,13 @@ Page({
     if (!question) return
     // 答案缓存命中则直接展示
     const content = question.content || ''
-    const cached = (this._answerCache || {})[content]
+    const cached = (this._answerCache || {})[content] || ''
     this.setData({
       showQuestion: true,
       activeQuestion: {
         ...question,
-        answer: cached || '',
+        answer: cached,
+        answerHtml: cached ? mdToHtml(cached) : '',
         answerLoaded: !!cached
       }
     })
@@ -175,7 +177,8 @@ Page({
       this._answerCache[q.content] = answer
       this.setData({
         answerLoading: false,
-        activeQuestion: { ...q, answer, answerLoaded: true }
+        // AI 答案带 Markdown（## / ** / 代码块），走 rich-text 渲染，不再把星号直接露出来
+        activeQuestion: { ...q, answer, answerHtml: mdToHtml(answer), answerLoaded: true }
       })
     }).catch(() => {
       this.setData({ answerLoading: false })

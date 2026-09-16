@@ -250,11 +250,17 @@ func ReviewAnswer(question *model.Question, answer string, cfg *model.InterviewC
 	if err != nil {
 		return nil, err
 	}
-	raw = cleanJSON(raw)
 
 	var result ReviewResult
-	if err := json.Unmarshal([]byte(raw), &result); err != nil {
-		return nil, fmt.Errorf("解析点评失败: %w", err)
+	if err = parseReviewJSON(raw, &result); err != nil {
+		// 首次解析失败：追加"只输出合法 JSON"约束自动重试一次，仍失败才报错
+		raw2, err2 := Chat(prompt + "\n\n注意：上一次输出无法被 JSON 解析。请只输出一个合法 JSON 对象本身，不要任何前后说明文字、不要代码块标记；pros/cons/detectedVerbalTics 必须是字符串数组，score/expressionScore 必须是整数。")
+		if err2 != nil {
+			return nil, fmt.Errorf("解析点评失败: %w（重试调用亦失败: %v）", err, err2)
+		}
+		if err = parseReviewJSON(raw2, &result); err != nil {
+			return nil, fmt.Errorf("解析点评失败: %w", err)
+		}
 	}
 	// 确保分数在 0-100
 	if result.Score < 0 {
@@ -564,8 +570,157 @@ func cleanJSON(s string) string {
 		if len(lines) > 2 {
 			s = strings.Join(lines[1:len(lines)-1], "\n")
 		}
+		s = strings.TrimSpace(strings.TrimPrefix(s, "json"))
 	}
-	return strings.TrimSpace(s)
+	// 模型常在 JSON 前后附带说明文字，截取第一个平衡的 JSON 对象/数组，提升解析成功率
+	if i := strings.IndexAny(s, "{["); i > 0 {
+		s = s[i:]
+	}
+	if s2 := extractBalancedJSON(s); s2 != "" {
+		return s2
+	}
+	return s
+}
+
+// extractBalancedJSON 从 s 中截取第一个括号平衡的 JSON 对象/数组（跳过字符串内的括号与转义符）
+// 未找到完整结构时返回空串，由调用方保留原文兜底
+func extractBalancedJSON(s string) string {
+	start := strings.IndexAny(s, "{[")
+	if start < 0 {
+		return ""
+	}
+	depth := 0
+	inStr := false
+	esc := false
+	for i := start; i < len(s); i++ {
+		c := s[i]
+		if inStr {
+			if esc {
+				esc = false
+				continue
+			}
+			switch c {
+			case '\\':
+				esc = true
+			case '"':
+				inStr = false
+			}
+			continue
+		}
+		switch c {
+		case '"':
+			inStr = true
+		case '{', '[':
+			depth++
+		case '}', ']':
+			depth--
+			if depth == 0 {
+				return s[start : i+1]
+			}
+		}
+	}
+	return ""
+}
+
+// parseReviewJSON 宽松解析点评 JSON：先经 cleanJSON 提取合法片段，再逐字段容错
+// （DeepSeek 偶发类型漂移：pros 给成字符串、score 给成 "85"、数组内混数字等，整体 Unmarshal 会直接失败）
+func parseReviewJSON(raw string, result *ReviewResult) error {
+	body := cleanJSON(raw)
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal([]byte(body), &m); err != nil {
+		return fmt.Errorf("%w, raw: %s", err, body[:minInt(200, len(body))])
+	}
+	result.Score = atoiLoose(m["score"])
+	result.Pros = parseStringList(m["pros"])
+	result.Cons = parseStringList(m["cons"])
+	result.ReferenceAnswer = parseStringLoose(m["referenceAnswer"])
+	result.ExpressionScore = atoiLoose(m["expressionScore"])
+	result.ExpressionFeedback = parseStringLoose(m["expressionFeedback"])
+	result.DetectedVerbalTics = parseStringList(m["detectedVerbalTics"])
+	if _, ok := m["score"]; !ok {
+		return fmt.Errorf("返回 JSON 缺少 score 字段, raw: %s", body[:minInt(200, len(body))])
+	}
+	return nil
+}
+
+// atoiLoose 容错读取整数字段：接受 85 / "85" / 85.0，无法解析返回 0
+func atoiLoose(rm json.RawMessage) int {
+	if len(rm) == 0 {
+		return 0
+	}
+	var n float64
+	if json.Unmarshal(rm, &n) == nil {
+		return int(n)
+	}
+	var s string
+	if json.Unmarshal(rm, &s) == nil {
+		s = strings.TrimSpace(s)
+		for i, r := range s {
+			if r < '0' || r > '9' {
+				s = s[:i]
+				break
+			}
+		}
+		var v int
+		if _, err := fmt.Sscanf(s, "%d", &v); err == nil {
+			return v
+		}
+	}
+	return 0
+}
+
+// parseStringList 容错读取字符串数组字段：接受 ["a"]、"a"、["a",1] 等漂移形态
+func parseStringList(rm json.RawMessage) []string {
+	if len(rm) == 0 {
+		return nil
+	}
+	var arr []string
+	if err := json.Unmarshal(rm, &arr); err == nil && arr != nil {
+		return arr
+	}
+	var s string
+	if json.Unmarshal(rm, &s) == nil {
+		if strings.TrimSpace(s) == "" {
+			return nil
+		}
+		return []string{s}
+	}
+	var mixed []interface{}
+	if json.Unmarshal(rm, &mixed) == nil {
+		out := make([]string, 0, len(mixed))
+		for _, v := range mixed {
+			switch t := v.(type) {
+			case string:
+				out = append(out, t)
+			case float64:
+				out = append(out, fmt.Sprintf("%d", int(t)))
+			default:
+				if b, err := json.Marshal(t); err == nil {
+					out = append(out, string(b))
+				}
+			}
+		}
+		return out
+	}
+	return nil
+}
+
+// parseStringLoose 容错读取字符串字段：非字符串时序列化兜底
+func parseStringLoose(rm json.RawMessage) string {
+	if len(rm) == 0 {
+		return ""
+	}
+	var s string
+	if json.Unmarshal(rm, &s) == nil {
+		return s
+	}
+	var mixed interface{}
+	if json.Unmarshal(rm, &mixed) == nil {
+		if b, err := json.Marshal(mixed); err == nil {
+			return string(b)
+		}
+	}
+	return ""
 }
 
 func minInt(a, b int) int {

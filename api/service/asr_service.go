@@ -34,7 +34,7 @@ func TranscribeAudio(audio []byte, ext string) (string, error) {
 		"ProjectId":      0,
 		"SubServiceType": 2, // 一句话识别
 		"EngSerViceType": "16k_zh",
-		"SourceType":     1, // base64 数据
+		"SourceType":     1,                  // base64 数据
 		"VoiceFormat":    voiceFormatOf(ext), // 实测接口要求 string 类型
 		"UsrAudioKey":    fmt.Sprintf("interview-%d", time.Now().UnixNano()),
 		"Data":           base64.StdEncoding.EncodeToString(audio),

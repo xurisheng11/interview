@@ -6,9 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"interview-sim/model"
 	"interview-sim/repository"
+
+	"github.com/google/uuid"
 )
 
 // ---- 简历解析 ----

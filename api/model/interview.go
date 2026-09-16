@@ -20,11 +20,11 @@ type InterviewConfig struct {
 
 // NonVerbalMetrics 非语言行为指标（语音/视频面试模式专有）
 type NonVerbalMetrics struct {
-	SpeechRate    float64  `json:"speechRate"`    // 每分钟字数（WPM）
-	PauseCount    int      `json:"pauseCount"`    // 停顿次数（>2秒算一次）
-	Duration      int      `json:"duration"`      // 作答时长（秒）
-	ThinkDuration int      `json:"thinkDuration"` // 思考时长（秒）
-	VerbalTics    []string `json:"verbalTics"`    // 识别到的口头禅列表
+	SpeechRate    float64  `json:"speechRate"`             // 每分钟字数（WPM）
+	PauseCount    int      `json:"pauseCount"`             // 停顿次数（>2秒算一次）
+	Duration      int      `json:"duration"`               // 作答时长（秒）
+	ThinkDuration int      `json:"thinkDuration"`          // 思考时长（秒）
+	VerbalTics    []string `json:"verbalTics"`             // 识别到的口头禅列表
 	StutterCount  int      `json:"stutterCount,omitempty"` // 口吃/不流畅次数（转写文本中重复字/词）
 }
 

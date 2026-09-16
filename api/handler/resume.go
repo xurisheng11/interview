@@ -5,12 +5,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"interview-sim/model"
 	"interview-sim/pkg/response"
 	"interview-sim/repository"
 	"interview-sim/service"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 const maxFileSize = 10 * 1024 * 1024 // 10 MB

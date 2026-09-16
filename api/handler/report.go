@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"interview-sim/pkg/response"
 	"interview-sim/service"
+
+	"github.com/gin-gonic/gin"
 )
 
 func GetReport(c *gin.Context) {

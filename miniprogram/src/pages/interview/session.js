@@ -408,8 +408,8 @@ Page({
   handleTimeUp() {
     wx.showToast({ title: '时间到！', icon: 'none' })
     this.stopAutoRecord()
-    // 等进行中的转写落定再提交，避免最后一段语音丢失
-    this.waitTranscripts().then(() => {
+    // 等最后一段 onStop 落定、转写全部完成再提交，避免丢字
+    this.waitRecorderSettled().then(() => this.waitTranscripts()).then(() => {
       this.saveCurrentAnswer()
       return this.submitCurrentAnswer()
     }).then(() => {
@@ -516,6 +516,23 @@ Page({
       const check = () => {
         if ((this.pendingTrans || 0) <= 0) { resolve(); return }
         setTimeout(check, 200)
+      }
+      check()
+    })
+  },
+
+  // 等待最后一次 stop() 的 onStop 异步回调真正触发（否则它的转写任务还没登记，waitTranscripts 会误判无转写直接放行）
+  waitRecorderSettled() {
+    return new Promise((resolve) => {
+      const t0 = Date.now()
+      const check = () => {
+        if (!this.data.isRecording) {
+          // onStop 已触发；留 300ms 给 uploadFile 登记 pendingTrans
+          setTimeout(resolve, 300)
+          return
+        }
+        if (Date.now() - t0 > 5000) { resolve(); return } // 兑底：onStop 迟迟不来也不卡死流程
+        setTimeout(check, 150)
       }
       check()
     })
@@ -735,7 +752,7 @@ Page({
     }
   },
 
-  // 下一题：先停自动识别并等转写落定，再提交当前答案给后端 AI 点评，最后前进
+  // 下一题/回答完毕：先停自动识别并等转写落定，再提交当前答案给后端 AI 点评，最后前进
   nextQuestion() {
     if (this.data.submitting) return
     this.stopAutoRecord()
@@ -743,13 +760,16 @@ Page({
 
     this.setData({ submitting: true })
     wx.showLoading({ title: this.data.isCamera ? '正在确认最后文字…' : '正在转写回答…', mask: true })
-    this.waitTranscripts().then(() => {
+    this.waitRecorderSettled().then(() => this.waitTranscripts()).then(() => {
       this.saveCurrentAnswer()
       const cur = this.data.questions[this.data.currentIndex] || {}
       const needSubmit = (cur.userAnswer || '').trim() !== '' && !cur.submitted
       if (!needSubmit) {
         wx.hideLoading()
         this.setData({ submitting: false })
+        if (this.data.isCamera && !cur.submitted) {
+          wx.showToast({ title: '本题未识别到作答内容，按未作答计', icon: 'none' })
+        }
         this.goNext()
         return
       }
@@ -757,6 +777,11 @@ Page({
       return this.submitCurrentAnswer().then(() => {
         wx.hideLoading()
         this.setData({ submitting: false })
+        const after = this.data.questions[this.data.currentIndex] || {}
+        if (after.submitFailed) {
+          // 不再静默吞错：明确告知会在交卷时自动补交
+          wx.showToast({ title: '本题提交较慢未成功，交卷时自动补交', icon: 'none', duration: 3000 })
+        }
         this.goNext()
       })
     })
@@ -808,38 +833,63 @@ Page({
     this.setData({ questions })
   },
 
-  // 提交当前答案（空答案/已提交过则跳过；失败不阻断流程，完成时还会重试）
-  submitCurrentAnswer() {
-    return new Promise((resolve) => {
-      const { interviewId, currentIndex, questions } = this.data
-      const cur = questions[currentIndex]
-      if (!cur) { resolve(); return }
-      const answer = (cur.userAnswer || this.data.answer || '').trim()
-      if (!answer || cur.submitted) { resolve(); return }
+  // 提交指定题目的答案（空答案/已提交过则跳过）；失败自动重试一次，仍失败则标记 submitFailed 留给交卷补交
+  submitAnswerFor(index) {
+    const { interviewId } = this.data
+    const cur = this.data.questions[index]
+    if (!cur) return Promise.resolve()
+    const answer = ((index === this.data.currentIndex ? (this.data.answer || cur.userAnswer) : cur.userAnswer) || '').trim()
+    if (!answer || cur.submitted) return Promise.resolve()
 
-      const payload = {
-        questionIndex: currentIndex,
-        answer: answer
+    const payload = {
+      questionIndex: index,
+      answer: answer
+    }
+    // 语音/视频模式：附带表达指标，后端会据此生成语速/自信度/口头禅/普通话等表达点评
+    if (this.data.isVoice) {
+      payload.nonVerbalMetrics = this.buildSpeechMetrics(cur, answer)
+    }
+    const mark = (ok) => {
+      const qs = this.data.questions
+      if (qs[index]) {
+        qs[index].submitted = ok
+        qs[index].submitFailed = !ok
+        this.setData({ questions: qs })
       }
-      // 语音/视频模式：附带表达指标，后端会据此生成语速/自信度/口头禅/普通话等表达点评
-      if (this.data.isVoice) {
-        payload.nonVerbalMetrics = this.buildSpeechMetrics(cur, answer)
-      }
-
-      api.interview.submitAnswer(interviewId, payload).then(() => {
-        const qs = this.data.questions
-        if (qs[currentIndex]) {
-          qs[currentIndex].submitted = true
-          this.setData({ questions: qs })
-        }
-        resolve()
+    }
+    return api.interview.submitAnswer(interviewId, payload).then(() => {
+      mark(true)
+    }).catch(() => {
+      // 后端 DeepSeek 点评同步耗时长，偶发超时/网络抖动重试一次
+      return api.interview.submitAnswer(interviewId, payload).then(() => {
+        mark(true)
       }).catch(() => {
-        resolve() // 即使失败也继续
+        mark(false) // 不阻断流程，交卷时 completeInterview 会统一补交
       })
     })
   },
 
-  // 完成面试：停自动识别、等转写落定，再把最后一题答案提交（含 AI 点评），最后触发报告生成
+  // 提交当前答案（兼容旧调用点）
+  submitCurrentAnswer() {
+    return this.submitAnswerFor(this.data.currentIndex)
+  },
+
+  // 交卷前兜底：把所有"有内容但未提交成功"的题逐题补交，避免报告整场显示已跳过
+  resubmitAllUnsubmitted() {
+    const qs = this.data.questions
+    const pending = []
+    qs.forEach((q, i) => {
+      const text = (i === this.data.currentIndex ? (this.data.answer || q.userAnswer) : q.userAnswer) || ''
+      if (text.trim() !== '' && !q.submitted) pending.push(i)
+    })
+    if (!pending.length) return Promise.resolve()
+    wx.showLoading({ title: '补交未成功的 ' + pending.length + ' 题…', mask: true })
+    return pending.reduce((chain, idx) => {
+      return chain.then(() => this.submitAnswerFor(idx))
+    }, Promise.resolve()).then(() => wx.hideLoading())
+  },
+
+  // 完成面试：停自动识别、等转写落定，提交最后一题并补交所有失败题，最后触发报告生成
   completeInterview() {
     this.stopAutoRecord()
     this.setData({ 
@@ -847,9 +897,11 @@ Page({
       showCompleteModal: true 
     })
 
-    this.waitTranscripts().then(() => {
+    this.waitRecorderSettled().then(() => this.waitTranscripts()).then(() => {
       this.saveCurrentAnswer()
       return this.submitCurrentAnswer()
+    }).then(() => {
+      return this.resubmitAllUnsubmitted()
     }).then(() => {
       return api.interview.complete(this.data.interviewId)
     }).then(res => {

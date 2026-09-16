@@ -113,11 +113,12 @@ export const interview = {
     url: `/interviews/${id}`
   }),
   
-  // 提交回答
+  // 提交回答（后端同步等 DeepSeek 点评，可能较慢，超时放宽避免丢答案）
   submitAnswer: (id, data) => request({
     url: `/interviews/${id}/answers`,
     method: 'POST',
-    data
+    data,
+    timeout: 90000
   }),
   
   // 完成面试

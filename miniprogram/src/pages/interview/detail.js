@@ -82,7 +82,7 @@ Page({
       statusText: STATUS_NAMES[interview.status] || interview.status || '',
       roundText: ROUND_NAMES[config.round] || config.round || '通用',
       difficultyText: DIFFICULTY_NAMES[config.difficulty] || config.difficulty || '综合',
-      modeText: interview.mode === 'video' ? '视频面试' : '文字面试',
+      modeText: interview.mode === 'video' ? '语音面试' : '文字面试',
       startTimeText: fmtTime(interview.startTime),
       questionCount: (interview.questions || []).length,
       isCompleted: interview.status === 'completed'

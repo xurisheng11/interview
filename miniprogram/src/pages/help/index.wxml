@@ -91,9 +91,9 @@
       <view class="contact-item" hover-class="item-pressed" bindtap="contactWechat">
         <view class="contact-left">
           <view class="contact-icon icon-cube t-green">微</view>
-          <text class="contact-label">微信公众号</text>
+          <text class="contact-label">微信号</text>
         </view>
-        <text class="contact-value">面试模拟助手</text>
+        <text class="contact-value">xurixuxuxu</text>
       </view>
 
       <view class="contact-item" hover-class="item-pressed" bindtap="contactEmail">
@@ -101,7 +101,7 @@
           <view class="contact-icon icon-cube t-blue">邮</view>
           <text class="contact-label">邮箱地址</text>
         </view>
-        <text class="contact-value">support@example.com</text>
+        <text class="contact-value">xurisheng1133@163.com</text>
       </view>
     </view>
   </view>

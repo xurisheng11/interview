@@ -230,10 +230,11 @@ export const resume = {
     method: 'POST'
   }),
 
-  // 基于简历创建面试
-  createInterview: (id) => request({
+  // 基于简历创建面试（mode: 'text' 文字 / 'video' 语音，缺省文字模式）
+  createInterview: (id, mode) => request({
     url: `/resumes/${id}/interview`,
-    method: 'POST'
+    method: 'POST',
+    data: { mode: mode || 'text' }
   }),
 
   // 上传简历（multipart/form-data）

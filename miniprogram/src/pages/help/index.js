@@ -99,10 +99,10 @@ Page({
     })
   },
 
-  // 联系微信
+  // 联系微信（复制微信号）
   contactWechat() {
     wx.setClipboardData({
-      data: 'interview_helper',
+      data: 'xurixuxuxu',
       success: () => {
         wx.showToast({ 
           title: '微信号已复制', 
@@ -112,10 +112,10 @@ Page({
     })
   },
 
-  // 联系邮箱
+  // 联系邮箱（复制邮箱）
   contactEmail() {
     wx.setClipboardData({
-      data: 'support@example.com',
+      data: 'xurisheng1133@163.com',
       success: () => {
         wx.showToast({ 
           title: '邮箱已复制', 

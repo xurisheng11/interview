@@ -153,16 +153,33 @@ Page({
     })
   },
 
-  /** 基于简历创建面试 */
+  /** 基于简历创建面试：先选答题模式（文字/语音） */
   handleCreateInterview() {
     if (this.data.startingInterview) return
     if (!this.data.resume || this.data.resume.analysisStatus !== 'done') {
       wx.showToast({ title: '请等待分析完成', icon: 'none' })
       return
     }
+    var that = this
+    wx.showActionSheet({
+      alertText: '选择答题方式',
+      itemList: [
+        '✍️ 文字答题 · 打字输入',
+        '🎙️ 语音答题 · 说话自动转文字，AI 分析语速/口头禅/表达'
+      ],
+      success: function (res) {
+        // tapIndex 1 = 语音模式（后端值 video）；其它为文字
+        that.doCreateInterview(res.tapIndex === 1 ? 'video' : 'text')
+      }
+    })
+  },
+
+  /** 按选中模式创建面试 */
+  doCreateInterview(mode) {
+    if (this.data.startingInterview) return
     this.setData({ startingInterview: true })
     wx.showLoading({ title: '创建面试…', mask: true })
-    api.resume.createInterview(this.data.resumeId).then(res => {
+    api.resume.createInterview(this.data.resumeId, mode).then(res => {
       wx.hideLoading()
       this.setData({ startingInterview: false })
       var interviewId = (res.data && res.data.interviewId) || res.interviewId

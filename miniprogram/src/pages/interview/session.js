@@ -4,6 +4,13 @@ const api = require('../../api/index')
 const recorderManager = wx.getRecorderManager()
 const innerAudioContext = wx.createInnerAudioContext()
 
+// 常见中文口头禅（与 Web 端 speechMixin 对齐，转写文本出现≥2次即上报）
+const VERBAL_TICS = [
+  '然后', '这个', '那个', '嗯', '呃', '啊', '就是', '就是说',
+  '的话', '其实', '基本上', '大概', '可能', '应该', '好像',
+  '对吧', '是吧', '好吗', '好吧', '所以'
+]
+
 // 语音转文字管理器（微信同声传译插件）：插件仅对非个人主体小程序开放，
 // 个人主体账号无法添加（app.json 已不声明插件），requirePlugin 失败自动降级为纯录音
 let recognitionManager = null
@@ -118,11 +125,13 @@ Page({
   initRecorder() {
     recorderManager.onStart(() => {
       this.setData({ isRecording: true, recordTime: 0 })
+      this.markFirstSpeech()
       this.syncSessionDisplay()
       this.startRecordTimer()
     })
 
     recorderManager.onStop((res) => {
+      this.accumulateSpeak(res && res.duration)
       this.setData({
         isRecording: false,
         audioPath: res.tempFilePath
@@ -157,6 +166,7 @@ Page({
     if (recognitionManager) {
       recognitionManager.onStart(() => {
         this.setData({ isRecording: true, recordTime: 0, liveRecognizeText: '' })
+        this.markFirstSpeech()
         this.syncSessionDisplay()
         this.startRecordTimer()
       })
@@ -167,6 +177,7 @@ Page({
       })
 
       recognitionManager.onStop((res) => {
+        this.accumulateSpeak(null)
         this.setData({
           isRecording: false,
           audioPath: res.tempFilePath || '',
@@ -205,6 +216,53 @@ Page({
     this.saveCurrentAnswer()
   },
 
+  // 记录本题首次开口时间（用于思考时长 = 首次开口 - 题目展示）
+  markFirstSpeech() {
+    const qs = this.data.questions
+    const cur = qs[this.data.currentIndex]
+    if (cur && !cur.firstSpeechAt) cur.firstSpeechAt = Date.now()
+  },
+
+  // 累计本题说话时长（秒）；durationMs 为录音返回毫秒，无则用计时器兜底
+  accumulateSpeak(durationMs) {
+    const qs = this.data.questions
+    const cur = qs[this.data.currentIndex]
+    if (!cur) return
+    const secs = durationMs ? Math.round(durationMs / 1000) : this.data.recordTime
+    if (secs > 0) cur.speakSeconds = (cur.speakSeconds || 0) + secs
+    this.setData({ questions: qs })
+  },
+
+  // 从转写文本检测口头禅（出现≥2次）
+  detectVerbalTics(text) {
+    if (!text) return []
+    const found = []
+    for (let i = 0; i < VERBAL_TICS.length; i++) {
+      const tic = VERBAL_TICS[i]
+      const count = text.split(tic).length - 1
+      if (count >= 2) found.push(tic)
+    }
+    return found
+  },
+
+  // 构建语音表达指标（语速/时长/思考时长/口头禅）
+  buildSpeechMetrics(cur, answer) {
+    const duration = (cur && cur.speakSeconds) || 0
+    const thinkDuration = (cur && cur.firstSpeechAt && this.questionShownAt)
+      ? Math.max(0, Math.round((cur.firstSpeechAt - this.questionShownAt) / 1000))
+      : 0
+    // 有效字数：中文 + 字母数字
+    const chars = (answer || '').replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '').length
+    const speechRate = duration > 0 ? Math.round(chars / (duration / 60)) : 0
+    return {
+      speechRate: speechRate,
+      pauseCount: 0, // 一句话识别无法测停顿
+      duration: duration,
+      thinkDuration: thinkDuration,
+      verbalTics: this.detectVerbalTics(answer)
+    }
+  },
+
   // 加载面试数据
   loadInterview() {
     wx.showLoading({ title: '加载中...' })
@@ -229,6 +287,7 @@ Page({
         remainingTime: interview.questionTime || 300, // 默认5分钟
         mode: interview.mode || 'text'
       })
+      this.questionShownAt = Date.now()
       this.syncSessionDisplay()
       
       this.startTimer()
@@ -393,6 +452,7 @@ Page({
         audioPath: this.data.questions[newIndex].audioPath || '',
         liveRecognizeText: ''
       })
+      this.questionShownAt = Date.now()
       this.syncSessionDisplay()
     }
   },
@@ -429,6 +489,7 @@ Page({
         audioPath: this.data.questions[newIndex].audioPath || '',
         liveRecognizeText: ''
       })
+      this.questionShownAt = Date.now()
       this.syncSessionDisplay()
     } else {
       // 最后一题，提交
@@ -468,10 +529,16 @@ Page({
       const answer = (cur.userAnswer || this.data.answer || '').trim()
       if (!answer || cur.submitted) { resolve(); return }
 
-      api.interview.submitAnswer(interviewId, {
+      const payload = {
         questionIndex: currentIndex,
         answer: answer
-      }).then(() => {
+      }
+      // 语音模式：附带表达指标，后端会据此生成语速/自信度/口头禅/普通话等表达点评
+      if (this.data.mode === 'video') {
+        payload.nonVerbalMetrics = this.buildSpeechMetrics(cur, answer)
+      }
+
+      api.interview.submitAnswer(interviewId, payload).then(() => {
         const qs = this.data.questions
         if (qs[currentIndex]) {
           qs[currentIndex].submitted = true

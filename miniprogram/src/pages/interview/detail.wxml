@@ -180,17 +180,20 @@
       </button>
 
       <view class="completed-actions" wx:else>
-        <button class="btn-action secondary" hover-class="btn-ghost-pressed" bindtap="restartInterview">
-          重新面试
-        </button>
-        <button class="btn-action ghost" hover-class="btn-ghost-pressed" bindtap="downloadWord"
-          wx:if="{{report}}">
-          下载Word报告
-        </button>
-        <button class="btn-action primary" hover-class="btn-brand-pressed" open-type="share"
-          wx:if="{{report}}">
-          分享报告
-        </button>
+        <view class="action-row">
+          <button class="btn-act primary" hover-class="btn-brand-pressed" open-type="share" wx:if="{{report}}">
+            <text class="btn-act-icon">🔗</text>
+            <text class="btn-act-text">分享报告</text>
+          </button>
+          <button class="btn-act ghost" hover-class="btn-ghost-pressed" bindtap="downloadWord" wx:if="{{report}}">
+            <text class="btn-act-icon">📄</text>
+            <text class="btn-act-text">下载Word</text>
+          </button>
+        </view>
+        <view class="btn-restart" hover-class="btn-restart-pressed" bindtap="restartInterview">
+          <text class="btn-restart-icon">🔄</text>
+          <text>用相同配置重新面试</text>
+        </view>
       </view>
     </view>
   </view>

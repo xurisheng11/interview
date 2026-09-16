@@ -45,6 +45,7 @@ func Setup() *gin.Engine {
 			interviews.PUT("/:id/complete", handler.CompleteInterview)
 		}
 		protected.GET("/reports/:interviewId", handler.GetReport)
+		protected.GET("/reports/:interviewId/word", handler.DownloadWordReport)
 		protected.POST("/reports/:interviewId/share", handler.CreateShare)
 
 		// 题库需鉴权路由

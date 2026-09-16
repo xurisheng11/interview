@@ -223,18 +223,27 @@ func GetSharedReport(token string) (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	// 脱敏：隐藏用户答案
+	// 脱敏：只给汇总数据，隐藏题目与用户答案
 	result := map[string]interface{}{
-		"interviewId":  report.InterviewID,
-		"jobTitle":     report.JobTitle,
-		"round":        report.Round,
-		"difficulty":   report.Difficulty,
-		"totalScore":   report.TotalScore,
-		"grade":        report.Grade,
-		"passStatus":   report.PassStatus,
-		"moduleScores": report.ModuleScores,
-		"aiSummary":    report.AISummary,
-		"createdAt":    report.CreatedAt,
+		"interviewId":        report.InterviewID,
+		"companyName":        report.CompanyName,
+		"jobTitle":           report.JobTitle,
+		"round":              report.Round,
+		"difficulty":         report.Difficulty,
+		"mode":               report.Mode,
+		"totalScore":         report.TotalScore,
+		"grade":              report.Grade,
+		"passStatus":         report.PassStatus,
+		"passReason":         report.PassReason,
+		"answeredCount":      report.AnsweredCount,
+		"totalCount":         report.TotalCount,
+		"avgExpressionScore": report.AvgExpressionScore,
+		"avgSpeechRate":      report.AvgSpeechRate,
+		"expressionSummary":  report.ExpressionSummary,
+		"faceSummary":        report.FaceSummary,
+		"moduleScores":       report.ModuleScores,
+		"aiSummary":          report.AISummary,
+		"createdAt":          report.CreatedAt,
 	}
 	return result, nil
 }

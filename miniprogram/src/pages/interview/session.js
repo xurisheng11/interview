@@ -39,8 +39,15 @@ Page({
     currentQuestion: null,
     answer: '',
     maxLength: 2000,
-    // 面试模式：text=纯文字；video=语音模式（录音答题，摄像头视频为 Web 端能力）
+    // 面试模式：text=纯文字；video=语音模式（录音答题）；video_call=视频面试（摄像头预览+录音答题）
     mode: 'text',
+    // isVoice=需录音转写与表达分析（video/video_call）；isCamera=展示摄像头预览（video_call）
+    isVoice: false,
+    isCamera: false,
+    // 摄像头不可用（用户拒绝授权或设备错误）时降级提示
+    cameraBlocked: false,
+    // 摄像头悬浮窗是否最小化（避免遮挡题目/回答）
+    cameraMinimized: false,
     
     // 录音状态
     isRecording: false,
@@ -119,6 +126,7 @@ Page({
   onUnload() {
     this.clearTimer()
     innerAudioContext.destroy()
+    wx.setKeepScreenOn({ keepScreenOn: false })
   },
 
   // 初始化录音管理器
@@ -138,8 +146,8 @@ Page({
       })
       this.stopRecordTimer()
       this.syncSessionDisplay()
-      // 语音模式：录音停止后上传后端转文字（腾讯云一句话识别），结果追加进回答
-      if (this.data.mode === 'video' && res.tempFilePath) {
+      // 语音/视频模式：录音停止后上传后端转文字（腾讯云一句话识别），结果追加进回答
+      if (this.data.isVoice && res.tempFilePath) {
         this.transcribeAudio(res.tempFilePath)
       }
     })
@@ -285,8 +293,14 @@ Page({
         totalCount: questions.length,
         currentQuestion: questions[0] || null,
         remainingTime: interview.questionTime || 300, // 默认5分钟
-        mode: interview.mode || 'text'
+        mode: interview.mode || 'text',
+        isVoice: interview.mode === 'video' || interview.mode === 'video_call',
+        isCamera: interview.mode === 'video_call'
       })
+      // 视频面试：保持屏幕常亮，避免答题中途息屏中断摄像头
+      if (interview.mode === 'video_call') {
+        wx.setKeepScreenOn({ keepScreenOn: true })
+      }
       this.questionShownAt = Date.now()
       this.syncSessionDisplay()
       
@@ -423,6 +437,22 @@ Page({
     }
   },
 
+  // 摄像头初始化成功：清除降级提示
+  onCameraInitDone() {
+    if (this.data.cameraBlocked) this.setData({ cameraBlocked: false })
+  },
+
+  // 摄像头错误（拒绝授权/设备不可用）：不阻断面试，降级为仅语音答题
+  onCameraError(e) {
+    console.error('摄像头错误', e && e.detail)
+    this.setData({ cameraBlocked: true })
+  },
+
+  // 切换摄像头悬浮窗最小化
+  toggleCameraMin() {
+    this.setData({ cameraMinimized: !this.data.cameraMinimized })
+  },
+
   // 录音计时器
   startRecordTimer() {
     this.recordTimer = setInterval(() => {
@@ -533,8 +563,8 @@ Page({
         questionIndex: currentIndex,
         answer: answer
       }
-      // 语音模式：附带表达指标，后端会据此生成语速/自信度/口头禅/普通话等表达点评
-      if (this.data.mode === 'video') {
+      // 语音/视频模式：附带表达指标，后端会据此生成语速/自信度/口头禅/普通话等表达点评
+      if (this.data.isVoice) {
         payload.nonVerbalMetrics = this.buildSpeechMetrics(cur, answer)
       }
 

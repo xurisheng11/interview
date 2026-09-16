@@ -82,7 +82,7 @@ Page({
       statusText: STATUS_NAMES[interview.status] || interview.status || '',
       roundText: ROUND_NAMES[config.round] || config.round || '通用',
       difficultyText: DIFFICULTY_NAMES[config.difficulty] || config.difficulty || '综合',
-      modeText: interview.mode === 'video' ? '语音面试' : '文字面试',
+      modeText: interview.mode === 'video_call' ? '视频面试' : (interview.mode === 'video' ? '语音面试' : '文字面试'),
       startTimeText: fmtTime(interview.startTime),
       questionCount: (interview.questions || []).length,
       isCompleted: interview.status === 'completed'
@@ -141,8 +141,8 @@ Page({
         v.roadmap = report.aiSummary.roadmap || ''
       }
 
-      // 视频面试附加指标
-      if (report.mode === 'video') {
+      // 语音/视频面试附加表达指标
+      if (report.mode === 'video' || report.mode === 'video_call') {
         const metrics = []
         if (report.avgExpressionScore > 0) metrics.push({ label: '平均表达分', value: report.avgExpressionScore + ' 分' })
         if (report.avgSpeechRate > 0) metrics.push({ label: '平均语速', value: Math.round(report.avgSpeechRate) + ' 字/分' })

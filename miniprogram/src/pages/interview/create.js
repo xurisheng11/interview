@@ -102,11 +102,12 @@ Page({
     // 公司名称（可选）
     companyName: '',
 
-    // 面试模式（value 保持 video 兼容后端；小程序端实现为录音答题，摄像头视频为 Web 端能力）
+    // 面试模式（text=文字；video=语音录音；video_call=视频面试=摄像头预览+语音录音）
     selectedMode: 'text',
     modes: [
       { value: 'text', name: '文字模式', desc: '打字输入回答' },
-      { value: 'video', name: '语音模式', desc: '说话答题，录音停止后自动转文字' }
+      { value: 'video', name: '语音模式', desc: '说话答题，停止后自动转文字' },
+      { value: 'video_call', name: '视频面试', desc: '摄像头实时预览 + 语音答题' }
     ],
 
     // 答题时间（每题）

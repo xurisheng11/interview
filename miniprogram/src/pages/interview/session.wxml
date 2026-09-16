@@ -1,4 +1,27 @@
 <view class="container">
+  <!-- 视频面试：右上角悬浮摄像头预览（可最小化，不阻断面试） -->
+  <block wx:if="{{isCamera}}">
+    <view class="camera-float" wx:if="{{!cameraMinimized && !cameraBlocked}}">
+      <camera
+        class="camera-view"
+        mode="mirrored"
+        device-position="front"
+        flash="none"
+        binderror="onCameraError"
+        bindinitdone="onCameraInitDone"
+      ></camera>
+      <view class="camera-badge">
+        <view class="camera-rec-dot"></view>
+        <text>视频面试中</text>
+      </view>
+      <view class="camera-min" catchtap="toggleCameraMin">✕</view>
+    </view>
+    <view class="camera-restore" wx:elif="{{!cameraBlocked}}" catchtap="toggleCameraMin">
+      <text>🎥</text>
+    </view>
+    <view class="camera-warn" wx:if="{{cameraBlocked}}">摄像头不可用，已降级为语音答题</view>
+  </block>
+
   <!-- 顶部进度条 -->
   <view class="progress-bar">
     <view class="progress-info">
@@ -34,13 +57,13 @@
   <!-- 答案输入区 -->
   <view class="answer-section">
     <view class="answer-header">
-      <text class="answer-label">{{mode === 'video' ? '你的回答（语音自动转文字）' : '你的回答'}}</text>
-      <text class="answer-tips">{{mode === 'video' ? '录音停止后自动转写追加，可编辑、计入评分' : '建议条理清晰、要点完整'}}</text>
+      <text class="answer-label">{{isVoice ? '你的回答（语音自动转文字）' : '你的回答'}}</text>
+      <text class="answer-tips">{{isVoice ? '录音停止后自动转写追加，可编辑、计入评分' : '建议条理清晰、要点完整'}}</text>
     </view>
     
     <textarea 
       class="answer-input {{isRecording ? 'recording' : ''}}"
-      placeholder="{{mode === 'video' ? '录音结束后自动填入，也可手动输入' : '请输入你的回答...'}}"
+      placeholder="{{isVoice ? '录音结束后自动填入，也可手动输入' : '请输入你的回答...'}}"
       value="{{answer}}"
       bindinput="onAnswerInput"
       maxlength="{{maxLength}}"
@@ -52,8 +75,8 @@
     </view>
   </view>
 
-  <!-- 录音区域（仅语音模式；横向紧凑卡片：左麦克风、中状态、右播放） -->
-  <view class="record-section" wx:if="{{mode === 'video'}}">
+  <!-- 录音区域（语音/视频模式；横向紧凑卡片：左麦克风、中状态、右播放） -->
+  <view class="record-section" wx:if="{{isVoice}}">
     <view class="record-row">
       <button
         class="btn-record {{isRecording ? 'stop' : 'start'}}"

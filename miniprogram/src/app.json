@@ -59,6 +59,14 @@
     ]
   },
   "style": "v2",
+  "permission": {
+    "scope.camera": {
+      "desc": "用于视频面试时展示你的实时画面"
+    },
+    "scope.record": {
+      "desc": "用于语音/视频面试录音答题"
+    }
+  },
   "sitemapLocation": "sitemap.json",
   "lazyCodeLoading": "requiredComponents"
 }

@@ -43,6 +43,15 @@
 
 <!-- 已登录状态 -->
 <view wx:else class="container">
+    <!-- 自定义品牌顶栏（logo + 名称，替代原生“首页”标题） -->
+    <view class="brand-nav" style="padding-top: {{statusBarHeight}}px;">
+      <image class="brand-nav-logo" src="/assets/logo.png" mode="aspectFit"></image>
+      <view class="brand-nav-texts">
+        <text class="brand-nav-name">面试模拟系统</text>
+        <text class="brand-nav-slogan">AI 驱动的面试练习平台</text>
+      </view>
+    </view>
+
     <!-- 用户信息卡片（品牌渐变卡） -->
     <view class="user-card anim-fade-in">
       <view class="deco-circle deco-1"></view>
@@ -172,12 +181,18 @@
       <text class="section-title">最近面试</text>
       <view wx:for="{{recentInterviews}}" wx:key="interviewId" class="interview-item" hover-class="item-pressed" bindtap="goToInterviewDetail" data-id="{{item.interviewId}}">
         <view class="interview-info">
-          <text class="interview-title">{{item.companyName || '未指定公司'}} - {{item.jobTitle || '未指定岗位'}}</text>
-          <text class="interview-time">{{item.startTime}}</text>
+          <text class="interview-title">{{item.companyName || '未指定公司'}} · {{item.jobTitle || '通用面试'}}</text>
+          <view class="interview-sub">
+            <text class="interview-time">{{item._time}}</text>
+            <text class="interview-mode">{{item._modeText}}</text>
+          </view>
         </view>
-        <view class="interview-score">
-          <text class="score-value">{{item.totalScore || '--'}}</text>
-          <text class="score-label">分</text>
+        <view class="interview-score {{item._isDone ? item._scoreCls : 's-doing'}}">
+          <block wx:if="{{item._isDone}}">
+            <text class="score-value">{{item.totalScore || 0}}</text>
+            <text class="score-label">分</text>
+          </block>
+          <text wx:else class="score-doing">{{item._statusText}}</text>
         </view>
       </view>
     </view>

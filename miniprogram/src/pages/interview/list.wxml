@@ -24,7 +24,7 @@
         </view>
         <view class="info-row">
           <text class="label">时间</text>
-          <text class="value">{{item.startTime}}</text>
+          <text class="value">{{item.timeText}}</text>
         </view>
       </view>
 

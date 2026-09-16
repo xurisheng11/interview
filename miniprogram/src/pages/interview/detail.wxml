@@ -6,132 +6,192 @@
   </view>
 
   <view wx:else>
-    <!-- 基本信息 -->
-    <view class="card anim-fade-in">
-      <view class="card-header">
-        <text class="title">{{interview.company}} - {{interview.position}}</text>
+    <!-- 头部信息卡 -->
+    <view class="card head-card anim-fade-in">
+      <view class="head-top">
+        <view class="head-title-wrap">
+          <text class="head-title">{{view.title}}</text>
+          <text class="head-subtitle">{{view.subtitle}} · {{view.roundText}} · {{view.modeText}}</text>
+        </view>
         <view class="status-badge {{interview.status}}">
           <view class="status-dot"></view>
-          <text>{{statusText}}</text>
+          <text>{{view.statusText}}</text>
         </view>
       </view>
-
-      <view class="info-grid">
-        <view class="info-item">
-          <text class="info-label">面试类型</text>
-          <text class="info-value">{{typeText}}</text>
+      <view class="head-meta">
+        <view class="meta-chip">
+          <text class="meta-chip-label">难度</text>
+          <text class="meta-chip-value">{{view.difficultyText}}</text>
         </view>
-        <view class="info-item">
-          <text class="info-label">时长</text>
-          <text class="info-value">{{interview.duration || '--'}} 分钟</text>
+        <view class="meta-chip">
+          <text class="meta-chip-label">题目数</text>
+          <text class="meta-chip-value">{{view.questionCount}}</text>
         </view>
-        <view class="info-item">
-          <text class="info-label">题目数</text>
-          <text class="info-value">{{interview.questionCount || '--'}}</text>
+        <view class="meta-chip">
+          <text class="meta-chip-label">用时</text>
+          <text class="meta-chip-value">{{view.durationText || '--'}}</text>
         </view>
-        <view class="info-item">
-          <text class="info-label">时间</text>
-          <text class="info-value">{{interview.createdAt}}</text>
+        <view class="meta-chip">
+          <text class="meta-chip-label">时间</text>
+          <text class="meta-chip-value">{{view.startTimeText}}</text>
         </view>
       </view>
     </view>
 
-    <!-- 得分情况 -->
+    <!-- 综合评分 -->
     <view class="card anim-fade-in" wx:if="{{report}}">
-      <text class="section-title">综合评分</text>
-      <view class="score-overview">
-        <view class="main-score">
-          <text class="score-num {{scoreClassTotal}}">{{report.totalScore || 0}}</text>
-          <text class="score-unit">分</text>
+      <text class="section-title">🏆 综合评分</text>
+      <view class="score-hero">
+        <view class="score-ring {{view.scoreClass}}">
+          <text class="score-ring-num">{{view.totalScore}}</text>
+          <text class="score-ring-unit">分</text>
         </view>
-        <view class="score-detail">
-          <view class="score-row">
-            <view class="score-row-top">
-              <text class="score-item-label">回答准确度</text>
-              <text class="score-item-value {{scoreClassAccuracy}}">{{report.accuracy || 0}}</text>
-            </view>
-            <view class="score-bar">
-              <view class="score-bar-fill {{scoreClassAccuracy}}" style="width: {{report.accuracy || 0}}%"></view>
-            </view>
+        <view class="score-side">
+          <view class="grade-tag {{view.scoreClass}}">{{view.grade}}</view>
+          <view class="pass-tag {{view.passClass}}">
+            <text>{{view.passText}}</text>
+            <text wx:if="{{view.passReason}}" class="pass-reason">{{view.passReason}}</text>
           </view>
-          <view class="score-row">
-            <view class="score-row-top">
-              <text class="score-item-label">表达流畅度</text>
-              <text class="score-item-value {{scoreClassFluency}}">{{report.fluency || 0}}</text>
-            </view>
-            <view class="score-bar">
-              <view class="score-bar-fill {{scoreClassFluency}}" style="width: {{report.fluency || 0}}%"></view>
-            </view>
+          <text class="score-count">作答 {{view.answeredCount}} 题 · 跳过 {{view.skippedCount}} 题</text>
+        </view>
+      </view>
+
+      <!-- 模块得分 -->
+      <view wx:if="{{view.moduleScores.length > 0}}" class="module-section">
+        <text class="subsection-title">知识点模块得分</text>
+        <view wx:for="{{view.moduleScores}}" wx:key="module" class="module-item">
+          <view class="module-top">
+            <text class="module-name">{{item.module}}</text>
+            <text class="module-score {{item.cls}}">{{item.avgText}}<text class="module-level">{{item.level}} · {{item.count}}题</text></text>
           </view>
-          <view class="score-row">
-            <view class="score-row-top">
-              <text class="score-item-label">逻辑清晰度</text>
-              <text class="score-item-value {{scoreClassLogic}}">{{report.logic || 0}}</text>
-            </view>
-            <view class="score-bar">
-              <view class="score-bar-fill {{scoreClassLogic}}" style="width: {{report.logic || 0}}%"></view>
-            </view>
+          <view class="module-bar">
+            <view class="module-bar-fill {{item.cls}}" style="width: {{item.width}}%"></view>
           </view>
+        </view>
+      </view>
+
+      <!-- 视频面试附加指标 -->
+      <view wx:if="{{view.videoMetrics.length > 0}}" class="video-metrics">
+        <view wx:for="{{view.videoMetrics}}" wx:key="label" class="video-metric">
+          <text class="video-metric-value">{{item.value}}</text>
+          <text class="video-metric-label">{{item.label}}</text>
+        </view>
+      </view>
+      <view wx:if="{{view.expressionSummary}}" class="expression-box">
+        <text class="expression-title">🎤 表达能力评价</text>
+        <text class="expression-text">{{view.expressionSummary}}</text>
+      </view>
+    </view>
+
+    <!-- 逐题点评 -->
+    <view class="card anim-fade-in" wx:if="{{view.questions.length > 0}}">
+      <text class="section-title">📝 逐题点评</text>
+      <view wx:for="{{view.questions}}" wx:key="idx" class="q-card">
+        <view class="q-head">
+          <view class="q-index">Q{{item.idx}}</view>
+          <view class="q-tags">
+            <text wx:if="{{item.difficulty}}" class="q-diff">{{item.difficulty}}</text>
+            <text wx:if="{{item.tagsText}}" class="q-tag">{{item.tagsText}}</text>
+          </view>
+          <view class="q-score {{item.scoreCls}}">
+            <text wx:if="{{item.answered}}">{{item.scoreText}}分</text>
+            <text wx:else>已跳过</text>
+          </view>
+        </view>
+
+        <text class="q-content">{{item.content}}</text>
+
+        <view class="q-answer" wx:if="{{item.answered}}">
+          <text class="q-block-label">我的回答</text>
+          <text class="q-answer-text">{{item.userAnswer}}</text>
+        </view>
+        <view class="q-skipped-hint" wx:else>
+          <text>本题未作答，计 0 分</text>
+        </view>
+
+        <view wx:if="{{item.pros.length > 0}}" class="q-pros">
+          <view wx:for="{{item.pros}}" wx:for-item="p" wx:key="*this" class="pro-line">
+            <text class="pro-icon">✅</text>
+            <text class="pro-text">{{p}}</text>
+          </view>
+        </view>
+        <view wx:if="{{item.cons.length > 0}}" class="q-cons">
+          <view wx:for="{{item.cons}}" wx:for-item="c" wx:key="*this" class="con-line">
+            <text class="con-icon">⚠️</text>
+            <text class="con-text">{{c}}</text>
+          </view>
+        </view>
+        <view wx:if="{{item.expressionFeedback}}" class="q-expr">
+          <text class="expr-icon">🗣</text>
+          <text class="expr-text">{{item.expressionFeedback}}</text>
+        </view>
+
+        <view wx:if="{{item.referenceAnswer}}" class="ref-toggle" hover-class="btn-press"
+          bindtap="toggleRef" data-index="{{index}}">
+          <text>💡 参考答案</text>
+          <text class="ref-arrow {{item._refOpen ? 'open' : ''}}">▾</text>
+        </view>
+        <view wx:if="{{item.referenceAnswer && item._refOpen}}" class="ref-body">
+          <text>{{item.referenceAnswer}}</text>
         </view>
       </view>
     </view>
 
-    <!-- 回答详情 -->
-    <view class="card anim-fade-in" wx:if="{{interview.answers && interview.answers.length > 0}}">
-      <text class="section-title">回答详情</text>
-      <view wx:for="{{interview.answers}}" wx:key="id" class="answer-item">
-        <view class="question">
-          <text class="q-label">Q{{index + 1}}</text>
-          <text class="q-text">{{item.question}}</text>
+    <!-- AI 综合评价 -->
+    <view class="card anim-fade-in" wx:if="{{view.strengths.length > 0 || view.weaknesses.length > 0 || view.roadmap}}">
+      <text class="section-title">🤖 AI 综合评价</text>
+
+      <view wx:if="{{view.strengths.length > 0}}" class="ai-block">
+        <text class="ai-block-title good-t">优势亮点</text>
+        <view wx:for="{{view.strengths}}" wx:key="*this" class="ai-line">
+          <text class="ai-dot good-d"></text>
+          <text class="ai-line-text">{{item}}</text>
         </view>
-        <view class="answer">
-          <text class="a-label">A</text>
-          <text class="a-text">{{item.answer}}</text>
+      </view>
+
+      <view wx:if="{{view.weaknesses.length > 0}}" class="ai-block">
+        <text class="ai-block-title bad-t">待改进项</text>
+        <view wx:for="{{view.weaknesses}}" wx:key="point" class="ai-weak">
+          <view class="ai-line">
+            <text class="ai-dot bad-d"></text>
+            <text class="ai-line-text">{{item.point}}</text>
+          </view>
+          <text wx:if="{{item.suggestion}}" class="weak-sug">建议：{{item.suggestion}}</text>
+          <text wx:if="{{item.resource}}" class="weak-res">资料：{{item.resource}}</text>
         </view>
-        <view class="answer-score" wx:if="{{item.score !== undefined}}">
-          <text>得分：{{item.score}}</text>
-        </view>
+      </view>
+
+      <view wx:if="{{view.roadmap}}" class="ai-block">
+        <text class="ai-block-title">提升路线</text>
+        <text class="roadmap-text">{{view.roadmap}}</text>
       </view>
     </view>
 
-    <!-- AI 评价 -->
-    <view class="card feedback-card anim-fade-in" wx:if="{{report && report.feedback}}">
-      <view class="feedback-header">
-        <view class="feedback-icon icon-cube">AI</view>
-        <text class="feedback-title">AI 点评</text>
-      </view>
-      <view class="feedback-content">
-        <text>{{report.feedback}}</text>
-      </view>
+    <!-- 报告未生成提示 -->
+    <view class="card no-report anim-fade-in" wx:if="{{!report && view.isCompleted}}">
+      <text>报告尚未生成，可能所有答案都未提交。重新完成一次带回答的面试即可生成完整点评。</text>
     </view>
 
-    <!-- 操作按钮 -->
+    <!-- 操作区 -->
     <view class="action-bar">
-      <!-- 未完成的面试 -->
-      <button
-        class="btn-continue"
-        bindtap="continueInterview"
-        wx:if="{{interview.status !== 'completed'}}"
-      >
+      <button class="btn-continue" bindtap="continueInterview" hover-class="btn-brand-pressed"
+        wx:if="{{!view.isCompleted}}">
         继续面试
       </button>
 
-      <!-- 已完成的面试 -->
       <view class="completed-actions" wx:else>
         <button class="btn-action secondary" hover-class="btn-ghost-pressed" bindtap="restartInterview">
           重新面试
         </button>
-        <button class="btn-action primary" hover-class="btn-brand-pressed" bindtap="shareReport">
+        <button class="btn-action ghost" hover-class="btn-ghost-pressed" bindtap="downloadWord"
+          wx:if="{{report}}">
+          下载Word报告
+        </button>
+        <button class="btn-action primary" hover-class="btn-brand-pressed" open-type="share"
+          wx:if="{{report}}">
           分享报告
         </button>
       </view>
-    </view>
-
-    <!-- 复制回答 -->
-    <view class="copy-section" wx:if="{{interview.answers && interview.answers.length > 0}}">
-      <button class="btn-copy" bindtap="copyAnswer">
-        复制全部回答
-      </button>
     </view>
   </view>
 </view>

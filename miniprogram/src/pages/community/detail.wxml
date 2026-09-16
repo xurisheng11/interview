@@ -19,9 +19,9 @@
 
     <view class="divider"></view>
 
-    <!-- 文章正文 -->
+    <!-- 文章正文（Markdown 已转 HTML） -->
     <view class="article-body">
-      <rich-text nodes="{{article.content}}" class="rich-content"></rich-text>
+      <rich-text nodes="{{article._html}}" class="rich-content"></rich-text>
     </view>
 
     <view class="divider"></view>

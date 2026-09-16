@@ -397,11 +397,29 @@ Page({
     }
   },
 
-  // 下一题
+  // 下一题：先提交当前答案给后端 AI 点评（报告分数/逐题点评依赖这一步），再前进
   nextQuestion() {
-    // 保存当前答案
+    if (this.data.submitting) return
     this.saveCurrentAnswer()
 
+    const cur = this.data.questions[this.data.currentIndex] || {}
+    const needSubmit = (cur.userAnswer || '').trim() !== '' && !cur.submitted
+    if (!needSubmit) {
+      this.goNext()
+      return
+    }
+
+    this.setData({ submitting: true })
+    wx.showLoading({ title: 'AI 正在点评…', mask: true })
+    this.submitCurrentAnswer().then(() => {
+      wx.hideLoading()
+      this.setData({ submitting: false })
+      this.goNext()
+    })
+  },
+
+  // 前进到下一题（或最后一题后完成面试）
+  goNext() {
     if (this.data.currentIndex < this.data.totalCount - 1) {
       const newIndex = this.data.currentIndex + 1
       this.setData({
@@ -418,14 +436,16 @@ Page({
     }
   },
 
-  // 跳过
+  // 跳过：不提交本题答案，报告中按跳过计 0 分
   skipQuestion() {
     wx.showModal({
       title: '确认跳过',
-      content: '确定要跳过这道题吗？',
+      content: '确定要跳过这道题吗？跳过的题不计入成绩。',
       success: (res) => {
         if (res.confirm) {
-          this.nextQuestion()
+          if (this.data.submitting) return
+          this.saveCurrentAnswer()
+          this.goNext()
         }
       }
     })
@@ -439,15 +459,24 @@ Page({
     this.setData({ questions })
   },
 
-  // 提交当前答案
+  // 提交当前答案（空答案/已提交过则跳过；失败不阻断流程，完成时还会重试）
   submitCurrentAnswer() {
     return new Promise((resolve) => {
       const { interviewId, currentIndex, questions } = this.data
-      
+      const cur = questions[currentIndex]
+      if (!cur) { resolve(); return }
+      const answer = (cur.userAnswer || this.data.answer || '').trim()
+      if (!answer || cur.submitted) { resolve(); return }
+
       api.interview.submitAnswer(interviewId, {
         questionIndex: currentIndex,
-        answer: questions[currentIndex].userAnswer || this.data.answer
+        answer: answer
       }).then(() => {
+        const qs = this.data.questions
+        if (qs[currentIndex]) {
+          qs[currentIndex].submitted = true
+          this.setData({ questions: qs })
+        }
         resolve()
       }).catch(() => {
         resolve() // 即使失败也继续
@@ -455,7 +484,7 @@ Page({
     })
   },
 
-  // 完成面试
+  // 完成面试：先把最后一题答案提交（含 AI 点评），再触发报告生成
   completeInterview() {
     this.setData({ 
       submitting: true,
@@ -465,7 +494,9 @@ Page({
     // 提交所有答案
     this.saveCurrentAnswer()
 
-    api.interview.complete(this.data.interviewId).then(res => {
+    this.submitCurrentAnswer().then(() => {
+      return api.interview.complete(this.data.interviewId)
+    }).then(res => {
       this.setData({ submitting: false })
       
       // 跳转到报告页

@@ -27,7 +27,8 @@ Page({
         statusText: this.getStatusText(item.status),
         difficultyText: this.getDifficultyText(item.difficulty),
         roundText: this.getRoundText(item.round),
-        scoreClass: this.getScoreClass(item.totalScore)
+        scoreClass: this.getScoreClass(item.totalScore),
+        timeText: this.formatTime(item.startTime)
       }))
       this.setData({ list })
     }).catch(err => {
@@ -66,6 +67,19 @@ Page({
       'paused': '已暂停'
     }
     return map[status] || status
+  },
+
+  // ISO 时间（带 T/Z）→ 本地可读格式
+  formatTime(val) {
+    if (!val) return '--'
+    const d = new Date(val)
+    if (!isNaN(d.getTime())) {
+      const pad = n => String(n).padStart(2, '0')
+      return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
+        ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes())
+    }
+    const m = String(val).match(/^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})/)
+    return m ? m[1] + ' ' + m[2] : String(val)
   },
 
   getDifficultyText(difficulty) {

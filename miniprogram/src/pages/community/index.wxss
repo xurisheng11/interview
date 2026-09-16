@@ -286,11 +286,14 @@
 
 .form-input {
   width: 100%;
-  padding: 20rpx 24rpx;
+  height: 88rpx;
+  line-height: 88rpx;
+  padding: 0 24rpx;
   border: 2rpx solid #e8ecf2;
   border-radius: 16rpx;
   font-size: 28rpx;
   color: var(--text-main);
+  background: #fafbfd;
   box-sizing: border-box;
 }
 

@@ -157,7 +157,7 @@
           disabled="{{!resume.isDone || startingInterview}}"
           bindtap="handleCreateInterview"
         >
-          {{resume.isDone ? (startingInterview ? '创建中…' : '开始简历面试') : '分析完成后可发起'}}
+          {{resume.isDone ? (startingInterview ? '创建中…' : '🚀 开始简历面试') : '分析完成后可发起'}}
         </button>
         <text wx:if="{{!resume.isDone}}" class="action-hint">
           当前简历{{resume.statusText}}，请等待分析完成后再发起面试。
@@ -168,7 +168,7 @@
 
       <!-- 删除简历 -->
       <button class="btn-action-danger" hover-class="btn-press" bindtap="handleDelete">
-        删除简历
+        🗑 删除简历
       </button>
     </view>
   </view>

@@ -1,5 +1,6 @@
 // pages/community/detail.js
 const api = require('../../api/index')
+const { mdToHtml } = require('../../utils/markdown')
 
 Page({
   data: {
@@ -28,6 +29,8 @@ Page({
     api.community.getArticle(this.data.articleId).then(res => {
       const article = res.data || res
       article._time = this.formatTime(article.createdAt)
+      // Markdown 正文转 HTML，交给 rich-text 渲染（标题/表格/列表/加粗不再堆成一团乱码）
+      article._html = mdToHtml(article.content || '')
       this.setData({ article, loading: false })
       this.loadComments()
     }).catch(err => {

@@ -15,7 +15,7 @@
     <button class="btn-primary search-btn" hover-class="btn-press" bindtap="search"
       loading="{{loading}}" disabled="{{loading}}">🔍 AI 查询</button>
     <view class="hot-companies">
-      <text class="hot-label">热门：</text>
+      <text class="hot-label">🔥 热门：</text>
       <view wx:for="{{hotCompanies}}" wx:key="*this" class="hot-tag" hover-class="btn-press"
         bindtap="quickSearch" data-company="{{item}}">{{item}}</view>
     </view>
@@ -70,11 +70,11 @@
 
       <view class="questions-list">
         <view wx:for="{{visibleQuestions}}" wx:key="index" class="question-item"
-          hover-class="q-pressed" bindtap="openQuestion" data-content="{{item.content}}">
+          hover-class="q-pressed" bindtap="openQuestion" data-index="{{index}}">
           <view class="q-header">
             <text class="q-num">{{index + 1}}</text>
             <text class="q-type {{item.type === 'technical' ? 'tech' : 'behavior'}}">{{item.type === 'technical' ? '技术' : '行为'}}</text>
-            <text wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this" wx:if="{{index < 2}}" class="q-tag">{{tag}}</text>
+            <text wx:for="{{item.tags}}" wx:for-item="tag" wx:for-index="tagIndex" wx:key="*this" wx:if="{{tagIndex < 2}}" class="q-tag">{{tag}}</text>
             <text class="q-arrow">›</text>
           </view>
           <view class="q-content">{{item.content}}</view>
@@ -101,8 +101,12 @@
     <view class="guide-examples">
       <view wx:for="{{examples}}" wx:key="company" class="example-card" hover-class="btn-press"
         bindtap="quickSearch" data-company="{{item.company}}">
-        <view class="example-company">{{item.company}}</view>
-        <view class="example-desc">{{item.desc}}</view>
+        <view class="example-logo">{{item.company[0]}}</view>
+        <view class="example-body">
+          <view class="example-company">{{item.company}}</view>
+          <view class="example-desc">{{item.desc}}</view>
+        </view>
+        <text class="example-arrow">›</text>
       </view>
     </view>
   </view>

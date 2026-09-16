@@ -40,6 +40,11 @@ Page({
     ]
   },
 
+  onLoad() {
+    // 参考答案缓存：必须初始化，否则 openQuestion 访问 undefined 报错导致弹层打不开
+    this._answerCache = {}
+  },
+
   // 公司名输入
   onCompanyInput(e) {
     this.setData({ company: e.detail.value })
@@ -131,13 +136,14 @@ Page({
     this.applyFilter()
   },
 
-  // 打开题目详情弹层
+  // 打开题目详情弹层（按下标取题，避免长文本经 dataset 回传出现转义问题）
   openQuestion(e) {
-    const content = e.currentTarget.dataset.content
-    const question = (this.data.result.questions || []).find(q => q.content === content)
+    const index = Number(e.currentTarget.dataset.index)
+    const question = this.data.visibleQuestions[index]
     if (!question) return
     // 答案缓存命中则直接展示
-    const cached = this._answerCache[content]
+    const content = question.content || ''
+    const cached = (this._answerCache || {})[content]
     this.setData({
       showQuestion: true,
       activeQuestion: {
@@ -165,6 +171,7 @@ Page({
       q.content
     ).then(res => {
       const answer = (res.data || res).answer || ''
+      if (!this._answerCache) this._answerCache = {}
       this._answerCache[q.content] = answer
       this.setData({
         answerLoading: false,

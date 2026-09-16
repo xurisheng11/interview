@@ -228,7 +228,8 @@ func (s *ResumeSessionExtended) ToJSON() (string, error) {
 }
 
 // CreateResumeInterview 创建基于简历的面试会话（含重试）
-func CreateResumeInterview(userID, resumeID string) (*ResumeSessionExtended, error) {
+// mode: "text" 文字模式 / "video" 语音模式（小程序录音答题，兼容后端 video 值）；其它值归一为 text
+func CreateResumeInterview(userID, resumeID, mode string) (*ResumeSessionExtended, error) {
 	r, err := repository.GetResume(resumeID)
 	if err != nil || r == nil {
 		return nil, fmt.Errorf("简历不存在")
@@ -238,6 +239,11 @@ func CreateResumeInterview(userID, resumeID string) (*ResumeSessionExtended, err
 	}
 	if r.AnalysisStatus == "failed" || r.AnalysisStatus == "pending" || r.AnalysisStatus == "analyzing" {
 		return nil, fmt.Errorf("简历分析未完成，无法发起面试")
+	}
+
+	// 模式归一：仅 text / video 两种，语音模式复用 video（摄像头视频为 Web 端能力）
+	if mode != "video" {
+		mode = "text"
 	}
 
 	// 生成题目（失败重试一次）
@@ -262,13 +268,13 @@ func CreateResumeInterview(userID, resumeID string) (*ResumeSessionExtended, err
 				JobTitle:   jobTitle,
 				Difficulty: "middle",
 				Round:      "round1",
-				Mode:       "text",
+				Mode:       mode,
 			},
 			Questions:    questions,
 			CurrentIndex: 0,
 			Answers:      make(map[int]*model.AnswerRecord),
 			Status:       "ongoing",
-			Mode:         "text",
+			Mode:         mode,
 			StartTime:    time.Now(),
 		},
 		Source:   "resume",

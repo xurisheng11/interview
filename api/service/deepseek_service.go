@@ -215,13 +215,19 @@ func ReviewAnswer(question *model.Question, answer string, cfg *model.InterviewC
 
 		prompt += fmt.Sprintf(`
 
-[语音表达数据]
-语速：%.0f字/分钟（推荐范围120-150），停顿次数：%d次，作答时长：%d秒，思考时长：%d秒%s
-请额外在JSON中新增字段：
-- expressionScore（0-100，评估口头表达流畅度、逻辑性、语言规范性）
-- expressionFeedback（针对口头表达的具体改进建议，含语速和停顿反馈）
-- detectedVerbalTics（检测到的口头禅列表，如"然后"、"这个"、"嗯"等高频词）`,
-			metrics.SpeechRate, metrics.PauseCount, metrics.Duration, metrics.ThinkDuration, verbalTicInfo,
+[语音表达数据]（候选人采用语音答题，以下为语音转写后统计的客观指标）
+语速：%.0f字/分钟（面试推荐区间120-160）；作答时长：%d秒；思考时长：%d秒；停顿次数：%d%s
+
+请基于上述指标 + 转写文本，额外输出口头表达专项评价，在 JSON 中新增以下字段：
+- expressionScore（0-100，综合口头表达流畅度、逻辑性、自信度的表达得分）
+- expressionFeedback（分点给出具体的口头表达改进建议，必须依次覆盖以下 5 个维度，每个维度 1 句：
+  1) 语速：偏慢/适中/偏快，给出调整到120-160字每分钟的建议；
+  2) 自信度：从转写文本的犹豫词、填充词、断句、模棱两可表达（如"可能/好像/大概/应该"）推断是否自信，给出增强自信的表达建议；
+  3) 口头禅：若检测到高频口头禅（如"然后/这个/那个/嗯"），指出并建议用停顿或逻辑连接词替代；
+  4) 普通话标准度：无法直接听音，请从转写质量推断（若出现大量同音错别字、乱码、词不成句，提示发音可能不够清晰标准；若转写流畅则肯定其清晰度）；
+  5) 条理性：回答是否总分总/要点分明，建议用"第一/第二/第三"等结构化表达）
+- detectedVerbalTics（从转写文本中检测到的口头禅列表，如["然后","这个","嗯"]，无则返回空数组）`,
+			metrics.SpeechRate, metrics.Duration, metrics.ThinkDuration, metrics.PauseCount, verbalTicInfo,
 		)
 	}
 

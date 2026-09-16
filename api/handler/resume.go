@@ -41,9 +41,9 @@ func UploadResume(c *gin.Context) {
 	// MIME 类型校验
 	mimeType := header.Header.Get("Content-Type")
 	allowedMimes := map[string]bool{
-		"application/pdf":                                                                 true,
-		"application/msword":                                                              true,
-		"application/vnd.openxmlformats-officedocument.wordprocessingml.document":          true,
+		"application/pdf":    true,
+		"application/msword": true,
+		"application/vnd.openxmlformats-officedocument.wordprocessingml.document": true,
 		"application/octet-stream": true, // 部分 Word 文件会返回此类型，宽松处理
 	}
 	if !allowedMimes[mimeType] {
@@ -77,13 +77,13 @@ func UploadResume(c *gin.Context) {
 
 	// 保存记录
 	resume := &model.ResumeRecord{
-		ID:            uuid.New().String(),
-		UserID:        userID,
-		Filename:      header.Filename,
-		FileSize:      header.Size,
-		MIMEType:      mimeType,
-		UploadedAt:    time.Now(),
-		ParsedContent: *content,
+		ID:             uuid.New().String(),
+		UserID:         userID,
+		Filename:       header.Filename,
+		FileSize:       header.Size,
+		MIMEType:       mimeType,
+		UploadedAt:     time.Now(),
+		ParsedContent:  *content,
 		AnalysisStatus: "pending",
 	}
 	if err := repository.SaveResume(resume); err != nil {
@@ -200,7 +200,13 @@ func CreateResumeInterview(c *gin.Context) {
 	userID := c.GetString("userId")
 	resumeID := c.Param("id")
 
-	session, err := service.CreateResumeInterview(userID, resumeID)
+	// 读取面试模式（体可为空，默认文字模式）
+	var body struct {
+		Mode string `json:"mode"`
+	}
+	_ = c.ShouldBindJSON(&body) // 忽略空体/解析错误，降级为 text
+
+	session, err := service.CreateResumeInterview(userID, resumeID, body.Mode)
 	if err != nil {
 		if strings.Contains(err.Error(), "不存在") {
 			response.NotFound(c, err.Error())

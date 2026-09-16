@@ -10,6 +10,7 @@ import (
 	"interview-sim/model"
 	"interview-sim/repository"
 	"interview-sim/router"
+	"interview-sim/service"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -29,6 +30,12 @@ func main() {
 	}
 	log.Println("Redis 连接成功")
 
+	// 云托管容器是临时文件系统：空库启动时先从对象存储回灌上一次备份，
+	// 必须在写入任何数据（管理员初始化、MySQL 同步）之前完成
+	if err := service.RestoreFromCOSIfEmpty(); err != nil {
+		log.Printf("从对象存储恢复数据失败，本次按空库启动: %v", err)
+	}
+
 	// 初始化 MySQL 持久层（失败仅告警不退出，系统退化为纯 Redis 模式）
 	if err := repository.InitMySQL(); err != nil {
 		log.Printf("MySQL 初始化失败，系统退化为纯 Redis 模式（同步与回源将跳过）: %v", err)
@@ -46,6 +53,9 @@ func main() {
 		// 启动每晚定时全量同步
 		repository.StartNightlySync()
 	}
+
+	// 开启对象存储定时备份与下线前备份（未配置 COS 环境变量则自动关闭）
+	service.StartBackupLoop()
 
 	// 初始化默认管理员账号
 	if err := initDefaultAdmin(); err != nil {

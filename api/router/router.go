@@ -144,6 +144,9 @@ func Setup() *gin.Engine {
 			admin.POST("/migrate-users", handler.AdminMigrateUsers)
 			// 手动触发 Redis -> MySQL 全量同步（运维/验证用）
 			admin.POST("/db/sync", handler.AdminSyncDB)
+			// 对象存储备份：GET 查配置状态，POST 手动备份（运维/验证用）
+			admin.GET("/backup", handler.AdminBackupStatus)
+			admin.POST("/backup", handler.AdminBackup)
 		}
 	}
 	api.GET("/reports/share/:token", handler.GetSharedReport)

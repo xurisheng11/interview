@@ -34,6 +34,13 @@ type Config struct {
 	WXSecret               string
 	TencentSecretID        string
 	TencentSecretKey       string
+	// 对象存储备份（云托管容器文件系统临时，靠 COS 跨版本/跨冷启动保存数据）
+	COSRegion         string
+	COSBucket         string // 形如 mybucket-1250000000（桶名-APPID）
+	COSPrefix         string
+	COSSecretID       string
+	COSSecretKey      string
+	BackupIntervalMin int
 }
 
 var Cfg *Config
@@ -49,6 +56,7 @@ func Init() {
 	questionCount, _ := strconv.Atoi(getEnv("INTERVIEW_QUESTION_COUNT", "10"))
 	mysqlSyncHour, _ := strconv.Atoi(getEnv("MYSQL_SYNC_HOUR", "2"))
 	mysqlEnabled, _ := strconv.ParseBool(getEnv("MYSQL_ENABLED", "true"))
+	backupIntervalMin := backupInterval(getEnv("BACKUP_INTERVAL_MIN", "15"))
 
 	Cfg = &Config{
 		ServerPort:             getEnv("SERVER_PORT", "8080"),
@@ -76,7 +84,34 @@ func Init() {
 		WXSecret:               getEnv("WX_SECRET", ""),
 		TencentSecretID:        getEnv("TENCENT_SECRET_ID", ""),
 		TencentSecretKey:       getEnv("TENCENT_SECRET_KEY", ""),
+		// COS 凭证默认复用语音识别那套腾讯云密钥，需单独授权时才用 COS_SECRET_* 覆盖
+		COSRegion:    getEnv("COS_REGION", ""),
+		COSBucket:    getEnv("COS_BUCKET", ""),
+		COSPrefix:    getEnv("COS_PREFIX", "interview-backup"),
+		COSSecretID:  getEnvOr("COS_SECRET_ID", "TENCENT_SECRET_ID", ""),
+		COSSecretKey: getEnvOr("COS_SECRET_KEY", "TENCENT_SECRET_KEY", ""),
+		// 备份频率：默认 15 分钟一次，最多丢一个周期
+		BackupIntervalMin: backupIntervalMin,
 	}
+}
+
+func backupInterval(raw string) int {
+	n, err := strconv.Atoi(raw)
+	if err != nil || n <= 0 {
+		return 15
+	}
+	return n
+}
+
+// getEnvOr 优先取 key，其次取 fallbackKey，最后用默认值
+func getEnvOr(key, fallbackKey, defaultVal string) string {
+	if val := os.Getenv(key); val != "" {
+		return val
+	}
+	if val := os.Getenv(fallbackKey); val != "" {
+		return val
+	}
+	return defaultVal
 }
 
 func getEnv(key, defaultVal string) string {

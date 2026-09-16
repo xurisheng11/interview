@@ -108,3 +108,18 @@ func AdminSyncDB(c *gin.Context) {
 	}
 	response.SuccessMsg(c, "同步完成", stats)
 }
+
+// AdminBackup POST /api/v1/admin/backup 手动触发一次对象存储备份
+func AdminBackup(c *gin.Context) {
+	result, err := service.AdminTriggerBackup()
+	if err != nil {
+		response.InternalError(c, "备份失败: "+err.Error())
+		return
+	}
+	response.SuccessMsg(c, "备份完成", result)
+}
+
+// AdminBackupStatus GET /api/v1/admin/backup 查看备份配置与当前库规模
+func AdminBackupStatus(c *gin.Context) {
+	response.Success(c, service.AdminBackupStatus())
+}

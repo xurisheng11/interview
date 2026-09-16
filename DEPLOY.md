@@ -243,9 +243,48 @@ JWT_SECRET=一串足够长的随机字符
 MYSQL_PASSWORD=一串随机密码
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=强密码
+TENCENT_SECRET_ID=腾讯云密钥ID（语音识别用）
+TENCENT_SECRET_KEY=腾讯云密钥Key
+
+# 可选：开启对象存储数据备份（不配则数据仍随容器销毁而丢失）
+COS_REGION=ap-shanghai
+COS_BUCKET=桶名-云APIappid（如 interview-backup-1250000000）
+COS_PREFIX=interview-backup
+BACKUP_INTERVAL_MIN=15
 ```
 
+> `COS_REGION` + `COS_BUCKET` 是开启备份的开关：两者填了就用 `TENCENT_SECRET_ID/KEY`（或显式指定的 `COS_SECRET_ID/KEY`）上传对象存储；不填则备份整体关闭，行为与之前一致。
+
 5. 等构建部署完成（首次约 5-10 分钟），服务详情页确认「运行中」
+
+## 第 3.5 步：开启数据备份（对抗容器临时文件系统）
+
+微信云托管**不提供持久存储卷**（新建版本只有端口/规格/副本数/环境变量等 10 项配置，没有挂载目录），
+容器文件系统一定是临时的：发布新版本、闲置缩容冷启动、容器崩溃重启都会清空 Redis 与 MySQL。
+本项目用**对象存储做逻辑备份**绕过这个限制：
+
+| 环节 | 行为 |
+|------|------|
+| 启动 | Redis 为空库 → 从 COS 拉 `interview-backup/redis-latest.jsonl`，逐 key `RESTORE` 回灌 |
+| 运行 | 每 `BACKUP_INTERVAL_MIN` 分钟（默认 15）`SCAN + DUMP` 全库导出并覆盖写 latest，每天额外留一份 `redis-YYYY-MM-DD.jsonl` 归档 |
+| 下线 | 收到 `SIGTERM`（发布新版本 / 缩容前平台会发）立即补一次备份再退出 |
+| MySQL | 不单独备份 —— 它是 Redis 的归档副本，回灌完成后启动全量同步会自动重建 |
+
+**开通步骤**：
+1. 腾讯云控制台 → 对象存储 → 创建存储桶（地域任选，访问权限「仅私有读写」），记下 **地域** 与 **桶名（含 APPID 后缀）**
+2. 确认 `TENCENT_SECRET_ID/KEY` 对应密钥有该桶的读写权限（主账号密钥默认可用）
+3. 云托管新建版本时填入上面 `COS_*` 变量 → 部署
+
+**验证是否生效**（管理员身份登录 Web 端后调用）：
+```bash
+curl -H "Authorization: Bearer <管理员token>" \
+  https://<默认域名>/api/v1/admin/backup          # 看 enabled / bucket / redisKeys
+curl -X POST -H "Authorization: Bearer <管理员token>" \
+  https://<默认域名>/api/v1/admin/backup          # 立即备份，返回写入的 key 数
+```
+返回 `enabled: true` 且 POST 后 COS 控制台能看到 `interview-backup/redis-latest.jsonl`，即链路打通。
+
+**边界**：最多丢一个备份周期内的数据；`JWT_SECRET` 换掉后旧登录态仍会失效（token 本身在客户端，不受影响，但签名变了要重登）。
 
 ## 第 4 步：开通公网访问，拿默认域名
 
@@ -290,8 +329,9 @@ ADMIN_PASSWORD=强密码
 
 ## 已知限制
 
-- 容器文件系统不持久：**每次重新部署版本，MySQL / Redis 数据全部重置**（体验期可接受；正式化时迁移 VPS 或挂云存储卷）
-- 环境变量**按版本配置**：每次新建 / 重新部署版本，都要重填第 3 步的 7 个变量
+- 容器文件系统不持久：**未开启对象存储备份时，每次重新部署 / 闲置缩容 / 容器崩溃，MySQL 与 Redis 数据全部重置**。开启 `COS_*` 后由备份回灌兜住（见第 3.5 步），最多丢一个备份周期
+- 云托管无持久存储卷可挂（平台能力缺失，非配置问题），要真持久只能走对象存储备份或迁 VPS
+- 环境变量**按版本配置**：每次新建 / 重新部署版本，都要重填第 3 步的这些变量
 - 更换 `JWT_SECRET` 后所有旧登录态立即失效，需重新登录
 - 免费环境在小程序**发布上线后**开始计费，月内体验不受影响
 - 默认域名有 QPS / 带宽限制，且进不了合法域名白名单（见第 5 步）

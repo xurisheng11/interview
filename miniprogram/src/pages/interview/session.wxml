@@ -58,13 +58,13 @@
   <!-- 答案输入区 -->
   <view class="answer-section">
     <view class="answer-header">
-      <text class="answer-label">{{isVoice ? '你的回答（语音自动转文字）' : '你的回答'}}</text>
-      <text class="answer-tips">{{isVoice ? '录音停止后自动转写追加，可编辑、计入评分' : '建议条理清晰、要点完整'}}</text>
+      <text class="answer-label">{{isCamera ? '你的回答（说话自动转文字）' : (isVoice ? '你的回答（语音自动转文字）' : '你的回答')}}</text>
+      <text class="answer-tips">{{isCamera ? '直接说话即可，文字自动追加，可编辑、计入评分' : (isVoice ? '录音停止后自动转写追加，可编辑、计入评分' : '建议条理清晰、要点完整')}}</text>
     </view>
     
     <textarea 
       class="answer-input {{isRecording ? 'recording' : ''}}"
-      placeholder="{{isVoice ? '录音结束后自动填入，也可手动输入' : '请输入你的回答...'}}"
+      placeholder="{{isCamera ? '说话后自动填入，也可手动输入' : (isVoice ? '录音结束后自动填入，也可手动输入' : '请输入你的回答...')}}"
       value="{{answer}}"
       bindinput="onAnswerInput"
       maxlength="{{maxLength}}"
@@ -76,8 +76,14 @@
     </view>
   </view>
 
-  <!-- 录音区域（语音/视频模式；横向紧凑卡片：左麦克风、中状态、右播放） -->
-  <view class="record-section" wx:if="{{isVoice}}">
+  <!-- 视频面试：无录音按钮，全自动识别，仅一条状态提示条（停止时点一下可恢复） -->
+  <view class="auto-bar" wx:if="{{isCamera}}" bindtap="resumeAutoRecord">
+    <view class="auto-dot" wx:if="{{isRecording || isTranscribing}}"></view>
+    <text class="auto-bar-text">{{isTranscribing ? '正在转写，文字会自动追加到回答…' : (isRecording ? '自动识别中：直接说话即可，无需任何操作' : '自动识别未运行，点此恢复；也可手动输入作答')}}</text>
+  </view>
+
+  <!-- 录音区域（语音模式手动录音；视频模式已改为上方自动识别条） -->
+  <view class="record-section" wx:if="{{isVoice && !isCamera}}">
     <view class="record-row">
       <button
         class="btn-record {{isRecording ? 'stop' : 'start'}}"

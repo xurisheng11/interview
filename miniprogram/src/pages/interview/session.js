@@ -216,7 +216,7 @@ Page({
       this.setData({ autoRecord: false })
       wx.showModal({
         title: '录音失败',
-        content: (msg ? ('错误信息：' + msg) : '请检查麦克风权限后重试') + '\n可点麦克风重试，或手动输入文字作答',
+        content: (msg ? ('错误信息：' + msg) : '请检查麦克风权限后重试') + '\n可点击上方提示条恢复识别，或手动输入文字作答',
         showCancel: false
       })
     })
@@ -475,6 +475,12 @@ Page({
         })
       }
     })
+  },
+
+  // 视频面试状态条点击：仅在识别未运行时恢复循环（录音/转写中点击不干扰）
+  resumeAutoRecord() {
+    if (this.data.isRecording || this.data.isTranscribing) return
+    this.startAutoRecord()
   },
 
   // 停止自动识别循环（切题/交卷前）；在录的那一段仍会转写并写回原题目

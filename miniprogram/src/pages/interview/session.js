@@ -48,6 +48,9 @@ Page({
     cameraBlocked: false,
     // 摄像头悬浮窗是否最小化（避免遮挡题目/回答）
     cameraMinimized: false,
+    // 摄像头悬浮窗可拖拽位置（px，onLoad 按屏幕尺寸初始化）
+    camTop: 75,
+    camLeft: 250,
     // 视频面试自动识别：进题即自动录音，说话自动转写追加，无需手动点麦克风
     autoRecord: false,
     // 因摄像头占用麦克风而自动暂停画面（部分安卓机型冲突）
@@ -116,6 +119,7 @@ Page({
   onLoad(options) {
     // 按实际能力渲染文案：插件可用才承诺"语音转文字"（个人主体小程序插件不可用，降级纯录音）
     this.setData({ speechToText: !!recognitionManager })
+    this.initCamPos()
     if (!options.id) {
       wx.showToast({ title: '参数错误', icon: 'none' })
       wx.navigateBack()
@@ -162,7 +166,7 @@ Page({
           index: this.data.currentIndex,
           silent: this.autoLoop, // 自动识别循环中静音段属正常，不打扰
           onDone: () => {
-            // 自动识别循环：仍在同一题且循环未停 → 接着录下一段（单次上限 60 秒）
+            // 自动识别循环：仍在同一题且循环未停 → 接着录下一段（自动模式每段 15 秒，说完很快出字）
             if (this.autoLoop && this.data.currentIndex === this.autoLoopIndex) {
               this.beginRecord()
             }
@@ -422,16 +426,18 @@ Page({
     this.setData({ answer: e.detail.value })
   },
 
-  // 开始一段录音（手动/自动共用入口）
+  // 开始一段录音（手动/自动共用入口）；自动识别循环用短分段，让转写尽快上屏
   beginRecord() {
     if (this.data.isRecording) return
+    // 自动分段时长：循环中 15 秒（兼顾上屏速度与句子完整性），手动语音录音仍 60 秒上限
+    const segMs = this.autoLoop ? 15000 : 60000
     if (recognitionManager) {
       this.usingRecognition = true
-      recognitionManager.start({ duration: 60000, lang: 'zh_CN' })
+      recognitionManager.start({ duration: segMs, lang: 'zh_CN' })
     } else {
       this.usingRecognition = false
       recorderManager.start({
-        duration: 60000, // 60秒，到点自动停止并触发转写（自动模式会循环续录）
+        duration: segMs,
         sampleRate: 16000,
         numberOfChannels: 1,
         encodeBitRate: 48000,
@@ -614,6 +620,44 @@ Page({
   // 切换摄像头悬浮窗最小化
   toggleCameraMin() {
     this.setData({ cameraMinimized: !this.data.cameraMinimized })
+  },
+
+  // 摄像头悬浮窗：按屏幕尺寸初始化默认位置（右上角，与原 CSS 定位一致）
+  initCamPos() {
+    const info = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()
+    const r = info.windowWidth / 750
+    this.winW = info.windowWidth
+    this.winH = info.windowHeight
+    this.camW = 220 * r
+    this.camH = 300 * r
+    this.rpx = r
+    this.setData({
+      camLeft: info.windowWidth - this.camW - 24 * r,
+      camTop: 150 * r
+    })
+  },
+
+  // 拖拽手柄：记录按下点与悬浮窗左上角的偏移
+  onCamDragStart(e) {
+    const t = e.touches[0]
+    this.dragDX = t.clientX - this.data.camLeft
+    this.dragDY = t.clientY - this.data.camTop
+  },
+
+  onCamDragMove(e) {
+    if (this.dragDX == null || !this.winW) return
+    const t = e.touches[0]
+    let left = t.clientX - this.dragDX
+    let top = t.clientY - this.dragDY
+    // 限制在屏幕内：顶部留出导航栏，底部留出答题按钮区
+    left = Math.max(8 * this.rpx, Math.min(this.winW - this.camW - 8 * this.rpx, left))
+    top = Math.max(100 * this.rpx, Math.min(this.winH - this.camH - 140 * this.rpx, top))
+    this.setData({ camLeft: Math.round(left), camTop: Math.round(top) })
+  },
+
+  onCamDragEnd() {
+    this.dragDX = null
+    this.dragDY = null
   },
 
   // 视频面试：每题开始 12 秒后自动抓一张帧上传做表情/紧张度分析

@@ -484,8 +484,7 @@
 /* ============ 视频面试：摄像头悬浮窗 ============ */
 .camera-float {
   position: fixed;
-  top: 150rpx;
-  right: 24rpx;
+  /* top/left 由拖拽逻辑动态绑定（px） */
   width: 220rpx;
   height: 300rpx;
   border-radius: 20rpx;
@@ -542,10 +541,24 @@
   font-size: 24rpx;
 }
 
+/* 拖拽手柄：悬浮窗顶部居中，按住可移动 */
+.camera-drag {
+  position: absolute;
+  left: 50%;
+  top: 8rpx;
+  transform: translateX(-50%);
+  padding: 6rpx 18rpx;
+  border-radius: 999rpx;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 18rpx;
+  white-space: nowrap;
+  z-index: 2;
+}
+
 .camera-restore {
   position: fixed;
-  top: 150rpx;
-  right: 24rpx;
+  /* top/left 跟随悬浮窗最后位置，缩小后仍在原处可点回 */
   width: 96rpx;
   height: 96rpx;
   border-radius: 50%;

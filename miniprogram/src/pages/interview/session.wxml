@@ -1,7 +1,7 @@
 <view class="container">
   <!-- 视频面试：右上角悬浮摄像头预览（可最小化，不阻断面试） -->
   <block wx:if="{{isCamera}}">
-    <view class="camera-float" wx:if="{{!cameraMinimized && !cameraBlocked}}">
+    <view class="camera-float" wx:if="{{!cameraMinimized && !cameraBlocked}}" style="top: {{camTop}}px; left: {{camLeft}}px;">
       <camera
         class="camera-view"
         mode="mirrored"
@@ -10,13 +10,15 @@
         binderror="onCameraError"
         bindinitdone="onCameraInitDone"
       ></camera>
+      <!-- 拖拽手柄：按住可把画面移到不挡题的位置 -->
+      <view class="camera-drag" catchtouchstart="onCamDragStart" catchtouchmove="onCamDragMove" catchtouchend="onCamDragEnd">≡ 拖动</view>
       <view class="camera-badge">
         <view class="camera-rec-dot"></view>
         <text>视频面试中</text>
       </view>
       <view class="camera-min" catchtap="toggleCameraMin">✕</view>
     </view>
-    <view class="camera-restore" wx:elif="{{!cameraBlocked}}" catchtap="toggleCameraMin">
+    <view class="camera-restore" wx:elif="{{!cameraBlocked}}" catchtap="toggleCameraMin" style="top: {{camTop}}px; left: {{camLeft}}px;">
       <text>🎥</text>
       <text class="camera-restore-tag" wx:if="{{cameraPausedForMic}}">画面已暂停</text>
     </view>

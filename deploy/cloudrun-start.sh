@@ -12,13 +12,18 @@ APP_PASS="${MYSQL_PASSWORD:-interview_dev_pass}"
 APP_DB="${MYSQL_DB:-interview_sim}"
 REDIS_PORT="${REDIS_PORT:-6379}"
 DATA_DIR=/data/mysql
+REDIS_DATA_DIR=/data/redis
 
 echo "==> [1/3] 启动 Redis (port ${REDIS_PORT})"
-redis-server --bind 127.0.0.1 --port "${REDIS_PORT}" --daemonize yes --appendonly yes \
+# 显式指定数据目录：不写 --dir 时 Redis 把 AOF/RDB 落在进程工作目录（/app），位置飘忽难以备份
+mkdir -p "${REDIS_DATA_DIR}"
+chmod 755 /data "${REDIS_DATA_DIR}" 2>/dev/null || true
+redis-server --bind 127.0.0.1 --port "${REDIS_PORT}" --daemonize yes --appendonly yes --dir "${REDIS_DATA_DIR}" \
   ${REDIS_PASSWORD:+--requirepass "${REDIS_PASSWORD}"}
 
 echo "==> [2/3] 初始化并启动 MySQL"
 mkdir -p /var/run/mysqld "${DATA_DIR}"
+chmod 755 /data 2>/dev/null || true
 chown mysql:mysql /var/run/mysqld
 if [ ! -d "${DATA_DIR}/mysql" ]; then
   echo "    首次启动，初始化数据目录（root 空密码）..."

@@ -164,6 +164,19 @@ Page({
     }
 
     this.setData({ view: v })
+
+    // 已完成面试：提前预领分享 token（好友点开才能看脱敏报告页），失败静默
+    if (v.isCompleted && report) this.ensureShareToken()
+  },
+
+  ensureShareToken() {
+    if (this.shareToken || this.shareTokenPending) return
+    this.shareTokenPending = true
+    api.report.createShare(this.data.interviewId).then(res => {
+      this.shareToken = (res.data && res.data.shareToken) || ''
+    }).catch(() => {}).then(() => {
+      this.shareTokenPending = false
+    })
   },
 
   // 展开/收起参考答案
@@ -218,9 +231,11 @@ Page({
 
   onShareAppMessage() {
     const { view } = this.data
-    return {
-      title: `我的面试报告 - ${view.title || '面试模拟'} ${view.totalScore || 0}分`,
-      path: `/pages/interview/detail?id=${this.data.interviewId}&share=1`
+    const title = `面试评测报告：${view.totalScore || 0} 分 · ${view.grade || ''}｜AI 模拟面试`
+    if (this.shareToken) {
+      // 专用只读分享页：免登录、脱敏汇总 + 转化引导
+      return { title, path: `/pages/interview/share?token=${this.shareToken}` }
     }
+    return { title, path: `/pages/interview/detail?id=${this.data.interviewId}` }
   }
 })

@@ -1,0 +1,96 @@
+<view class="page">
+  <view class="loading" wx:if="{{loading}}">报告加载中…</view>
+
+  <view class="empty" wx:elif="{{error}}">
+    <text class="empty-icon">🔗</text>
+    <text class="empty-text">{{error}}</text>
+    <button class="cta ghost" bindtap="goInterview">去试试 AI 模拟面试</button>
+  </view>
+
+  <block wx:else>
+    <!-- 渐变头部：品牌 + 面试信息 + 得分 -->
+    <view class="hero">
+      <view class="hero-brand">✨ AI 模拟面试 · 面试评测报告</view>
+      <view class="hero-company">{{view.company}}</view>
+      <view class="hero-job">{{view.jobTitle}}</view>
+      <view class="hero-tags">
+        <text class="hero-tag">{{view.roundText}}</text>
+        <text class="hero-tag">{{view.difficultyText}}</text>
+        <text class="hero-tag">{{view.modeText}}</text>
+      </view>
+
+      <view class="score-card">
+        <view class="score-main">
+          <text class="score-num">{{view.totalScore}}</text>
+          <text class="score-unit">分</text>
+        </view>
+        <view class="score-side">
+          <view class="grade-row">
+            <text class="grade-badge">{{view.grade}}</text>
+            <text class="pass-chip {{view.passClass}}">{{view.passText}}</text>
+          </view>
+          <text class="score-count">共 {{view.totalCount}} 题 · 作答 {{view.answeredCount}} 题</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="body">
+      <!-- 表达指标 -->
+      <view class="card" wx:if="{{view.metrics.length}}">
+        <view class="card-title">🎙 表达能力</view>
+        <view class="metric-grid">
+          <view class="metric-item" wx:for="{{view.metrics}}" wx:key="label">
+            <text class="metric-value">{{item.value}}</text>
+            <text class="metric-label">{{item.label}}</text>
+          </view>
+        </view>
+        <text class="face-note" wx:if="{{view.faceNote}}">{{view.faceNote}}</text>
+        <view class="summary-text" wx:if="{{view.expressionSummary}}">{{view.expressionSummary}}</view>
+      </view>
+
+      <!-- 模块得分 -->
+      <view class="card" wx:if="{{view.moduleScores.length}}">
+        <view class="card-title">📚 知识模块掌握度</view>
+        <view class="module-item" wx:for="{{view.moduleScores}}" wx:key="module">
+          <view class="module-top">
+            <text class="module-name">{{item.module}}<text class="module-count">{{item.count}} 题</text></text>
+            <text class="module-score {{item.cls}}">{{item.avgText}} 分<text class="module-level">{{item.level}}</text></text>
+          </view>
+          <view class="module-bar">
+            <view class="module-bar-fill {{item.cls}}" style="width: {{item.width}}%"></view>
+          </view>
+        </view>
+      </view>
+
+      <!-- AI 评价 -->
+      <view class="card" wx:if="{{view.strengths.length || view.weaknesses.length}}">
+        <view class="card-title">🤖 AI 综合评价</view>
+        <block wx:if="{{view.strengths.length}}">
+          <text class="ai-sub good-t">✦ 优势亮点</text>
+          <view class="ai-line" wx:for="{{view.strengths}}" wx:key="*this">
+            <view class="ai-dot good-d"></view>
+            <text class="ai-line-text">{{item}}</text>
+          </view>
+        </block>
+        <block wx:if="{{view.weaknesses.length}}">
+          <text class="ai-sub bad-t">✦ 待改进项</text>
+          <view class="ai-weak" wx:for="{{view.weaknesses}}" wx:key="point">
+            <view class="ai-line">
+              <view class="ai-dot bad-d"></view>
+              <text class="ai-line-text">{{item.point}}</text>
+            </view>
+            <text class="weak-sug" wx:if="{{item.suggestion}}">建议：{{item.suggestion}}</text>
+          </view>
+        </block>
+      </view>
+
+      <!-- 转化引导 -->
+      <view class="promo">
+        <view class="promo-title">想知道自己面试能得多少分？</view>
+        <view class="promo-sub">文字 / 语音 / 视频三种模式，AI 面试官实时点评</view>
+      </view>
+      <button class="cta" bindtap="goInterview">我也来模拟一场 →</button>
+      <view class="foot-tip">本报告由好友分享 · 仅含脱敏汇总数据 · 链接 7 天内有效</view>
+    </view>
+  </block>
+</view>

@@ -170,6 +170,12 @@ export const report = {
   // 获取分享报告
   getShare: (token) => request({
     url: `/reports/share/${token}`
+  }),
+
+  // 创建分享链接（返回 7 天有效的 shareToken，仅本人可创建）
+  createShare: (interviewId) => request({
+    url: `/reports/${interviewId}/share`,
+    method: 'POST'
   })
 }
 

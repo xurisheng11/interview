@@ -179,7 +179,7 @@ func SubmitAnswer(userID, interviewID string, req *SubmitAnswerReq) (*ReviewResu
 	}
 
 	question := &session.Questions[req.QuestionIndex]
-	result, err := ReviewAnswer(question, req.Answer, &session.Config, req.NonVerbalMetrics)
+	result, err := ReviewAnswer(question, req.Answer, &session.Config, req.NonVerbalMetrics, session.FaceEmotions[req.QuestionIndex])
 	if err != nil {
 		return nil, fmt.Errorf("AI 点评失败: %w", err)
 	}
@@ -219,8 +219,42 @@ func SubmitAnswer(userID, interviewID string, req *SubmitAnswerReq) (*ReviewResu
 		ExpressionFeedback: result.ExpressionFeedback,
 		NonVerbalMetrics:   extendedMetrics,
 	}
+	// 视频面试：合并本题情绪抓帧识别结果，供报告面部分析展示
+	if session.FaceEmotions != nil {
+		record.FaceEmotion = session.FaceEmotions[req.QuestionIndex]
+	}
 	_ = repository.UpdateSessionAnswer(interviewID, req.QuestionIndex, record)
 	return result, nil
+}
+
+// SaveFaceFrame 视频面试（video_call）情绪抓帧：识别图片中主脸情绪并按题目存入会话，
+// 识别失败返回错误由 handler 静默处理，不阻断面试
+func SaveFaceFrame(userID, interviewID string, index int, imageBase64 string) (*model.FaceEmotionInfo, error) {
+	session, err := repository.GetSession(interviewID)
+	if err != nil || session == nil {
+		return nil, fmt.Errorf("面试不存在")
+	}
+	if session.UserID != userID {
+		return nil, fmt.Errorf("无权操作")
+	}
+	if session.Mode != "video_call" {
+		return nil, fmt.Errorf("仅视频面试模式支持表情分析")
+	}
+	if index < 0 || index >= len(session.Questions) {
+		return nil, fmt.Errorf("题目索引超出范围")
+	}
+	info, err := DetectFaceEmotion(imageBase64)
+	if err != nil {
+		return nil, err
+	}
+	if session.FaceEmotions == nil {
+		session.FaceEmotions = make(map[int]*model.FaceEmotionInfo)
+	}
+	session.FaceEmotions[index] = info
+	if err := repository.SaveSession(session); err != nil {
+		return nil, err
+	}
+	return info, nil
 }
 
 // SkipQuestion 跳过题目（本地标记，前端处理，此接口可选）

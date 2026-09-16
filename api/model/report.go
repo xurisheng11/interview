@@ -23,6 +23,7 @@ type ReportQuestion struct {
 	ExpressionScore    int               `json:"expressionScore,omitempty"`
 	ExpressionFeedback string            `json:"expressionFeedback,omitempty"`
 	NonVerbalMetrics   *NonVerbalMetrics `json:"nonVerbalMetrics,omitempty"`
+	FaceEmotion        *FaceEmotionInfo  `json:"faceEmotion,omitempty"` // 本题视频抓帧情绪
 }
 
 // ModuleScore 知识点模块得分
@@ -84,10 +85,73 @@ type InterviewReport struct {
 	AvgSpeechRate      float64          `json:"avgSpeechRate,omitempty"`
 	AvgThinkDuration   int              `json:"avgThinkDuration,omitempty"` // 平均思考时长（秒）
 	VerbalTicReport    *VerbalTicReport `json:"verbalTicReport,omitempty"`  // 口头禅分析
+	FaceSummary        *FaceSummary     `json:"faceSummary,omitempty"`      // 视频面试面部情绪分析
 
 	// 新增字段
 	CompanyName    string   `json:"companyName,omitempty"`    // 目标公司
 	InterviewTypes []string `json:"interviewTypes,omitempty"` // 面试形式
+}
+
+// FaceSummary 视频面试面部情绪分析（逐题抓帧聚合）
+type FaceSummary struct {
+	Samples      int     `json:"samples"`      // 成功识别的帧数
+	DominantName string  `json:"dominantName"` // 占比最高的情绪
+	NeutralRatio float64 `json:"neutralRatio"` // 自然/放松帧占比 [0,1]
+	SmileRatio   float64 `json:"smileRatio"`   // 微笑帧占比 [0,1]
+	TenseRatio   float64 `json:"tenseRatio"`   // 紧张信号帧（惊讶/生气/悲伤/厌恶/害怕）占比 [0,1]
+	NervousLevel string  `json:"nervousLevel"` // 紧张程度描述：放松/轻度紧张/较紧张
+}
+
+// CalcFaceSummary 从逐题报告数据聚合面部情绪分析；无任何抓帧结果时返回 nil
+func CalcFaceSummary(questions []ReportQuestion) *FaceSummary {
+	total, tense, smile, neutral := 0, 0, 0, 0
+	emotionCount := map[int]int{}
+	for _, q := range questions {
+		fe := q.FaceEmotion
+		if fe == nil {
+			continue
+		}
+		total++
+		emotionCount[fe.Type]++
+		switch fe.Type {
+		case 0: // 自然
+			neutral++
+		case 1: // 高兴
+			neutral++
+		default: // 2惊讶 3生气 4悲伤 5厌恶 6害怕 → 紧张信号
+			tense++
+		}
+		if fe.Smile == 1 {
+			smile++
+		}
+	}
+	if total == 0 {
+		return nil
+	}
+	dominant, maxCount := "", -1
+	names := []string{"自然", "高兴", "惊讶", "生气", "悲伤", "厌恶", "害怕"}
+	for t, c := range emotionCount {
+		if c > maxCount && t >= 0 && t < len(names) {
+			maxCount = c
+			dominant = names[t]
+		}
+	}
+	s := &FaceSummary{
+		Samples:      total,
+		DominantName: dominant,
+		NeutralRatio: float64(neutral) / float64(total),
+		SmileRatio:   float64(smile) / float64(total),
+		TenseRatio:   float64(tense) / float64(total),
+	}
+	switch {
+	case s.TenseRatio >= 0.4:
+		s.NervousLevel = "较紧张"
+	case s.TenseRatio >= 0.15:
+		s.NervousLevel = "轻度紧张"
+	default:
+		s.NervousLevel = "放松"
+	}
+	return s
 }
 
 // CalcAvgExpressionScore 计算平均表达得分（仅视频模式）

@@ -18,13 +18,23 @@ type InterviewConfig struct {
 	InterviewTypes []string `json:"interviewTypes"` // 面试形式: structured, semi-structured, random
 }
 
-// NonVerbalMetrics 非语言行为指标（视频面试模式专有）
+// NonVerbalMetrics 非语言行为指标（语音/视频面试模式专有）
 type NonVerbalMetrics struct {
 	SpeechRate    float64  `json:"speechRate"`    // 每分钟字数（WPM）
 	PauseCount    int      `json:"pauseCount"`    // 停顿次数（>2秒算一次）
 	Duration      int      `json:"duration"`      // 作答时长（秒）
 	ThinkDuration int      `json:"thinkDuration"` // 思考时长（秒）
 	VerbalTics    []string `json:"verbalTics"`    // 识别到的口头禅列表
+	StutterCount  int      `json:"stutterCount,omitempty"` // 口吃/不流畅次数（转写文本中重复字/词）
+}
+
+// FaceEmotionInfo 视频面试抓帧情绪识别结果（腾讯云人脸属性 DetectFaceAttributes）
+type FaceEmotionInfo struct {
+	Type        int     `json:"type"`        // 情绪类型：0自然 1高兴 2惊讶 3生气 4悲伤 5厌恶 6害怕
+	Name        string  `json:"name"`        // 情绪中文名
+	Probability float64 `json:"probability"` // 识别置信度 [0,1]
+	Smile       int     `json:"smile"`       // 是否微笑：0否 1是
+	SmileProb   float64 `json:"smileProb"`   // 微笑置信度
 }
 
 // Question 面试题目
@@ -47,10 +57,11 @@ type AnswerRecord struct {
 	Skipped         bool     `json:"skipped"`
 	SubmittedAt     string   `json:"submittedAt"`
 
-	// 视频面试专有字段（omitempty，文字模式不写入）
+	// 语音/视频面试专有字段（omitempty，文字模式不写入）
 	ExpressionScore    int               `json:"expressionScore,omitempty"`
 	ExpressionFeedback string            `json:"expressionFeedback,omitempty"`
 	NonVerbalMetrics   *NonVerbalMetrics `json:"nonVerbalMetrics,omitempty"`
+	FaceEmotion        *FaceEmotionInfo  `json:"faceEmotion,omitempty"` // 本题视频抓帧情绪（提交时从 session.FaceEmotions 合并）
 }
 
 // InterviewSession 面试会话（存 Redis）
@@ -74,6 +85,9 @@ type InterviewSession struct {
 	VirtualBackground bool     `json:"virtualBackground"`  // 虚拟背景
 	BgStyle           string   `json:"bgStyle"`            // 背景样式
 	ResumeID          string   `json:"resumeId,omitempty"` // 关联简历ID（用于简历关联出题）
+
+	// 视频面试（video_call）逐题情绪抓帧结果，提交答案时合并进 AnswerRecord
+	FaceEmotions map[int]*FaceEmotionInfo `json:"faceEmotions,omitempty"`
 }
 
 func (s *InterviewSession) ToJSON() (string, error) {

@@ -63,6 +63,7 @@ func GenerateReport(userID, interviewID string) (*model.InterviewReport, error) 
 			rq.ExpressionScore = ans.ExpressionScore
 			rq.ExpressionFeedback = ans.ExpressionFeedback
 			rq.NonVerbalMetrics = ans.NonVerbalMetrics
+			rq.FaceEmotion = ans.FaceEmotion
 			if ans.Skipped {
 				skippedCount++
 			} else {
@@ -154,6 +155,8 @@ func GenerateReport(userID, interviewID string) (*model.InterviewReport, error) 
 		if summary, err := GenerateVideoExpressionSummary(session.Config.JobTitle, answerRecords); err == nil {
 			report.ExpressionSummary = summary
 		}
+		// 视频面试：聚合逐题情绪抓帧结果（无抓帧数据时为 nil）
+		report.FaceSummary = model.CalcFaceSummary(questions)
 	} else {
 		// C2 修复：文字模式也填充平均思考时长（有 thinkDuration 数据就统计）
 		report.AvgThinkDuration = model.CalcAvgThinkDuration(questions)

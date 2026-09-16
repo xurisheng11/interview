@@ -171,6 +171,11 @@ func BuildWordReport(report *model.InterviewReport) ([]byte, error) {
 		if report.AvgThinkDuration > 0 {
 			body.WriteString(wordKV("平均思考时长", fmtDuration(report.AvgThinkDuration)))
 		}
+		if report.FaceSummary != nil {
+			fs := report.FaceSummary
+			body.WriteString(wordKV("面部表情分析", fmt.Sprintf("有效抓帧 %d 帧；主要情绪：%s；紧张信号帧占比 %.0f%%（%s）；微笑帧占比 %.0f%%",
+				fs.Samples, fs.DominantName, fs.TenseRatio*100, fs.NervousLevel, fs.SmileRatio*100)))
+		}
 	}
 	if len(report.ModuleScores) > 0 {
 		body.WriteString(wordPara("知识点模块得分：", wsLabel))

@@ -262,7 +262,7 @@ func PracticeQuestion(userID, questionID, answer string) (map[string]interface{}
 		Difficulty: q.Difficulty,
 	}
 
-	result, err := ReviewAnswer(mq, answer, cfg, nil)
+	result, err := ReviewAnswer(mq, answer, cfg, nil, nil)
 	if err != nil {
 		return nil, fmt.Errorf("AI 点评失败: %w", err)
 	}

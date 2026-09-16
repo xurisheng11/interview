@@ -41,6 +41,7 @@ func Setup() *gin.Engine {
 			interviews.GET("", handler.GetInterviewList)
 			interviews.GET("/:id", handler.GetInterview)
 			interviews.POST("/:id/answers", handler.SubmitAnswer)
+			interviews.POST("/:id/face", handler.UploadFaceFrame) // 视频面试情绪抓帧
 			interviews.PUT("/:id/pause", handler.PauseInterview)
 			interviews.PUT("/:id/complete", handler.CompleteInterview)
 		}

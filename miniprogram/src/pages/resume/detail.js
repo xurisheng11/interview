@@ -153,28 +153,18 @@ Page({
     })
   },
 
-  /** 基于简历创建面试：先选答题模式（文字/语音） */
+  /** 基于简历创建面试：固定语音模式（说话答题+AI表达分析） */
   handleCreateInterview() {
     if (this.data.startingInterview) return
     if (!this.data.resume || this.data.resume.analysisStatus !== 'done') {
       wx.showToast({ title: '请等待分析完成', icon: 'none' })
       return
     }
-    var that = this
-    wx.showActionSheet({
-      alertText: '选择答题方式',
-      itemList: [
-        '✍️ 文字答题 · 打字输入',
-        '🎙️ 语音答题 · 说话自动转文字，AI 分析语速/口头禅/表达'
-      ],
-      success: function (res) {
-        // tapIndex 1 = 语音模式（后端值 video）；其它为文字
-        that.doCreateInterview(res.tapIndex === 1 ? 'video' : 'text')
-      }
-    })
+    // 语音模式（后端值 video）：录音答题、自动转文字并采集语速/口头禅/表达指标
+    this.doCreateInterview('video')
   },
 
-  /** 按选中模式创建面试 */
+  /** 按指定模式创建面试 */
   doCreateInterview(mode) {
     if (this.data.startingInterview) return
     this.setData({ startingInterview: true })

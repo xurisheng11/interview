@@ -169,7 +169,7 @@
           </view>
           <view class="btn-start-texts">
             <text class="btn-start-title">{{startingInterview ? '创建中…' : (resume.isDone ? '开始简历面试' : '分析完成后可发起')}}</text>
-            <text class="btn-start-sub">AI 根据简历个性化出题 · 针对性练习</text>
+            <text class="btn-start-sub">AI 根据简历出题 · 语音答题+表达分析</text>
           </view>
         </view>
         <text class="btn-start-arrow">›</text>

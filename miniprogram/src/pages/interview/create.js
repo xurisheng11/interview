@@ -107,7 +107,7 @@ Page({
     modes: [
       { value: 'text', name: '文字模式', desc: '打字输入回答' },
       { value: 'video', name: '语音模式', desc: '说话答题，停止后自动转文字' },
-      { value: 'video_call', name: '视频面试', desc: '摄像头实时预览 + 语音答题' }
+      { value: 'video_call', name: '视频面试', desc: '摄像头画面 + 说话自动识别转文字' }
     ],
 
     // 答题时间（每题）

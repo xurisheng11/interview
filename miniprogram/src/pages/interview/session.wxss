@@ -532,6 +532,20 @@
   z-index: 100;
 }
 
+/* 因麦克风冲突自动暂停画面时的角标 */
+.camera-restore-tag {
+  position: absolute;
+  bottom: -34rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 20rpx;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.55);
+  padding: 4rpx 12rpx;
+  border-radius: 10rpx;
+  white-space: nowrap;
+}
+
 .camera-warn {
   margin: 16rpx 24rpx 0;
   padding: 16rpx 24rpx;

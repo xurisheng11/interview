@@ -18,6 +18,7 @@
     </view>
     <view class="camera-restore" wx:elif="{{!cameraBlocked}}" catchtap="toggleCameraMin">
       <text>🎥</text>
+      <text class="camera-restore-tag" wx:if="{{cameraPausedForMic}}">画面已暂停</text>
     </view>
     <view class="camera-warn" wx:if="{{cameraBlocked}}">摄像头不可用，已降级为语音答题</view>
   </block>
@@ -89,10 +90,10 @@
       <view class="record-info">
         <view class="record-status-line">
           <text class="record-dot" wx:if="{{isRecording || isTranscribing}}"></text>
-          <text class="record-status {{isRecording || isTranscribing ? 'on' : ''}}">{{isTranscribing ? '正在转写，请稍候...' : (isRecording ? (speechToText ? '正在听写...' : '正在录音...') : (audioPath ? '录音完成，转写文字已追加到回答' : '点麦克风说话答题，停止后自动转文字'))}}</text>
+          <text class="record-status {{isRecording || isTranscribing ? 'on' : ''}}">{{isTranscribing ? '正在转写，请稍候...' : (isRecording ? (autoRecord ? '自动识别中，直接说话即可' : (speechToText ? '正在听写...' : '正在录音...')) : (audioPath ? '录音完成，转写文字已追加到回答' : '点麦克风说话答题，停止后自动转文字'))}}</text>
           <text class="record-time" wx:if="{{isRecording}}">{{recordTimeText}} / 01:00</text>
         </view>
-        <text class="record-sub-hint">{{isTranscribing ? '转写约需几秒，请稍候勿离开' : '单次上限 60 秒，可多段录音逐段转写拼接'}}</text>
+        <text class="record-sub-hint">{{isTranscribing ? '转写约需几秒，请稍候勿离开' : (autoRecord ? '视频面试已开自动识别：说话即转文字，超 60 秒自动分段衔接；点麦克风可暂停' : '单次上限 60 秒，可多段录音逐段转写拼接')}}</text>
       </view>
 
       <button

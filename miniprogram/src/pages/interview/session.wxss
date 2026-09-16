@@ -391,6 +391,12 @@
   font-weight: 500;
 }
 
+/* 视频面试"回答完毕"：绿色正向动作，区别于普通翻页 */
+.btn-next.btn-done {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  box-shadow: 0 8rpx 24rpx rgba(22, 163, 74, 0.35);
+}
+
 .btn-center {
   min-width: 0;
   display: flex;

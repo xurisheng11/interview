@@ -742,7 +742,7 @@ Page({
     this.saveCurrentAnswer()
 
     this.setData({ submitting: true })
-    wx.showLoading({ title: '正在转写回答…', mask: true })
+    wx.showLoading({ title: this.data.isCamera ? '正在确认最后文字…' : '正在转写回答…', mask: true })
     this.waitTranscripts().then(() => {
       this.saveCurrentAnswer()
       const cur = this.data.questions[this.data.currentIndex] || {}

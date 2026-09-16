@@ -81,7 +81,7 @@
   <!-- 视频面试：无录音按钮，全自动识别，仅一条状态提示条（停止时点一下可恢复） -->
   <view class="auto-bar" wx:if="{{isCamera}}" bindtap="resumeAutoRecord">
     <view class="auto-dot" wx:if="{{isRecording || isTranscribing}}"></view>
-    <text class="auto-bar-text">{{isTranscribing ? '正在转写，文字会自动追加到回答…' : (isRecording ? '自动识别中：直接说话即可，无需任何操作' : '自动识别未运行，点此恢复；也可手动输入作答')}}</text>
+    <text class="auto-bar-text">{{isTranscribing ? '正在转写，文字会自动追加到回答…' : (isRecording ? '识别中：直接说话即可，说完点下方“回答完毕”' : '自动识别未运行，点此恢复；也可手动输入作答')}}</text>
   </view>
 
   <!-- 录音区域（语音模式手动录音；视频模式已改为上方自动识别条） -->
@@ -138,11 +138,11 @@
     </view>
 
     <button 
-      class="btn-next"
+      class="btn-next {{isCamera && currentIndex !== totalCount - 1 ? 'btn-done' : ''}}"
       bindtap="nextQuestion"
       loading="{{submitting}}"
     >
-      <text>{{currentIndex === totalCount - 1 ? '提交' : '下一题'}}</text>
+      <text>{{currentIndex === totalCount - 1 ? '提交' : (isCamera ? '✅ 回答完毕' : '下一题')}}</text>
     </button>
   </view>
 

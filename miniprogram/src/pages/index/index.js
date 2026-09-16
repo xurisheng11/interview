@@ -86,7 +86,7 @@ Page({
         _statusText: STATUS_NAMES[it.status] || it.status || '',
         _isDone: it.status === 'completed',
         _scoreCls: scoreClass(it.totalScore || 0),
-        _modeText: it.mode === 'video' ? '视频' : '文字'
+        _modeText: it.mode === 'video_call' ? '视频' : (it.mode === 'video' ? '语音' : '文字')
       }))
       this.setData({ recentInterviews: list })
     }).catch(err => {

@@ -138,8 +138,8 @@ func GenerateReport(userID, interviewID string) (*model.InterviewReport, error) 
 		Mode:          session.Mode,
 	}
 
-	// 视频模式：生成表达能力评价并计算平均指标
-	if session.Mode == "video" {
+	// 语音/视频模式：生成表达能力评价并计算平均指标
+	if isVoiceMode(session.Mode) {
 		// 收集 AnswerRecord 指针
 		var answerRecords []*model.AnswerRecord
 		for i := range session.Questions {

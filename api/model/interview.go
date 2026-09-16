@@ -14,7 +14,7 @@ type InterviewConfig struct {
 	Round          string   `json:"round"`      // round1/round2/round3/comprehensive（综合面试）
 	FocusAreas     []string `json:"focusAreas"`
 	Remark         string   `json:"remark"`
-	Mode           string   `json:"mode"`           // text | video，默认 text
+	Mode           string   `json:"mode"`           // text | video(语音) | video_call(视频)，默认 text
 	InterviewTypes []string `json:"interviewTypes"` // 面试形式: structured, semi-structured, random
 }
 
@@ -62,7 +62,7 @@ type InterviewSession struct {
 	CurrentIndex int                   `json:"currentIndex"`
 	Answers      map[int]*AnswerRecord `json:"answers"`
 	Status       string                `json:"status"` // ongoing/paused/completed
-	Mode         string                `json:"mode"`   // text | video，默认 text
+	Mode         string                `json:"mode"`   // text | video(语音) | video_call(视频)，默认 text
 	StartTime    time.Time             `json:"startTime"`
 	PauseTime    *time.Time            `json:"pauseTime,omitempty"`
 

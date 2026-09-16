@@ -10,6 +10,11 @@ import (
 	"interview-sim/model"
 )
 
+// isVoiceMode 语音类模式（语音面试 video / 视频面试 video_call）均需做表达分析
+func isVoiceMode(mode string) bool {
+	return mode == "video" || mode == "video_call"
+}
+
 // ============ Word 报告生成（.docx，OOXML 最小子集） ============
 // 不引入第三方依赖：docx 本质是 zip 包内几个 XML，直接手工拼装。
 
@@ -130,8 +135,10 @@ func BuildWordReport(report *model.InterviewReport) ([]byte, error) {
 	if v, ok := wordDifficultyNames[report.Difficulty]; ok {
 		meta = append(meta, "难度 "+v)
 	}
-	if report.Mode == "video" {
+	if report.Mode == "video_call" {
 		meta = append(meta, "视频面试")
+	} else if report.Mode == "video" {
+		meta = append(meta, "语音面试")
 	} else {
 		meta = append(meta, "文字面试")
 	}
@@ -154,7 +161,7 @@ func BuildWordReport(report *model.InterviewReport) ([]byte, error) {
 	body.WriteString(wordKV("通过判定", passText))
 	body.WriteString(wordKV("答题情况", fmt.Sprintf("共 %d 题，作答 %d 题，跳过 %d 题",
 		report.TotalCount, report.AnsweredCount, report.SkippedCount)))
-	if report.Mode == "video" {
+	if isVoiceMode(report.Mode) {
 		if report.AvgExpressionScore > 0 {
 			body.WriteString(wordKV("平均表达得分", fmt.Sprintf("%d 分", report.AvgExpressionScore)))
 		}

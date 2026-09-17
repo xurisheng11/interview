@@ -123,16 +123,6 @@ func main() {
 		return
 	}
 
-	// -save 模式：把对象下载到本地留底。多个实例互相覆盖备份时，先把当前这份抢下来再动手
-	if len(os.Args) > 1 && os.Args[1] == "-save" {
-		if len(os.Args) < 4 {
-			fmt.Println("用法：coscheck -save <对象键> <本地文件>")
-			return
-		}
-		saveObject(ctx, client, os.Args[2], os.Args[3])
-		return
-	}
-
 	// 带对象键参数时进入只读校验模式：把备份文件从桶里读回来，确认写入真的落地
 	if len(os.Args) > 1 {
 		for _, objKey := range os.Args[1:] {

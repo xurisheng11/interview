@@ -26,39 +26,63 @@ Page({
   },
 
   loadProfile() {
-    // 从缓存获取用户信息
-    const userInfo = wx.getStorageSync('userInfo') || {}
-    
+    // 先渲染本地缓存保证秒开，再以服务器返回为准覆盖
+    // 以前只读缓存：清过缓存或换设备后，服务器上资料齐全，页面却一片空白
+    this.fillForm(wx.getStorageSync('userInfo') || {})
+
+    api.profile.get().then(res => {
+      const remote = (res && res.data) || {}
+      const merged = { ...wx.getStorageSync('userInfo'), ...remote }
+      wx.setStorageSync('userInfo', merged)
+      getApp().globalData.userInfo = merged
+      this.fillForm(merged)
+    }).catch(() => {
+      // 拉取失败就停在缓存视图，不打断正在编辑的用户
+    })
+  },
+
+  fillForm(info) {
+    // 历史脏数据：wxfile:// 是手机本地临时路径，换设备或微信清理后必然加载失败，按无头像处理
+    let avatar = info.avatar || ''
+    if (avatar && avatar.indexOf('http://') !== 0 && avatar.indexOf('https://') !== 0) {
+      avatar = ''
+    }
+
     this.setData({
       formData: {
-        avatar: userInfo.avatar || '',
-        nickname: userInfo.nickname || '',
-        username: userInfo.username || '',
-        phone: userInfo.phone || '',
-        email: userInfo.email || '',
-        bio: userInfo.bio || '',
-        targetPosition: userInfo.targetPosition || '',
-        experience: userInfo.experience || ''
+        avatar: avatar,
+        nickname: info.nickname || '',
+        username: info.username || '',
+        phone: info.phone || '',
+        email: info.email || '',
+        bio: info.bio || '',
+        targetPosition: info.targetPosition || '',
+        experience: info.experience || ''
       }
     })
   },
 
-  // 选择头像
+  // 选择头像：先传到对象存储，成功后才写进表单
   chooseAvatar() {
     wx.chooseMedia({
       count: 1,
       mediaType: ['image'],
       sourceType: ['album', 'camera'],
+      sizeType: ['compressed'],
       success: (res) => {
         const tempFilePath = res.tempFiles[0].tempFilePath
-        this.setData({
-          'formData.avatar': tempFilePath
-        })
-        
-        // TODO: 上传头像到服务器
-        wx.showToast({
-          title: '头像已选择',
-          icon: 'success'
+        wx.showLoading({ title: '上传中...', mask: true })
+        api.profile.uploadAvatar(tempFilePath).then(data => {
+          wx.hideLoading()
+          this.setData({ 'formData.avatar': data.avatar })
+          // 上传接口已直接写库生效，同步刷新缓存，不让“我的”页停在旧头像
+          const userInfo = { ...wx.getStorageSync('userInfo'), avatar: data.avatar }
+          wx.setStorageSync('userInfo', userInfo)
+          getApp().globalData.userInfo = userInfo
+          wx.showToast({ title: '头像已更新', icon: 'success' })
+        }).catch(err => {
+          wx.hideLoading()
+          wx.showToast({ title: (err && err.message) || '头像上传失败', icon: 'none' })
         })
       }
     })

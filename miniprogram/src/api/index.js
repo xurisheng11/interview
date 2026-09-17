@@ -191,6 +191,37 @@ export const profile = {
     method: 'PUT',
     data
   }),
+
+  // 上传头像到对象存储，成功返回 { avatar: 'https://...' }
+  // 必须真上传：以前只存手机本地临时路径，图片字节从未离开手机
+  uploadAvatar: (filePath) => {
+    return new Promise((resolve, reject) => {
+      const app = getApp()
+      const token = wx.getStorageSync('token')
+      wx.uploadFile({
+        url: app.globalData.apiBaseUrl + '/profile/avatar',
+        filePath: filePath,
+        name: 'file',
+        header: {
+          'Authorization': token ? `Bearer ${token}` : ''
+        },
+        timeout: 120000,
+        success: (res) => {
+          try {
+            const data = JSON.parse(res.data)
+            if (res.statusCode === 200 && data.code === 200) {
+              resolve(data.data)
+            } else {
+              reject(new Error(data.message || `头像上传失败(${res.statusCode})`))
+            }
+          } catch (e) {
+            reject(new Error('解析头像上传结果失败'))
+          }
+        },
+        fail: () => reject(new Error('网络异常，头像上传失败'))
+      })
+    })
+  },
   
   getStats: () => request({
     url: '/profile/stats'

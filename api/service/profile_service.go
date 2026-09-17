@@ -24,22 +24,23 @@ func GetProfile(userId string) (map[string]interface{}, error) {
 		return nil, errors.New("用户不存在")
 	}
 	return map[string]interface{}{
-		"userId":     user.UserID,
-		"username":   user.Username,
-		"nickname":   user.Nickname,
-		"avatar":     user.Avatar,
-		"bio":        user.Bio,
-		"email":      user.Email,
-		"phone":      user.Phone,
-		"createdAt":  user.CreatedAt.Format(time.RFC3339),
-		"role":       user.Role,
-		"jobStatus":  user.JobStatus,
-		"experience": user.Experience,
+		"userId":         user.UserID,
+		"username":       user.Username,
+		"nickname":       user.Nickname,
+		"avatar":         user.Avatar,
+		"bio":            user.Bio,
+		"email":          user.Email,
+		"phone":          user.Phone,
+		"createdAt":      user.CreatedAt.Format(time.RFC3339),
+		"role":           user.Role,
+		"jobStatus":      user.JobStatus,
+		"experience":     user.Experience,
+		"targetPosition": user.TargetPosition,
 	}, nil
 }
 
 // UpdateProfile 更新用户个人信息
-func UpdateProfile(userId, nickname, avatar, bio string) error {
+func UpdateProfile(userId, nickname, avatar, bio, targetPosition string) error {
 	updates := map[string]interface{}{}
 	if nickname != "" {
 		updates["nickname"] = nickname
@@ -47,7 +48,17 @@ func UpdateProfile(userId, nickname, avatar, bio string) error {
 	// avatar 允许为空（清除头像）
 	updates["avatar"] = avatar
 	updates["bio"] = bio
+	// 只在非空时写入：Web 端表单没有这个字段，无条件覆盖会把小程序填的目标岗位抹掉
+	if targetPosition != "" {
+		updates["targetPosition"] = targetPosition
+	}
 	return repository.HSetMap("user:"+userId, updates)
+}
+
+// UpdateProfileAvatar 只更新头像字段，供头像上传接口写回。
+// 不走 UpdateProfile：那个函数会连带把昵称与简介按入参原样覆盖，上传接口不该有权限改其他字段。
+func UpdateProfileAvatar(userId, avatarURL string) error {
+	return repository.HSetMap("user:"+userId, map[string]interface{}{"avatar": avatarURL})
 }
 
 // ChangePassword 修改密码

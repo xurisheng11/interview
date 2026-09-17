@@ -101,6 +101,7 @@ func Setup() *gin.Engine {
 		{
 			profile.GET("", handler.GetProfile)
 			profile.PUT("", handler.UpdateProfile)
+			profile.POST("/avatar", handler.UploadAvatar)
 			profile.PUT("/password", handler.ChangePassword)
 			profile.PUT("/job-status", handler.UpdateJobStatus)
 			profile.GET("/stats", handler.GetStats)

@@ -1,9 +1,13 @@
 package handler
 
 import (
-	"github.com/gin-gonic/gin"
+	"errors"
+	"io"
+
 	"interview-sim/pkg/response"
 	"interview-sim/service"
+
+	"github.com/gin-gonic/gin"
 )
 
 // GetProfile GET /api/v1/profile
@@ -22,20 +26,72 @@ func UpdateProfile(c *gin.Context) {
 	userId := c.GetString("userId")
 
 	var body struct {
-		Nickname string `json:"nickname"`
-		Avatar   string `json:"avatar"`
-		Bio      string `json:"bio"`
+		Nickname       string `json:"nickname"`
+		Avatar         string `json:"avatar"`
+		Bio            string `json:"bio"`
+		TargetPosition string `json:"targetPosition"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		response.BadRequest(c, "参数错误: "+err.Error())
 		return
 	}
 
-	if err := service.UpdateProfile(userId, body.Nickname, body.Avatar, body.Bio); err != nil {
+	if err := service.UpdateProfile(userId, body.Nickname, body.Avatar, body.Bio, body.TargetPosition); err != nil {
 		response.InternalError(c, err.Error())
 		return
 	}
 	response.Success(c, gin.H{"message": "更新成功"})
+}
+
+// UploadAvatar POST /api/v1/profile/avatar（multipart/form-data，字段名 file）
+// 头像必须真上传：以前小程序只把手机本地临时路径 wxfile://tmp_xxx 存进资料字段，
+// 图片字节从没离开过用户手机，换设备或微信清理临时目录后头像必然空白
+func UploadAvatar(c *gin.Context) {
+	userId := c.GetString("userId")
+
+	file, err := c.FormFile("file")
+	if err != nil {
+		response.BadRequest(c, "请选择头像图片（表单字段名需为 file）")
+		return
+	}
+	if file.Size > 2<<20 {
+		response.BadRequest(c, "头像不能超过 2MB")
+		return
+	}
+	src, err := file.Open()
+	if err != nil {
+		response.BadRequest(c, "头像读取失败")
+		return
+	}
+	defer src.Close()
+	data, err := io.ReadAll(src)
+	if err != nil {
+		response.InternalError(c, "头像读取失败: "+err.Error())
+		return
+	}
+
+	// 带上旧头像地址是为了写完后顺手删掉，换一次头像不在桶里堆一份垃圾
+	var oldAvatar string
+	if profile, perr := service.GetProfile(userId); perr == nil {
+		if v, ok := profile["avatar"].(string); ok {
+			oldAvatar = v
+		}
+	}
+
+	avatarURL, err := service.SaveAvatar(userId, data, file.Header.Get("Content-Type"), oldAvatar)
+	if err != nil {
+		if errors.Is(err, service.ErrAvatarStorageUnavailable) {
+			response.BadRequest(c, err.Error())
+			return
+		}
+		response.InternalError(c, err.Error())
+		return
+	}
+	if err := service.UpdateProfileAvatar(userId, avatarURL); err != nil {
+		response.InternalError(c, err.Error())
+		return
+	}
+	response.Success(c, gin.H{"avatar": avatarURL})
 }
 
 // ChangePassword PUT /api/v1/profile/password

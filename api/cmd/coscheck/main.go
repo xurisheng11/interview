@@ -10,6 +10,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -69,6 +70,69 @@ func main() {
 		Transport: &cos.AuthorizationTransport{SecretID: id, SecretKey: key},
 	})
 
+	// -rm 模式：删除探测/残留对象，保持桶干净
+	if len(os.Args) > 1 && os.Args[1] == "-rm" {
+		if len(os.Args) < 3 {
+			fmt.Println("用法：coscheck -rm <对象键>")
+			return
+		}
+		for _, objKey := range os.Args[2:] {
+			if _, err := client.Object.Delete(ctx, objKey); err != nil {
+				fmt.Printf("RM %s 失败：%v\n", objKey, err)
+				continue
+			}
+			fmt.Printf("RM %s 已删除\n", objKey)
+		}
+		return
+	}
+
+	// -pubput 模式：以 public-read 写入一个探测对象，实测私有桶能否被匿名读
+	if len(os.Args) > 1 && os.Args[1] == "-pubput" {
+		if len(os.Args) < 3 {
+			fmt.Println("用法：coscheck -pubput <对象键>")
+			return
+		}
+		probeKey := os.Args[2]
+		opt := &cos.ObjectPutOptions{ACLHeaderOptions: &cos.ACLHeaderOptions{XCosACL: "public-read"}}
+		if _, err := client.Object.Put(ctx, probeKey, strings.NewReader("public-read probe"), opt); err != nil {
+			fmt.Printf("PUBPUT %s 失败：%v\n", probeKey, err)
+			return
+		}
+		fmt.Printf("PUBPUT %s 成功（对象 ACL=public-read）\n", probeKey)
+		fmt.Printf("匿名读地址 https://%s.cos.%s.myqcloud.com/%s\n", bucket, region, probeKey)
+		return
+	}
+
+	// -copy 模式：桶内复制，把最新快照刷进当天归档（覆盖早期的残缺快照）
+	if len(os.Args) > 1 && os.Args[1] == "-copy" {
+		if len(os.Args) < 4 {
+			fmt.Println("用法：coscheck -copy <源对象键> <目标对象键>")
+			return
+		}
+		copyObject(ctx, client, bucket, os.Args[2], os.Args[3])
+		return
+	}
+
+	// -save 模式：把对象下载到本地留底。多个实例互相覆盖备份时，先把当前这份抢下来再动手
+	if len(os.Args) > 1 && os.Args[1] == "-save" {
+		if len(os.Args) < 4 {
+			fmt.Println("用法：coscheck -save <对象键> <本地文件>")
+			return
+		}
+		saveObject(ctx, client, os.Args[2], os.Args[3])
+		return
+	}
+
+	// -save 模式：把对象下载到本地留底。多个实例互相覆盖备份时，先把当前这份抢下来再动手
+	if len(os.Args) > 1 && os.Args[1] == "-save" {
+		if len(os.Args) < 4 {
+			fmt.Println("用法：coscheck -save <对象键> <本地文件>")
+			return
+		}
+		saveObject(ctx, client, os.Args[2], os.Args[3])
+		return
+	}
+
 	// 带对象键参数时进入只读校验模式：把备份文件从桶里读回来，确认写入真的落地
 	if len(os.Args) > 1 {
 		for _, objKey := range os.Args[1:] {
@@ -112,23 +176,81 @@ func checkObject(ctx context.Context, client *cos.Client, key string) {
 		return
 	}
 	defer resp.Body.Close()
-	data, err := io.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Printf("GET %s 内容读取失败：%v\n", key, err)
 		return
 	}
-	lines := strings.Split(strings.TrimSpace(string(data)), "\n")
-	fmt.Printf("GET %s：HTTP %d，%d 字节，%d 条记录\n", key, resp.StatusCode, len(data), len(lines))
-	for i, ln := range lines {
-		if i >= 3 {
-			fmt.Printf("    ... 其余 %d 条省略\n", len(lines)-3)
-			break
+	fmt.Printf("GET %s：HTTP %d，%d 字节\n", key, resp.StatusCode, len(body))
+
+	// 备份是 JSONL（一行一个 key）：把 key 名、TTL、负载大小列出来，便于比对线上 Redis
+	var shown int
+	for _, line := range strings.Split(strings.TrimSpace(string(body)), "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
 		}
-		if r := []rune(ln); len(r) > 110 {
-			ln = string(r[:110]) + "…"
+		var e struct {
+			K       string `json:"k"`
+			TTLms   int64  `json:"t"`
+			Payload string `json:"p"`
 		}
-		fmt.Printf("    %s\n", ln)
+		if err := json.Unmarshal([]byte(line), &e); err != nil {
+			fmt.Printf("  非备份格式行（%d 字节）：%s\n", len(line), trimRunes(line, 90))
+			shown++
+			continue
+		}
+		ttl := "永久"
+		if e.TTLms > 0 {
+			ttl = fmt.Sprintf("剩 %dm", e.TTLms/60000)
+		}
+		fmt.Printf("  %-46s %-6s payload=%dB\n", trimRunes(e.K, 46), ttl, len(e.Payload))
+		shown++
 	}
+	fmt.Printf("  合计 %d 条记录\n", shown)
+}
+
+// copyObject 桶内复制。SDK 的源格式是“桶名(含APPID)/对象键”，且参数顺序是目标在前。
+// 注意：COS 可能把错误嵌在 200 响应体里，SDK 已处理，但 ETag 为空仍要当失败看。
+func copyObject(ctx context.Context, client *cos.Client, bucket, src, dst string) {
+	res, resp, err := client.Object.Copy(ctx, dst, bucket+"/"+src, nil)
+	if err != nil {
+		fmt.Printf("COPY %s -> %s 失败：%v\n", src, dst, err)
+		return
+	}
+	if resp != nil {
+		fmt.Printf("COPY %s -> %s：HTTP %d，ETag=%s\n", src, dst, resp.StatusCode, res.ETag)
+	}
+	checkObject(ctx, client, dst)
+}
+
+// saveObject 下载到本地留底。备份被多方互相覆盖时，本地留底是唯一可靠证据。
+func saveObject(ctx context.Context, client *cos.Client, key, path string) {
+	resp, err := client.Object.Get(ctx, key, nil)
+	if err != nil {
+		fmt.Printf("SAVE %s 失败：%v\n", key, err)
+		return
+	}
+	defer resp.Body.Close()
+	f, err := os.Create(path)
+	if err != nil {
+		fmt.Printf("创建 %s 失败：%v\n", path, err)
+		return
+	}
+	defer f.Close()
+	n, cerr := io.Copy(f, resp.Body)
+	if cerr != nil {
+		fmt.Printf("SAVE %s -> %s：%d 字节后读取中断：%v\n", key, path, n, cerr)
+		return
+	}
+	fmt.Printf("SAVE %s -> %s：%d 字节\n", key, path, n)
+}
+
+func trimRunes(s string, n int) string {
+	if r := []rune(s); len(r) > n {
+		return string(r[:n]) + "…"
+	}
+	return s
 }
 
 func firstNonEmpty(vals ...string) string {
